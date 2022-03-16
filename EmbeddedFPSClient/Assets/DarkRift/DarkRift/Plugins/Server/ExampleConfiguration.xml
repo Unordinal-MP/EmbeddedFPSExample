@@ -30,7 +30,7 @@
         <settings file="Logs/{0:d-M-yyyy}/{0:HH-mm-ss tt}.txt" />
       </logWriter>
       
-      <logWriter name="UnityConsoleWriter1" type="UnityConsoleWriter" levels="info, warning, error, fatal" />
+      <logWriter name="UnityConsoleWriter1" type="UnityConsoleWriter" levels="trace, info, warning, error, fatal" />
     </logWriters>
   </logging>
 

@@ -121,7 +121,10 @@ public class Room : MonoBehaviour
 
     public void RemovePlayerFromRoom(ClientConnection clientConnection)
     {
-        Destroy(clientConnection.Player.gameObject);
+        if (clientConnection.Player != null)
+            Destroy(clientConnection.Player.gameObject);
+        else
+            Debug.LogError("clientConnection.Player should not be null"); //TODO: pls fix Shubham
         playerDespawnData.Add(new PlayerDespawnData(clientConnection.Client.ID));
         ClientConnections.Remove(clientConnection);
         serverPlayers.Remove(clientConnection.Player);
