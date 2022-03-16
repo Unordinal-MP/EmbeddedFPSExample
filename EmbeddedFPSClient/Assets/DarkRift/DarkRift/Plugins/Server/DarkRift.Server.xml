@@ -22,6 +22,9 @@
         <member name="P:DarkRift.Server.Client.IsConnected">
             <inheritdoc/>
         </member>
+        <member name="P:DarkRift.Server.Client.ConnectionState">
+            <inheritdoc/>
+        </member>
         <member name="P:DarkRift.Server.Client.Strikes">
             <inheritdoc/>
         </member>
@@ -37,27 +40,60 @@
         <member name="P:DarkRift.Server.Client.MessagesReceived">
             <inheritdoc/>
         </member>
+        <member name="P:DarkRift.Server.Client.RemoteEndPoints">
+            <inheritdoc/>
+        </member>
+        <member name="P:DarkRift.Server.Client.RoundTripTime">
+            <inheritdoc/>
+        </member>
         <member name="F:DarkRift.Server.Client.connection">
             <summary>
-                The connection to the Client.
+                The connection to the client.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.Client.server">
+        <member name="F:DarkRift.Server.Client.clientManager">
             <summary>
-                The server we belong to.
+                The client manager in charge of this client.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.Client.#ctor(DarkRift.Server.NetworkServerConnection,System.UInt16,DarkRift.Server.DarkRiftServer)">
+        <member name="F:DarkRift.Server.Client.threadHelper">
             <summary>
-                Creates a new Client connection with a given global identifier and the Client they are connected through.
+                The thread helper this client will use.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Client.logger">
+            <summary>
+                The logger this client will use.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Client.Create(DarkRift.Server.NetworkServerConnection,System.UInt16,DarkRift.Server.ClientManager,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new client connection with a given global identifier and the client they are connected through.
             </summary>
             <param name="connection">The connection we handle.</param>
-            <param name="id">The ID assigned to this Client.</param>
-            <param name="server">The server we belong to.</param>
+            <param name="id">The ID we've been assigned.</param>
+            <param name="clientManager">The client manager in charge of this client.</param>
+            <param name="threadHelper">The thread helper this client will use.</param>
+            <param name="logger">The logger this client will use.</param>
+        </member>
+        <member name="M:DarkRift.Server.Client.#ctor(DarkRift.Server.NetworkServerConnection,System.UInt16,DarkRift.Server.ClientManager,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new client connection with a given global identifier and the client they are connected through.
+            </summary>
+            <param name="connection">The connection we handle.</param>
+            <param name="id">The ID we've been assigned.</param>
+            <param name="clientManager">The client manager in charge of this client.</param>
+            <param name="threadHelper">The thread helper this client will use.</param>
+            <param name="logger">The logger this client will use.</param>
         </member>
         <member name="M:DarkRift.Server.Client.SendID">
             <summary>
-                Sends the Client their ID.
+                Sends the client their ID.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Client.StartListening">
+            <summary>
+            Starts this client's connecting listening for messages.
             </summary>
         </member>
         <member name="M:DarkRift.Server.Client.SendMessage(DarkRift.Message,DarkRift.SendMode)">
@@ -66,44 +102,62 @@
         <member name="M:DarkRift.Server.Client.Disconnect">
             <inheritdoc/>
         </member>
-        <member name="M:DarkRift.Server.Client.Disconnected(System.Net.Sockets.SocketError)">
+        <member name="M:DarkRift.Server.Client.DropConnection">
+            <summary>
+                Disconnects the connection without invoking events for plugins.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Client.GetRemoteEndPoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Client.Disconnected(System.Net.Sockets.SocketError,System.Exception)">
             <summary>
                 Handles a remote disconnection.
             </summary>
             <param name="error">The error that caused the disconnection.</param>
+            <param name="exception">The exception that caused the disconnection.</param>
         </member>
-        <member name="M:DarkRift.Server.Client.HandleIncomingDataBuffer(System.Byte[],DarkRift.SendMode)">
+        <member name="M:DarkRift.Server.Client.HandleIncomingDataBuffer(DarkRift.MessageBuffer,DarkRift.SendMode)">
             <summary>
-                Handles data that was sent from this Client.
+                Handles data that was sent from this client.
             </summary>
             <param name="buffer">The buffer that was received.</param>
             <param name="sendMode">The method data was sent using.</param>
         </member>
         <member name="M:DarkRift.Server.Client.HandleIncomingMessage(DarkRift.Message,DarkRift.SendMode)">
             <summary>
-                Handles messages that were sent from this Client.
+                Handles messages that were sent from this client.
             </summary>
             <param name="message">The message that was received.</param>
             <param name="sendMode">The method data was sent using.</param>
         </member>
-        <member name="M:DarkRift.Server.Client.PushBuffer(System.Byte[],DarkRift.SendMode)">
+        <member name="M:DarkRift.Server.Client.PushBuffer(DarkRift.MessageBuffer,DarkRift.SendMode)">
             <summary>
-                Pushes a buffer to the Client.
+                Pushes a buffer to the client.
             </summary>
             <param name="buffer">The buffer to push.</param>
             <param name="sendMode">The method to send the data using.</param>
             <returns>Whether the send was successful.</returns>
         </member>
-        <member name="M:DarkRift.Server.Client.Strike(DarkRift.Server.StrikeReason,System.String)">
+        <member name="M:DarkRift.Server.Client.Strike(DarkRift.Server.StrikeReason,System.String,System.Int32)">
             <summary>
-                Informs plugins and adds a strike to this Client's record.
+                Informs plugins and adds a strike to this client's record.
             </summary>
             <param name="reason">The reason for the strike.</param>
             <param name="message">A message describing the reason for the strike.</param>
+            <param name="weight">The number of strikes this accounts for.</param>
+        </member>
+        <member name="M:DarkRift.Server.Client.EnforceStrike(DarkRift.Server.StrikeReason,System.String,System.Int32)">
+            <summary>
+                Adds a strike to this client's record.
+            </summary>
+            <param name="reason">The reason for the strike.</param>
+            <param name="message">A message describing the reason for the strike.</param>
+            <param name="weight">The number of strikes this accounts for.</param>
         </member>
         <member name="M:DarkRift.Server.Client.Dispose">
             <summary>
-                Disposes of this Client.
+                Disposes of this client.
             </summary>
         </member>
         <member name="T:DarkRift.Server.ClientConnectedEventArgs">
@@ -113,24 +167,36 @@
         </member>
         <member name="P:DarkRift.Server.ClientConnectedEventArgs.Client">
             <summary>
-                The <see cref="P:DarkRift.Server.ClientConnectedEventArgs.Client"/> object for the new Client.
+                The <see cref="P:DarkRift.Server.ClientConnectedEventArgs.Client"/> object for the new client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientConnectedEventArgs.RemoteTcpEndPoint">
             <summary>
-                The remote end point of the TCP connection to this Client.
+                The remote end point of the TCP connection to this client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientConnectedEventArgs.RemoteUdpEndPoint">
             <summary>
-                The remote end point of the UDP connection to this Client.
+                The remote end point of the UDP connection to this client.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ClientConnectedEventArgs.RemoteEndPoints">
+            <summary>
+                The collection of end points this client is connected to.
             </summary>
         </member>
         <member name="M:DarkRift.Server.ClientConnectedEventArgs.#ctor(DarkRift.Server.IClient)">
             <summary>
                 Creates a new ClientConnectedEventArgs from the given data.
             </summary>
-            <param name="clientConnection">The ClientConnection of the new Client.</param>
+            <param name="clientConnection">The ClientConnection of the new client.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientConnectedEventArgs.GetRemoteEndPoint(System.String)">
+            <summary>
+                Gets the remote end point with the given name.
+            </summary>
+            <param name="name">The end point name.</param>
+            <returns>The end point.</returns>
         </member>
         <member name="T:DarkRift.Server.ClientDisconnectedEventArgs">
             <summary>
@@ -139,17 +205,22 @@
         </member>
         <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.Client">
             <summary>
-                The Client of the new Client.
+                The Client of the new client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.RemoteTcpEndPoint">
             <summary>
-                The remote end point of the TCP connection to this Client.
+                The remote end point of the TCP connection to this client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.RemoteUdpEndPoint">
             <summary>
-                The remote end point of the UDP connection to this Client.
+                The remote end point of the UDP connection to this client.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.RemoteEndPoints">
+            <summary>
+                The collection of end points this client is connected to.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.LocalDisconnect">
@@ -162,30 +233,47 @@
                 The error that caused the disconnect.
             </summary>
             <remarks>
-                If <see cref="P:DarkRift.Server.ClientDisconnectedEventArgs.LocalDisconnect"/> is true this field will be set to a default value and should be ignored.
+                If <see cref="P:DarkRift.Server.ClientDisconnectedEventArgs.LocalDisconnect"/> is true this field will be set to a default value and 
+                should be ignored.
+                
+                If the contents of this property is <see cref="F:System.Net.Sockets.SocketError.SocketError"/> consider 
+                exploring <see cref="P:DarkRift.Server.ClientDisconnectedEventArgs.Exception"/> for a general exception that caused the disconnection 
+                instead.
             </remarks>
         </member>
-        <member name="M:DarkRift.Server.ClientDisconnectedEventArgs.#ctor(DarkRift.Server.IClient,System.Boolean,System.Net.Sockets.SocketError)">
+        <member name="P:DarkRift.Server.ClientDisconnectedEventArgs.Exception">
+            <summary>
+                The exception that caused the disconnection.
+            </summary>
+            <remarks>
+                If <see cref="P:DarkRift.Server.ClientDisconnectedEventArgs.LocalDisconnect"/> is true this field will be set to a default value and 
+                should be ignored.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.ClientDisconnectedEventArgs.#ctor(DarkRift.Server.IClient,System.Boolean,System.Net.Sockets.SocketError,System.Exception)">
             <summary>
                 Creates a new ClientDisconnectedEventArgs from the given data.
             </summary>
-            <param name="clientConnection">The ClientConnection of the Client.</param>
+            <param name="clientConnection">The ClientConnection of the client.</param>
             <param name="localDisconnect">Whether it was a local call that caused the disconnection.</param>
             <param name="error">The error that caused the disconnect.</param>
+            <param name="exception">The exception that caused the disconenct.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientDisconnectedEventArgs.GetRemoteEndPoint(System.String)">
+            <summary>
+                Gets the remote end point with the given name.
+            </summary>
+            <param name="name">The end point name.</param>
+            <returns>The end point.</returns>
         </member>
         <member name="T:DarkRift.Server.ClientManager">
             <summary>
                 Handles all clients on the server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ClientManager.listener">
-            <summary>
-                The listener for connections to connect to.
-            </summary>
-        </member>
         <member name="P:DarkRift.Server.ClientManager.Address">
             <summary>
-                The address he server is listening on.
+                The address the server is listening on.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientManager.Port">
@@ -210,12 +298,12 @@
         </member>
         <member name="E:DarkRift.Server.ClientManager.ClientConnected">
             <summary>
-                Invoked when a Client connects to the server.
+                Invoked when a client connects to the server.
             </summary>
         </member>
         <member name="E:DarkRift.Server.ClientManager.ClientDisconnected">
             <summary>
-                Invoked when a Client disconnects from the server.
+                Invoked when a client disconnects from the server.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientManager.Count">
@@ -225,7 +313,7 @@
         </member>
         <member name="P:DarkRift.Server.ClientManager.MaxStrikes">
             <summary>
-                The number of strikes a Client can get before they are kicked.
+                The number of strikes a client can get before they are kicked.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ClientManager.UseFallbackNetworking">
@@ -242,9 +330,9 @@
                 The clients connected to this server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ClientManager.server">
+        <member name="F:DarkRift.Server.ClientManager.allocatedIds">
             <summary>
-                The server instance owning us.
+                The IDs of clients connecting but without objects created on the sever yet.
             </summary>
         </member>
         <member name="F:DarkRift.Server.ClientManager.lastIDAllocated">
@@ -257,19 +345,100 @@
                 The lock on ID allocation
             </summary>
         </member>
-        <member name="M:DarkRift.Server.ClientManager.NewConnection(DarkRift.Server.NetworkServerConnection)">
+        <member name="F:DarkRift.Server.ClientManager.networkListenerManager">
             <summary>
-                Called when a new Client connects.
+                The server's network listener manager.
             </summary>
-            <param name="connection">The new Client.</param>
         </member>
-        <member name="M:DarkRift.Server.ClientManager.HandleDisconnection(DarkRift.Server.Client,System.Boolean,System.Net.Sockets.SocketError)">
+        <member name="F:DarkRift.Server.ClientManager.threadHelper">
             <summary>
-                Handles a Client disconnecting. 
+                The thread helper the client manager will use.
             </summary>
-            <param name="Client">The Client disconnecting.</param>
+        </member>
+        <member name="F:DarkRift.Server.ClientManager.logger">
+            <summary>
+                The logger this client manager will use.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ClientManager.clientLogger">
+            <summary>
+                The logger clients will use.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.#ctor(DarkRift.Server.ServerSpawnData.ServerSettings,DarkRift.Server.NetworkListenerManager,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new client manager.
+            </summary>
+            <param name="settings">The settings for this client manager.</param>
+            <param name="networkListenerManager">The server's network listener manager.</param>
+            <param name="threadHelper">The thread helper the client manager will use.</param>
+            <param name="logger">The logger this client manager will use.</param>
+            <param name="clientLogger">The logger clients will use.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.SubscribeToListeners">
+            <summary>
+                Subscribes the client manager to all network listeners in the NetworkListenerManager.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.GetDefaultBichannelListenerOrError">
+            <summary>
+                Returns the Default BichannelListener if present or throws an exception.
+            </summary>
+            <returns>The default Bichannel listener.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.HandleNewConnection(DarkRift.Server.NetworkServerConnection)">
+            <summary>
+                Called when a new client connects.
+            </summary>
+            <param name="connection">The new client.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.AllocateIDToClient(System.UInt16,DarkRift.Server.Client,System.Int32@)">
+            <summary>
+                Allocates a specified ID to a client.
+            </summary>
+            <param name="id">The ID to allocate.</param>
+            <param name="client">The client to allocate the ID to.</param>
+            <param name="totalClients">The total number of clients connected.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.DeallocateID(System.UInt16,System.Int32@)">
+            <summary>
+                Deallocates a specified ID.
+            </summary>
+            <param name="id">The ID to deallocate.</param>
+            <param name="totalClients">The total number of clients connected.</param>
+            <returns>true, if the ID was allocated; else, false.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.ReserveID">
+            <summary>
+                Allocates a new ID.
+            </summary>
+            <returns>The ID allocated for the new client.</returns>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException">If the ID is already allocated.</exception>
+            <exception cref="T:System.InvalidOperationException">If there are no IDs available to allocate.</exception>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.HandleDisconnection(DarkRift.Server.Client,System.Boolean,System.Net.Sockets.SocketError,System.Exception)">
+            <summary>
+                Handles a client disconnecting.
+            </summary>
+            <param name="client">The client disconnecting.</param>
             <param name="localDisconnect">If the disconnection was caused by a call to <see cref="M:DarkRift.Server.Client.Disconnect"/></param>
             <param name="error">The error that caused the disconnect.</param>
+            <param name="exception">The exception that caused the disconnect.</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.FinaliseClientDisconnect(System.Exception,System.Net.Sockets.SocketError,DarkRift.Server.Client,System.Int32)">
+            <summary>
+                Finalises the client disconnecting.
+            </summary>
+            <param name="exception">The exception causing the disconnect.</param>
+            <param name="error">The SocketError causing the disconnect.</param>
+            <param name="client">The client disconnecting.</param>
+            <param name="noClients">The number of clients to report as connected</param>
+        </member>
+        <member name="M:DarkRift.Server.ClientManager.DropClient(DarkRift.Server.Client)">
+            <summary>
+                Handles a client being dropped.
+            </summary>
+            <param name="client">The client disconnecting.</param>
         </member>
         <member name="M:DarkRift.Server.ClientManager.GetAllClients">
             <inheritdoc/>
@@ -279,11 +448,6 @@
         </member>
         <member name="M:DarkRift.Server.ClientManager.GetClient(System.UInt16)">
             <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.ClientManager.Start">
-            <summary>
-                Starts the manager listening for new connections.
-            </summary>
         </member>
         <member name="T:DarkRift.Server.Command">
             <summary>
@@ -328,10 +492,28 @@
                 Handles commands sent into the server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.CommandEngine.server">
+        <member name="F:DarkRift.Server.CommandEngine.threadHelper">
             <summary>
-                The owning server instance.
+                The thread helper the command engine will use.
             </summary>
+        </member>
+        <member name="F:DarkRift.Server.CommandEngine.pluginManager">
+            <summary>
+                The plugin manager this command engine will use to find handlers.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.CommandEngine.logger">
+            <summary>
+                The logger the command engine will use.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.CommandEngine.#ctor(DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.PluginManager,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new command engine.
+            </summary>
+            <param name="threadHelper">The thread helper the command engine will use.</param>
+            <param name="pluginManager">The plugin manager this command engine will use to find handlers.</param>
+            <param name="logger">The logger the command engine will use.</param>
         </member>
         <member name="M:DarkRift.Server.CommandEngine.HandleCommand(System.String)">
             <summary>
@@ -339,12 +521,46 @@
             </summary>
             <param name="command">The command to invoke.</param>
         </member>
+        <member name="M:DarkRift.Server.CommandEngine.InvokeCommand(System.String,DarkRift.Server.Command)">
+            <summary>
+                Invokes the given command.
+            </summary>
+            <param name="rawCommand">The command as entered into the console.</param>
+            <param name="command">The command to run.</param>
+        </member>
+        <member name="M:DarkRift.Server.CommandEngine.BuildCommandEventArgs(System.String,DarkRift.Server.Command)">
+            <summary>
+                Constructs a new CommandEventArgs object from the given command.
+            </summary>
+            <param name="rawCommand">The command as invoked on the console.</param>
+            <param name="command">The command being executed.</param>
+            <returns>The event args for the event.</returns>
+        </member>
         <member name="M:DarkRift.Server.CommandEngine.FindCommand(System.String)">
             <summary>
                 Searches all plugins for a given command.
             </summary>
             <param name="command">The command to search for.</param>
             <returns>The command.</returns>
+        </member>
+        <member name="M:DarkRift.Server.CommandEngine.FindPluginWithCommand(System.String)">
+            <summary>
+                Searches all plugins for the command with the specified name.
+            </summary>
+            <param name="commandName">The name of the command to find.</param>
+            <returns>The plugin containing the command.</returns>
+        </member>
+        <member name="M:DarkRift.Server.CommandEngine.GetCommands">
+            <summary>
+                Returns all command available.
+            </summary>
+            <returns>The commands found.</returns>
+        </member>
+        <member name="M:DarkRift.Server.CommandEngine.GetCommands(System.String)">
+            <summary>
+                Returns all command available in the given plugin.
+            </summary>
+            <returns>The commands found.</returns>
         </member>
         <member name="M:DarkRift.Server.CommandEngine.GetIntendedPlugin(System.String)">
             <summary>
@@ -425,10 +641,15 @@
                 The flags that were passed with the command.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.CommandEventArgs.logManager">
+        <member name="M:DarkRift.Server.CommandEventArgs.#ctor(DarkRift.Server.Command,System.String,System.String[],System.String[],System.Collections.Specialized.NameValueCollection)">
             <summary>
-                The log manager to output syntax errors to.
+                Creates a new CommandEventArgs object.
             </summary>
+            <param name="command">The command being executed.</param>
+            <param name="originalCommand">The command as typed in by the user.</param>
+            <param name="rawArguments">The arguments the command was called with.</param>
+            <param name="arguments">The arguments passed with the command that weren't flags.</param>
+            <param name="flags">The flags that were passed with the command.</param>
         </member>
         <member name="M:DarkRift.Server.CommandEventArgs.HasFlag(System.String)">
             <summary>
@@ -467,94 +688,138 @@
                 The variables to inject into configuration.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.#ctor(System.Collections.Specialized.NameValueCollection)">
+        <member name="F:DarkRift.Server.ConfigurationFileHelper.configurationDocsRoot">
+            <summary>
+            Root of documentation for this configuration file.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ConfigurationFileHelper.variablesDocsPage">
+            <summary>
+            Page in documetation for variable resolution.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.#ctor(System.Collections.Specialized.NameValueCollection,System.String,System.String)">
             <summary>
                 Creates a new helper with the specified variables.
             </summary>
-            <param name="variables"></param>
+            <param name="variables">The variables to interpolate while processing the configuration file.</param>
+            <param name="configurationDocsRoot">The root of documentation for this configuration file.</param>
+            <param name="variablesDocsPage">Page in documetation for variable resolution.</param>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads an IP attribute from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The IP address read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.Net.IPAddress)">
+            <summary>
+                Reads an IP attribute from the XML element supplied.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <param name="defaultValue">The default value if none is provided.</param>
+            <returns>The IP address read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads an IP version value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The ip version read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadBooleanAttribute(System.Xml.Linq.XElement,System.String,System.String,System.Boolean)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadIPVersionAttributeOrDefault(System.Xml.Linq.XElement,System.String,DarkRift.IPVersion)">
+            <summary>
+                Reads an IP version value from the XML element supplied.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <param name="defaultValue">The default value if none is provided.</param>
+            <returns>The ip version read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadBooleanAttribute(System.Xml.Linq.XElement,System.String,System.Boolean)">
             <summary>
                 Reads a Boolean value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The Boolean read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadByteAttribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadByteAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a byte value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The byte read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16Attribute(System.Xml.Linq.XElement,System.String,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16Attribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a UInt16 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <returns>The UInt16 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,System.UInt16)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt16AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.UInt16)">
             <summary>
                 Reads a UInt16 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The UInt16 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt32AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String,System.UInt32)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadUInt32AttributeOrDefault(System.Xml.Linq.XElement,System.String,System.UInt32)">
             <summary>
                 Reads a UInt32 value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="invalidErrorString">The message string when the attribute is invalid.</param>
             <param name="defaultValue">The default value to return if the attribute isn't present.</param>
             <returns>The UInt32 read.</returns>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttribute(System.Xml.Linq.XElement,System.String,System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttribute(System.Xml.Linq.XElement,System.String)">
             <summary>
                 Reads a string value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
-            <param name="missingErrorString">The message string when the attribute is missing.</param>
             <returns>The string read.</returns>
         </member>
         <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadStringAttributeOrDefault(System.Xml.Linq.XElement,System.String,System.String)">
             <summary>
                 Reads a string value from the XML element supplied.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <param name="defaultValue">The default value to return if the attribute isn't present.</param>
+            <returns>The string read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadLogLevelsAttribute(System.Xml.Linq.XElement,System.String)">
+            <summary>
+                Reads a set of log levels from the XML element supplied.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <returns>The log levels read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadLogLevelsAttributeOrDefault(System.Xml.Linq.XElement,System.String,DarkRift.LogType[])">
+            <summary>
+                Reads a set of log levels from the XML element supplied or returns the default.
+            </summary>
+            <param name="element">The element to read from.</param>
+            <param name="attributeName">The name of the attribute to read.</param>
+            <param name="defaultValue">The default value to return if the attribute isn't present.</param>
+            <returns>The log levels read.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ReadDependencyResolutionStrategy(System.Xml.Linq.XElement,System.String,DarkRift.Server.DependencyResolutionStrategy)">
+            <summary>
+                Reads a DependencyResolutionStrategy value from the XML element supplied.
             </summary>
             <param name="element">The element to read from.</param>
             <param name="attributeName">The name of the attribute to read.</param>
@@ -578,12 +843,21 @@
             <param name="parseFunction">The function to parse each child element.</param>
             <param name="collection">The collection to write the elements to.</param>
         </member>
-        <member name="M:DarkRift.Server.ConfigurationFileHelper.ResolveVariables(System.String)">
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.ResolveVariables(System.String,System.Xml.IXmlLineInfo)">
             <summary>
                 Resolves variables to their values in the given string.
             </summary>
             <param name="str">The string to resolve variables in.</param>
+            <param name="lineInfo">The line information about where this resolution is occuring.</param>
             <returns>The resolved string.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ConfigurationFileHelper.GetRequiredElement(System.Xml.Linq.XElement,System.String)">
+            <summary>
+            Returns a child element or throws an exception if not present.
+            </summary>
+            <param name="from">The element to load from.</param>
+            <param name="name">The name of the child element to return.</param>
+            <returns>The child element.</returns>
         </member>
         <member name="T:DarkRift.Server.DarkRiftInfo">
             <summary>
@@ -598,6 +872,11 @@
         <member name="P:DarkRift.Server.DarkRiftInfo.Version">
             <summary>
                 The version of the server.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftInfo.DocumentationRoot">
+            <summary>
+            The root URL of the server's documentation.
             </summary>
         </member>
         <member name="P:DarkRift.Server.DarkRiftInfo.Type">
@@ -620,29 +899,28 @@
                 Indicates the server is paid for. Yay!
             </summary>
         </member>
+        <member name="M:DarkRift.Server.DarkRiftInfo.#ctor(System.DateTime)">
+            <summary>
+                Creates a new DarkRiftInfo object.
+            </summary>
+            <param name="startTime">The time the server was started</param>
+        </member>
         <member name="T:DarkRift.Server.DarkRiftServer">
             <summary>
                 The main server class.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.DarkRiftServer.InternalLogManager">
+        <member name="P:DarkRift.Server.DarkRiftServer.LogManager">
             <summary>
                 The manager for logs.
             </summary>
-        </member>
-        <member name="P:DarkRift.Server.DarkRiftServer.PluginFactory">
-            <summary>
-                The factory for plugins.
-            </summary>
-        </member>
-        <member name="P:DarkRift.Server.DarkRiftServer.InternalClientManager">
-            <summary>
-                The Client manager handling all clients on this server.
-            </summary>
+            <remarks>
+                Pro only.
+            </remarks>
         </member>
         <member name="P:DarkRift.Server.DarkRiftServer.ClientManager">
             <summary>
-                The Client manager handling all clients on this server.
+                The client manager handling all clients on this server.
             </summary>
         </member>
         <member name="P:DarkRift.Server.DarkRiftServer.PluginManager">
@@ -650,9 +928,9 @@
                 The manager for all plugins.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.DarkRiftServer.CommandEngine">
+        <member name="P:DarkRift.Server.DarkRiftServer.NetworkListenerManager">
             <summary>
-                The handler for all commands issued from the user.
+                The manager for all listeners.
             </summary>
         </member>
         <member name="P:DarkRift.Server.DarkRiftServer.DatabaseManager">
@@ -685,9 +963,44 @@
                 Information about this server.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.DarkRiftServer.Loaded">
+            <summary>
+                Whether this server has been loaded yet.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftServer.InternalPluginManager">
+            <summary>
+                The server plugin manager.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftServer.InternalClientManager">
+            <summary>
+                The client manager handling all clients on this server.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftServer.CommandEngine">
+            <summary>
+                The handler for all commands issued from the user.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.DarkRiftServer.DataManager">
             <summary>
                 The manager for server data.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DarkRiftServer.networkListenerManager">
+            <summary>
+                The server listener manager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DarkRiftServer.logManager">
+            <summary>
+                The manager for logs.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DarkRiftServer.pluginFactory">
+            <summary>
+                The factory for plugins.
             </summary>
         </member>
         <member name="F:DarkRift.Server.DarkRiftServer.dispatcher">
@@ -695,9 +1008,19 @@
                 The dispatcher for the server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.DarkRiftServer.InternalPluginManager">
+        <member name="P:DarkRift.Server.DarkRiftServer.Disposed">
             <summary>
-                The server plugin manager.
+                Whether this server has been disposed yet.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DarkRiftServer.disposed">
+            <summary>
+                Whether this server has been disposed yet.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DarkRiftServer.logger">
+            <summary>
+                The server's main logger.
             </summary>
         </member>
         <member name="M:DarkRift.Server.DarkRiftServer.#ctor(DarkRift.Server.ServerSpawnData)">
@@ -709,6 +1032,11 @@
         <member name="M:DarkRift.Server.DarkRiftServer.Start">
             <summary>
                 Starts the server.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftServer.StartServer">
+            <summary>
+                Starts the server propagating any exceptions raised during startup.
             </summary>
         </member>
         <member name="M:DarkRift.Server.DarkRiftServer.ExecuteDispatcherTasks">
@@ -757,16 +1085,54 @@
             <param name="eventsFromDispatcher">Whether events should be invoked from the dispatcher.</param>
             <param name="dispatcher">The dispatcher to use.</param>
         </member>
-        <member name="M:DarkRift.Server.DarkRiftThreadHelper.SetEventsFromDispatcher">
-            <summary>
-                Sets <see cref="P:DarkRift.Server.DarkRiftThreadHelper.EventsFromDispatcher"/> to true.
-            </summary>
-        </member>
         <member name="M:DarkRift.Server.DarkRiftThreadHelper.DispatchIfNeeded(System.Action)">
             <summary>
                 Helper method to run code from the dispatcher if <see cref="P:DarkRift.Server.DarkRiftThreadHelper.EventsFromDispatcher"/> is set.
             </summary>
             <param name="action">The action to perform.</param>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftThreadHelper.DispatchIfNeeded(System.Action,DarkRift.Dispatching.ActionDispatchCompleteCallback)">
+            <summary>
+                Helper method to run code from the dispatcher if <see cref="P:DarkRift.Server.DarkRiftThreadHelper.EventsFromDispatcher"/> is set.
+            </summary>
+            <param name="action">The action to perform.</param>
+            <param name="callback">The callback to invoke once this is complete.</param>
+            <remarks>If the task was run synchronously then the argument to callback will be null as no task was created.</remarks>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoff(System.Action{DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext},System.Int32,System.Action{System.Exception})">
+            <summary>
+                Exponentially backs off a task
+            </summary>
+            <param name="action">The action to try to perform.</param>
+            <param name="retries">The maximum number of retries to allow.</param>
+            <param name="failureCallback">The callback to invoke if retries are exhausted, with the last exception thrown.</param>
+        </member>
+        <member name="T:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext">
+            <summary>
+                Class containing contextual information for an exponential backoff.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.Tries">
+            <summary>
+                The number of tries attempted so far.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.MaxRetries">
+            <summary>
+                The maximum number of retries that will be attempted.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.BaseDelay">
+            <summary>
+                The delay the exponential backoff was started with.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.DarkRiftThreadHelper.ExponentialBackoffContext.#ctor(System.Int32,System.Int32)">
+            <summary>
+                Creates a new ExponentialBackoffContext.
+            </summary>
+            <param name="maxRetries">The maximum number of retries that will be performed.</param>
+            <param name="baseDelay">The delay to apply of first failure.</param>
         </member>
         <member name="T:DarkRift.Server.DatabaseManager">
             <summary>
@@ -799,14 +1165,63 @@
                 The name of the plugins DB mutex.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.DataManager.server">
-            <summary>
-                The server this belongs to.
-            </summary>
-        </member>
         <member name="F:DarkRift.Server.DataManager.dataDirectory">
             <summary>
                 The directory for storing data in.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.DataManager.LockedFile">
+            <summary>
+                Class encapsulating the legacy locking functionality
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DataManager.LockedFile.stream">
+            <summary>
+                The file stream to the file.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DataManager.LockedFile.mutex">
+            <summary>
+                The legacy mutex for the file locking.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DataManager.LockedFile.reader">
+            <summary>
+                Returns the reader for the stream.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.DataManager.LockedFile.writer">
+            <summary>
+                Returns the writer for the stream.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.DataManager.LockedFile.IsEmpty">
+            <summary>
+                Returns whether the file is empty or not.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.DataManager.LockedFile.#ctor(System.String,System.Threading.Mutex)">
+            <summary>
+                Creates a new wrapper for the file specified and aquires the lock.
+            </summary>
+            <param name="filename">The file to aquire.</param>
+            <param name="fileMutex">The legacy mutex for the file locking.</param>
+        </member>
+        <member name="M:DarkRift.Server.DataManager.LockedFile.Load">
+            <summary>
+                Returns the file as an XDocument.
+            </summary>
+            <returns>The XDocument for the file.</returns>
+        </member>
+        <member name="M:DarkRift.Server.DataManager.LockedFile.Save(System.Xml.Linq.XDocument)">
+            <summary>
+                Writes the XDocument to the file.
+            </summary>
+            <param name="document">The XDocument to save.</param>
+        </member>
+        <member name="M:DarkRift.Server.DataManager.LockedFile.Dispose">
+            <summary>
+                Releases the locks on the file.
             </summary>
         </member>
         <member name="M:DarkRift.Server.DataManager.GetResourceDirectory(System.String)">
@@ -860,14 +1275,38 @@
                 Creates a new table for storing plugin metadata.
             </summary>
         </member>
-        <member name="T:DarkRift.Server.ErrorStrings">
+        <member name="T:DarkRift.Server.DependencyResolutionStrategy">
             <summary>
-                Collection of DarkRift error strings.
+            The way that dependencies of a plugin will be found.
             </summary>
+        </member>
+        <member name="F:DarkRift.Server.DependencyResolutionStrategy.Standard">
+            <summary>
+            Uses the standard .NET assembly resolution with no enhancements.
+            </summary>
+            <remarks>
+            This strategy will search for dependencies for using the standard .NET rules detailed <see cref="!:https://docs.microsoft.com/en-us/dotnet/framework/deployment/how-the-runtime-locates-assemblies">here</see>.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.Server.DependencyResolutionStrategy.RecursiveFromFile">
+            <summary>
+            Recursively searches all subdirectories of each file's containing folder in addition to the standard .NET assembly resolution.
+            </summary>
+            <remarks>
+            This strategy will search for dependencies for using the standard .NET rules detailed <see cref="!:https://docs.microsoft.com/en-us/dotnet/framework/deployment/how-the-runtime-locates-assemblies">here</see> but with additional steps to search through each discovered file's containing folder and any subdirectory of it.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.Server.DependencyResolutionStrategy.RecursiveFromDirectory">
+            <summary>
+            Recursively searches all subdirectories of the folder's containing folder in addition to the standard .NET assembly resolution.
+            </summary>
+            <remarks>
+            This strategy will search for dependencies for using the standard .NET rules detailed <see cref="!:https://docs.microsoft.com/en-us/dotnet/framework/deployment/how-the-runtime-locates-assemblies">here</see> but with additional steps to search through the specified directory and any subdirectory of it. This cannot be used when using a path to a file.
+            </remarks>
         </member>
         <member name="T:DarkRift.Server.ExtendedPluginBase">
             <summary>
-                Base class for all <see cref="!:DataConnector">Data Connectors</see> and <see cref="T:DarkRift.Server.Plugin">Plugins</see>.
+                Base class for plugins with additional privileges.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ExtendedPluginBase.ThreadSafe">
@@ -893,6 +1332,12 @@
             <summary>
                 The handler for writing events.
             </summary>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginBase.#ctor(DarkRift.Server.ExtendedPluginBaseLoadData)">
+            <summary>
+                Constructor taking extended load data.
+            </summary>
+            <param name="pluginLoadData">The load data for the plugins.</param>
         </member>
         <member name="M:DarkRift.Server.ExtendedPluginBase.WriteEvent(System.String,DarkRift.LogType,System.Exception)">
             <summary>
@@ -923,19 +1368,126 @@
             <param name="args">The details of the upgrade.</param>
             <remarks>Pro only.</remarks>
         </member>
+        <member name="T:DarkRift.Server.ExtendedPluginBaseLoadData">
+            <summary>
+                Base load data class for plugins inheriting <see cref="T:DarkRift.Server.ExtendedPluginBase"/>.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.ExtendedPluginBaseLoadData.WriteEventHandler">
             <summary>
-                The handler for writing events.
+                The handler for writing events via <see cref="M:DarkRift.Server.ExtendedPluginBase.WriteEvent(System.String,DarkRift.LogType,System.Exception)"/>.
             </summary>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginBaseLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
+            <summary>
+                Creates new load data with the given properties.
+            </summary>
+            <param name="name">The name of the plugin.</param>
+            <param name="settings">The settings to pass the plugin.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="logger">The logger this plugin will use.</param>
+            <remarks>
+                This constructor ensures that the legacy <see cref="P:DarkRift.Server.ExtendedPluginBaseLoadData.WriteEventHandler"/> field is initialised to <see cref="M:DarkRift.Server.Logger.Log(System.String,DarkRift.LogType,System.Exception)"/> for backwards compatibility.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginBaseLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.WriteEventHandler)">
+            <summary>
+                Creates new load data with the given properties.
+            </summary>
+            <param name="name">The name of the plugin.</param>
+            <param name="settings">The settings to pass the plugin.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="writeEventHandler"><see cref="P:DarkRift.Server.ExtendedPluginBaseLoadData.WriteEventHandler"/> for logging.</param>
+        </member>
+        <member name="T:DarkRift.Server.ExtendedPluginManagerBase`1">
+            <summary>
+                Base plugin manager for plugin managers handling <see cref="T:DarkRift.Server.ExtendedPluginBase"/> types.
+            </summary>
+            <typeparam name="T">The type of plugin being managed.</typeparam>
+        </member>
+        <member name="F:DarkRift.Server.ExtendedPluginManagerBase`1.server">
+            <summary>
+                The server that owns this plugin manager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ExtendedPluginManagerBase`1.dataManager">
+            <summary>
+                The server's datamanager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ExtendedPluginManagerBase`1.logger">
+            <summary>
+                The logger for this manager.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.DataManager,DarkRift.Server.PluginFactory,DarkRift.Server.Logger)">
+            <summary>
+                Creates a new ExtendedPluginManagerBase.
+            </summary>
+            <param name="server">The server that owns this plugin manager.</param>
+            <param name="dataManager">The server's datamanager.</param>
+            <param name="pluginFactory">The server's plugin factory.</param>
+            <param name="logger">The logger for this manager.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.LoadPlugin(System.String,System.Type,DarkRift.Server.PluginBaseLoadData,DarkRift.Server.PluginLoadData,System.Boolean)">
+            <summary>
+                Load the plugin given.
+            </summary>
+            <param name="name">The name of the plugin instance.</param>
+            <param name="type">The plugin type to load.</param>
+            <param name="pluginLoadData">The data for this plugin.</param>
+            <param name="backupLoadData">The data for this plugin if the first fails.</param>
+            <param name="createResourceDirectory">Whether to create a resource directory or not.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.LoadPlugin(System.String,System.String,DarkRift.Server.PluginBaseLoadData,DarkRift.Server.PluginLoadData,System.Boolean)">
+            <summary>
+                Load the plugin given.
+            </summary>
+            <param name="name">The name of the plugin instance.</param>
+            <param name="type">The plugin type to load.</param>
+            <param name="pluginLoadData">The data for this plugin.</param>
+            <param name="backupLoadData">The data for this plugin if the first fails.</param>
+            <param name="createResourceDirectory">Whether to create a resource directory or not.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.HandleThreadSafe(`0)">
+            <summary>
+                Make server threadsafe if necessary
+            </summary>
+            <param name="plugin">The plugin to check.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.HandleInstallUpgrade(`0)">
+            <summary>
+                Install/upgrade the loaded plugin.
+            </summary>
+            <param name="plugin">The plugin to check.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.GetInstalledVersion(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.Uninstall(System.String)">
+            <summary>
+                Uninstalls a plugin by name, it cannot be currently operating.
+            </summary>
+            <param name="name">The name of the plugin to uninstall.</param>
+        </member>
+        <member name="M:DarkRift.Server.ExtendedPluginManagerBase`1.Loaded">
+            <summary>
+                Invokes the Loaded event on all plugins.
+            </summary>
+            <remarks>
+                <see cref="P:DarkRift.Server.DarkRiftServer.Loaded"/> must be true when this is invoked.
+            </remarks>
         </member>
         <member name="T:DarkRift.Server.IClient">
             <summary>
-                Server representation of a Client.
+                Server representation of a client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.IClient.ID">
             <summary>
-                The ID of the Client.
+                The ID of the client.
             </summary>
         </member>
         <member name="P:DarkRift.Server.IClient.RemoteTcpEndPoint">
@@ -950,22 +1502,44 @@
         </member>
         <member name="P:DarkRift.Server.IClient.IsConnected">
             <summary>
-                Is this Client still available?
+                Is this client still available?
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.IClient.ConnectionState">
+            <summary>
+                The state of the connection;
             </summary>
         </member>
         <member name="P:DarkRift.Server.IClient.Strikes">
             <summary>
-                The number of illegal behaviours this Client has made.
+                The number of illegal behaviours this client has made.
             </summary>
             <remarks>
                 <legacyBold>Setter only available in Pro.</legacyBold>
             </remarks>
         </member>
+        <member name="P:DarkRift.Server.IClient.RemoteEndPoints">
+            <summary>
+                The collection of end points this client is connected to.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.IClient.RoundTripTime">
+            <summary>
+                The round trip time helper for this client.
+            </summary>
+        </member>
         <member name="M:DarkRift.Server.IClient.Disconnect">
             <summary>
-                Disconnects this Client from the server.
+                Disconnects this client from the server.
             </summary>
-            <returns>Whether the send was successful.</returns>
+            <returns>Whether the disconnect was successful.</returns>
+        </member>
+        <member name="M:DarkRift.Server.IClient.GetRemoteEndPoint(System.String)">
+            <summary>
+                Gets the remote end point with the given name.
+            </summary>
+            <param name="name">The end point name.</param>
+            <returns>The end point.</returns>
         </member>
         <member name="T:DarkRift.Server.IClientManager">
             <summary>
@@ -989,12 +1563,12 @@
         </member>
         <member name="E:DarkRift.Server.IClientManager.ClientConnected">
             <summary>
-                Invoked when a Client connects to the server.
+                Invoked when a client connects to the server.
             </summary>
         </member>
         <member name="E:DarkRift.Server.IClientManager.ClientDisconnected">
             <summary>
-                Invoked when a Client disconnects from the server.
+                Invoked when a client disconnects from the server.
             </summary>
         </member>
         <member name="P:DarkRift.Server.IClientManager.Count">
@@ -1004,7 +1578,7 @@
         </member>
         <member name="P:DarkRift.Server.IClientManager.MaxStrikes">
             <summary>
-                The number of strikes a Client can get before they are kicked.
+                The number of strikes a client can get before they are kicked.
             </summary>
         </member>
         <member name="M:DarkRift.Server.IClientManager.GetAllClients">
@@ -1015,17 +1589,17 @@
         </member>
         <member name="P:DarkRift.Server.IClientManager.Item(System.UInt16)">
             <summary>
-                Returns the Client with the given ID.
+                Returns the client with the given ID.
             </summary>
-            <param name="id">The global ID of the Client.</param>
-            <returns>The Client.</returns>
+            <param name="id">The global ID of the client.</param>
+            <returns>The client.</returns>
         </member>
         <member name="M:DarkRift.Server.IClientManager.GetClient(System.UInt16)">
             <summary>
-                Returns the Client with the given ID.
+                Returns the client with the given ID.
             </summary>
-            <param name="id">The global ID of the Client.</param>
-            <returns>The Client.</returns>
+            <param name="id">The global ID of the client.</param>
+            <returns>The client.</returns>
         </member>
         <member name="T:DarkRift.Server.IDatabaseManager">
             <summary>
@@ -1086,6 +1660,12 @@
             <param name="name">The name of the log writer to find.</param>
             <returns>The log writer.</returns>
         </member>
+        <member name="M:DarkRift.Server.ILogManager.GetLoggerFor(System.String)">
+            <summary>
+                Returns a logger for the given component.
+            </summary>
+            <param name="name">The name of the component to log for.</param>
+        </member>
         <member name="T:DarkRift.Server.IMessageSinkSource">
             <summary>
                 Interface for places messages can be sent to and from.
@@ -1098,11 +1678,55 @@
         </member>
         <member name="M:DarkRift.Server.IMessageSinkSource.SendMessage(DarkRift.Message,DarkRift.SendMode)">
             <summary>
-                Sends a message to the Client.
+                Sends a message to the client.
             </summary>
             <param name="message">The message to be sent.</param>
             <param name="sendMode">How the message should be sent.</param>
             <returns>Whether the send was successful.</returns>
+        </member>
+        <member name="T:DarkRift.Server.INetworkListenerManager">
+            <summary>
+                Interface for the listener manager that handles network listeners.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.INetworkListenerManager.Item(System.String)">
+            <summary>
+                Gets the listener with the specified name.
+            </summary>
+            <param name="name">The name of the listener.</param>
+            <returns>The listener.</returns>
+            <remarks>
+                O(1) complexity.
+                This cannot be called during server initialization as not all plugins may 
+                have been loaded at that point, consider using the 
+                <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.INetworkListenerManager.GetNetworkListeners">
+            <summary>
+                Gets the listeners loaded into this server.
+            </summary>
+            <returns>An array of the listeners.</returns>
+        </member>
+        <member name="M:DarkRift.Server.INetworkListenerManager.GetNetworkListenerByName(System.String)">
+            <summary>
+                Gets the listener with the specified name.
+            </summary>
+            <param name="name">The name of the listener.</param>
+            <returns>The listener.</returns>
+            <remarks>
+                O(1) complexity.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.INetworkListenerManager.GetNetworkListenersByType``1">
+            <summary>
+                Gets the listeners of the given type.
+            </summary>
+            <typeparam name="T">The type of the listener to load.</typeparam>
+            <returns>The listeners.</returns>
+            <remarks>
+                O(n) complexity.
+            </remarks>
         </member>
         <member name="T:DarkRift.Server.InstallEventArgs">
             <summary>
@@ -1124,7 +1748,7 @@
                 O(1) complexity.
                 This cannot be called during server initialization as not all plugins may 
                 have been loaded at that point, consider using the 
-                <see cref="!:Plugin.Loaded(LoadedEventArgs)"/> event instead.
+                <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
             </remarks>
         </member>
         <member name="M:DarkRift.Server.IPluginManager.GetPluginByName(System.String)">
@@ -1138,7 +1762,7 @@
                 
                 This cannot be called during server initialization as not all plugins may 
                 have been loaded at that point, consider using the 
-                <see cref="!:Plugin.Loaded(LoadedEventArgs)"/> event instead.
+                <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
             </remarks>
         </member>
         <member name="M:DarkRift.Server.IPluginManager.GetPluginByType``1">
@@ -1152,13 +1776,79 @@
                 
                 This cannot be called during server initialization as not all plugins may 
                 have been loaded at that point, consider using the 
-                <see cref="!:Plugin.Loaded(LoadedEventArgs)"/> event instead.
+                <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
             </remarks>
         </member>
         <member name="T:DarkRift.Server.LoadedEventArgs">
             <summary>
                 Event arguments for when plugins have loaded.
             </summary>
+        </member>
+        <member name="T:DarkRift.Server.Logger">
+            <summary>
+                Encapsulates logging for a component.
+            </summary>
+            <see cref="M:DarkRift.Server.ILogManager.GetLoggerFor(System.String)"/>
+        </member>
+        <member name="P:DarkRift.Server.Logger.Name">
+            <summary>
+                The name of the component the logger is logging for.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Logger.logManager">
+            <summary>
+                The log manager to send logs to.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Logger.#ctor(System.String,DarkRift.Server.LogManager)">
+            <summary>
+                Creates a new logger with the given name.
+            </summary>
+            <param name="name">The name of the component logging for.</param>
+            <param name="logManager">The log manager to send logs to.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Log(System.String,DarkRift.LogType,System.Exception)">
+            <summary>
+                Writes an event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="logType">The type of event that occurred.</param>
+            <param name="exception">The exception that caused this log.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Trace(System.String,System.Exception)">
+            <summary>
+                Writes a trace event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="exception">The exception that caused this log.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Info(System.String,System.Exception)">
+            <summary>
+                Writes an info event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="exception">The exception that caused this log.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Warning(System.String,System.Exception)">
+            <summary>
+                Writes a warning event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="exception">The exception that caused this log.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Error(System.String,System.Exception)">
+            <summary>
+                Writes an error event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="exception">The exception that caused this log.</param>
+        </member>
+        <member name="M:DarkRift.Server.Logger.Fatal(System.String,System.Exception)">
+            <summary>
+                Writes a fatal event to the logs.
+            </summary>
+            <param name="message">The details of the event.</param>
+            <param name="exception">The exception that caused this log.</param>
         </member>
         <member name="F:DarkRift.Server.LogManager.logWriters">
             <summary>
@@ -1175,14 +1865,33 @@
                 The server this belongs to.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.LogManager.LoadWriters(DarkRift.Server.ServerSpawnData.LoggingSettings)">
+        <member name="T:DarkRift.Server.LogManager.DefaultWriter">
+            <summary>
+                Default writer for logs before log wrtiers have been setup.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.LogManager.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.ServerSpawnData.LoggingSettings)">
+            <summary>
+                Creates a new log manager.
+            </summary>
+            <param name="server">The server we belong to.</param>
+            <param name="settings">The settings to load writers from.</param>
+        </member>
+        <member name="M:DarkRift.Server.LogManager.LoadWriters(DarkRift.Server.ServerSpawnData.LoggingSettings,DarkRift.Server.PluginFactory)">
             <summary>
                 Loads the writers found by the plugin factory.
+            </summary>
+            <param name="settings">The settings to load writers from.</param>
+            <param name="pluginFactory">The server's plugin factory.</param>
+        </member>
+        <member name="M:DarkRift.Server.LogManager.Clear">
+            <summary>
+                Clears all writers.
             </summary>
         </member>
         <member name="M:DarkRift.Server.LogManager.WriteEvent(System.String,System.String,DarkRift.LogType,System.Exception)">
             <summary>
-                Writes an event to the log file.
+                Writes an event to the logs.
             </summary>
             <param name="sender">The object that's reporting this event.</param>
             <param name="message">The details of the event.</param>
@@ -1200,6 +1909,9 @@
         </member>
         <member name="P:DarkRift.Server.LogManager.Item(System.String)">
             <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.LogManager.GetLoggerFor(System.String)">
+            <inheitdoc />
         </member>
         <member name="T:DarkRift.Server.LogWriter">
             <summary>
@@ -1238,9 +1950,23 @@
             </summary>
             <param name="args">The message to log.</param>
         </member>
+        <member name="T:DarkRift.Server.LogWriterLoadData">
+            <summary>
+                Load data for <see cref="T:DarkRift.Server.LogWriter"/> plugins.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.LogWriterLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper)">
+            <summary>
+                Creates new load data for a <see cref="T:DarkRift.Server.LogWriter"/>.
+            </summary>
+            <param name="name">The name of the log writer.</param>
+            <param name="settings">The settings to pass the log writer.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+        </member>
         <member name="T:DarkRift.Server.MessageReceivedEventArgs">
             <summary>
-                Arguments for the <see cref="E:DarkRift.Server.Client.MessageReceived"/> event.
+                Arguments for the <see cref="E:DarkRift.Server.IMessageSinkSource.MessageReceived"/> event.
             </summary>
         </member>
         <member name="P:DarkRift.Server.MessageReceivedEventArgs.SendMode">
@@ -1250,7 +1976,7 @@
         </member>
         <member name="P:DarkRift.Server.MessageReceivedEventArgs.Client">
             <summary>
-                The Client the message was received from.
+                The client the message was received from.
             </summary>
         </member>
         <member name="P:DarkRift.Server.MessageReceivedEventArgs.Tag">
@@ -1263,13 +1989,23 @@
                 The message received.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.MessageReceivedEventArgs.#ctor(DarkRift.Message,DarkRift.SendMode,DarkRift.Server.IClient)">
+        <member name="F:DarkRift.Server.MessageReceivedEventArgs.isCurrentlyLoungingInAPool">
             <summary>
-                Creates a new args object for the <see cref="E:DarkRift.Server.Client.MessageReceived"/> event.
+                Whether this args object is currently in an object pool waiting or not.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.MessageReceivedEventArgs.Create(DarkRift.Message,DarkRift.SendMode,DarkRift.Server.IClient)">
+            <summary>
+                Creates a new args object for the <see cref="E:DarkRift.Server.IMessageSinkSource.MessageReceived"/> event.
             </summary>
             <param name="message">The message received.</param>
             <param name="sendMode">The send mode the message was received with.</param>
-            <param name="Client">The Client the message was received from.</param>
+            <param name="client">The client the message was received from.</param>
+        </member>
+        <member name="M:DarkRift.Server.MessageReceivedEventArgs.#ctor">
+            <summary>
+                Creates a new MessageReceivedEventArgs. For use from the ObjectCache.
+            </summary>
         </member>
         <member name="M:DarkRift.Server.MessageReceivedEventArgs.GetMessage">
             <summary>
@@ -1277,322 +2013,288 @@
             </summary>
             <returns>An new instance of the message received.</returns>
         </member>
+        <member name="M:DarkRift.Server.MessageReceivedEventArgs.Dispose">
+            <summary>
+                Recycles this object back into the pool.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.MessageReceivedEventArgs.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.NetworkListener">
             <summary>
-                Listener for network connections.
+                Base class for all plugins providing network functionality.
             </summary>
         </member>
-        <member name="T:DarkRift.Server.NetworkListener.ConnectedHandler">
+        <member name="P:DarkRift.Server.NetworkListener.Address">
             <summary>
-                Delegate for handling new connections.
-            </summary>
-            <param name="Client">The Client that connected.</param>
-        </member>
-        <member name="P:DarkRift.Server.NetworkListener.Connected">
-            <summary>
-                Method called when a new Client connects.
+                The address this listener is operating on.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.tcpListener">
+        <member name="P:DarkRift.Server.NetworkListener.Port">
             <summary>
-                The TCP listening socket.
+                The port this listener is operating on.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.udpListener">
+        <member name="E:DarkRift.Server.NetworkListener.RegisteredConnection">
             <summary>
-                The UDP listening socket.
+                Event fired when a new connection is registered.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.ipVersion">
+        <member name="M:DarkRift.Server.NetworkListener.#ctor(DarkRift.Server.NetworkListenerLoadData)">
             <summary>
-                The IP version we're listening on.
+                Constructor for a network listener.
+            </summary>
+            <param name="pluginLoadData">The load data for the listener plugin.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkListener.WriteEvent(System.String,DarkRift.LogType,System.Exception)">
+            <summary>
+                Writes an event to the server's logs.
+            </summary>
+            <param name="message">The message to write.</param>
+            <param name="logType">The type of message to write.</param>
+            <param name="exception">The exception that occurred (if there was one).</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkListener.RegisterConnection(DarkRift.Server.NetworkServerConnection)">
+            <summary>
+                Registers a new connection to the server.
+            </summary>
+            <param name="connection">The new connection.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkListener.StartListening">
+            <summary>
+                Starts the listener listening on the network.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.noDelay">
+        <member name="T:DarkRift.Server.NetworkListenerLoadData">
             <summary>
-                Whether no delay should be set on sockets.
+                Data related to the listener's loading.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.useFallback">
+        <member name="P:DarkRift.Server.NetworkListenerLoadData.NetworkListenerManager">
             <summary>
-                Whether the system should use the fallback socket methods for Unity compatability.
+                The network listener manager to pass to the listener.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.pendingTcpSockets">
+        <member name="P:DarkRift.Server.NetworkListenerLoadData.Address">
             <summary>
-                Dictionary of TCP connections awaiting their UDP counterpart.
+                The address this listener is listening on.
             </summary>
         </member>
-        <member name="T:DarkRift.Server.NetworkListener.PendingConnection">
+        <member name="P:DarkRift.Server.NetworkListenerLoadData.Port">
             <summary>
-                Represents a connection to the server awaiting the UDP channel to connect.
+                The port this listener is listening on.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkListener.PendingConnection.RemoteEndPoint">
+        <member name="M:DarkRift.Server.NetworkListenerLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger)">
             <summary>
-                The TCP endpoint pending.
+                Creates new load data for a <see cref="T:DarkRift.Server.NetworkListener"/>.
+            </summary>
+            <param name="name">The name of the listener.</param>
+            <param name="settings">The settings to pass the listener.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="logger">The logger this plugin will use.</param>
+            <remarks>
+                This constructor ensures that the legacy <see cref="T:DarkRift.Server.WriteEventHandler"/> field is initialised to <see cref="M:DarkRift.Server.Logger.Log(System.String,DarkRift.LogType,System.Exception)"/> for backwards compatibility.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.NetworkListenerLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.WriteEventHandler)">
+            <summary>
+                Creates new load data for a <see cref="T:DarkRift.Server.NetworkListener"/>.
+            </summary>
+            <param name="name">The name of the listener.</param>
+            <param name="settings">The settings to pass the listener.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="writeEventHandler"><see cref="T:DarkRift.Server.WriteEventHandler"/> for logging.</param>
+        </member>
+        <member name="T:DarkRift.Server.NetworkListenerManager">
+            <summary>
+                Manager for all <see cref="T:DarkRift.Server.NetworkListener"/> plugins.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkListener.PendingConnection.TcpSocket">
+        <member name="F:DarkRift.Server.NetworkListenerManager.server">
             <summary>
-                The TCP socket connected.
+                The DarkRift server.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkListener.PendingConnection.Timer">
+        <member name="F:DarkRift.Server.NetworkListenerManager.logManager">
             <summary>
-                The timer for timing out the connection request.
+                The server's log manager.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.udpConnections">
+        <member name="M:DarkRift.Server.NetworkListenerManager.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.LogManager,DarkRift.Server.DataManager,DarkRift.Server.PluginFactory)">
             <summary>
-                The UDP connections to the server.
+                Creates a new NetworkListenerManager.
             </summary>
+            <param name="server">The server that owns this plugin manager.</param>
+            <param name="logManager">The server's log manager.</param>
+            <param name="dataManager">The server's datamanager.</param>
+            <param name="pluginFactory">The server's plugin factory.</param>
         </member>
-        <member name="F:DarkRift.Server.NetworkListener.server">
+        <member name="M:DarkRift.Server.NetworkListenerManager.LoadNetworkListeners(DarkRift.Server.ServerSpawnData.ListenersSettings)">
             <summary>
-                The server hosting us.
+                Loads the plugins found by the plugin factory.
             </summary>
+            <param name="settings">The settings to load plugins with.</param>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.IPVersion,System.Boolean,DarkRift.Server.NetworkListener.ConnectedHandler,System.Boolean)">
+        <member name="M:DarkRift.Server.NetworkListenerManager.LoadNetworkListener(System.Type,System.String,System.Net.IPAddress,System.UInt16,System.Collections.Specialized.NameValueCollection)">
             <summary>
-                Creates a new network listener.
+                Load the listener given.
             </summary>
-            <param name="server">The server we are hosted on.</param>
-            <param name="noDelay">Whether to disable Nagle's algorithm on the socket.</param>
-            <param name="ipVersion">The IP version to use.</param>
-            <param name="connectedHandler">The handler for new connections.</param>
-            <param name="useFallback">Whether to use the fallback network listeners for compatability.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.StartListening(System.Net.IPAddress,System.Int32)">
-            <summary>
-                Begins accepting new connections.
-            </summary>
-            <param name="address">The IP address to listen on.</param>
+            <param name="type">The plugin type to load.</param>
+            <param name="name">The name of the plugins instance.</param>
+            <param name="address">The address to listen on.</param>
             <param name="port">The port to listen on.</param>
+            <param name="settings">The settings for this plugin.</param>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.StartListeningOnStandard">
+        <member name="M:DarkRift.Server.NetworkListenerManager.StartListening">
             <summary>
-                Begins accepting new connections on the fallback system for Unity.
+                Starts all <see cref="T:DarkRift.Server.NetworkListener">NetworkListeners</see> listening.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.StartListeningOnFallback">
-            <summary>
-                Begins accepting new connections on the fallback system for Unity.
-            </summary>
+        <member name="P:DarkRift.Server.NetworkListenerManager.Item(System.String)">
+            <inheritdoc/>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.TcpAcceptCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
-            <summary>
-                Called when a new Client has been accepted.
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
+        <member name="M:DarkRift.Server.NetworkListenerManager.GetNetworkListenerByName(System.String)">
+            <inheritdoc/>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.FallbackTcpAcceptCompleted(System.IAsyncResult)">
-            <summary>
-                Called when a new Client has been accepted through the fallback accept.
-            </summary>
-            <param name="result">The result of the accept.</param>
+        <member name="M:DarkRift.Server.NetworkListenerManager.GetNetworkListenersByType``1">
+            <inheritdoc/>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.HandleTcpConnection(System.Net.Sockets.Socket)">
-            <summary>
-                Handles new TCP connections from main or fallback methods.
-            </summary>
-            <param name="acceptSocket">The socket accepted.</param>
+        <member name="M:DarkRift.Server.NetworkListenerManager.GetNetworkListeners">
+            <inheritdoc/>
         </member>
-        <member name="M:DarkRift.Server.NetworkListener.ConnectionTimeoutHandler(System.Object)">
-            <summary>
-                Called when a connection times out due to lack the of a UDP connection.
-            </summary>
-            <param name="state">The token given to the connection.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.CancelPendingTcpConnection(System.Int64)">
-            <summary>
-                Cancels a pending TCP socket and timers.
-            </summary>
-            <param name="token">The identification token for the connection.</param>
-            <returns>The endpoint associated with the connection.</returns>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.UdpMessageReceived(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
-            <summary>
-                Called when a new UDP packet is received on the listening port.
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.FallbackUdpMessageReceived(System.IAsyncResult)">
-            <summary>
-                Called when a UDP message is received on the fallback system.
-            </summary>
-            <param name="result">The result of the operation.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.HandleUdpConnection(System.Byte[],System.Net.EndPoint)">
-            <summary>
-                Handles a new connection to the UDP listener.
-            </summary>
-            <param name="buffer">The buffer send as an entry.</param>
-            <param name="remoteEndPoint">The originating endpoint.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.RegisterUdpConnection(DarkRift.Server.NetworkServerConnection)">
-            <summary>
-                Subscribes a connection to receive messages.
-            </summary>
-            <param name="connection">The connection to subscribe.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.UnregisterUdpConnection(DarkRift.Server.NetworkServerConnection)">
-            <summary>
-                Unsubscribes a connection from receiveing messages.
-            </summary>
-            <param name="connection">The connection to subscribe.</param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkListener.SendUdpBuffer(System.Net.EndPoint,System.Byte[],System.Int32,System.Int32,System.Action{System.Net.Sockets.SocketError})">
-            <summary>
-                Sends a buffer to the given endpoint using the UDP socket.
-            </summary>
-            <param name="remoteEndPoint">The end point to send to.</param>
-            <param name="buffer">The buffer to send.</param>
-            <param name="offset">The offset to begin sending.</param>
-            <param name="count">The length of the buffer from offset to send.</param>
-            <param name="completed">The function to invoke once the send is completed.</param>
+        <member name="M:DarkRift.Server.NetworkListenerManager.GetAllNetworkListeners">
+            <inheritdoc/>
         </member>
         <member name="T:DarkRift.Server.NetworkServerConnection">
             <summary>
-                A connection to a remote cliente and handles TCP and UDP channels.
+                Base class handling a connection to a client.
             </summary>
         </member>
-        <member name="T:DarkRift.Server.NetworkServerConnection.MessageReceivedHandler">
+        <member name="P:DarkRift.Server.NetworkServerConnection.ConnectionState">
             <summary>
-                Delegate for handling received messages.
+                The state of this connection.
             </summary>
-            <param name="data">The data received.</param>
-            <param name="mode">The <see cref="T:DarkRift.SendMode"/> used to send the data.</param>
         </member>
-        <member name="T:DarkRift.Server.NetworkServerConnection.DisconnectedHandler">
+        <member name="P:DarkRift.Server.NetworkServerConnection.RemoteEndPoints">
             <summary>
-                Delegate for handling disconnections.
+                The collection of end points this connection is connected to.
             </summary>
-            <param name="socketError">The socket error that caused the disconnection.</param>
         </member>
         <member name="P:DarkRift.Server.NetworkServerConnection.MessageReceived">
             <summary>
-                The method called when a message has been received.
+                The action to call when a message is received.
             </summary>
         </member>
         <member name="P:DarkRift.Server.NetworkServerConnection.Disconnected">
             <summary>
-                The method called when this connection is disconnected.
+                The action to call when the connection is remotely disconnected.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkServerConnection.CanSend">
+        <member name="M:DarkRift.Server.NetworkServerConnection.GetRemoteEndPoint(System.String)">
             <summary>
-                Is this Client able to send or not.
+                Get's an end point of the remote client.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkServerConnection.IsListening">
+        <member name="P:DarkRift.Server.NetworkServerConnection.Client">
             <summary>
-                Is this Client currently listening for messages or not.
+                The client related to this server connection.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.NetworkServerConnection.RemoteTcpEndPoint">
+        <member name="M:DarkRift.Server.NetworkServerConnection.HandleMessageReceived(DarkRift.MessageBuffer,DarkRift.SendMode)">
             <summary>
-                The end point of the remote Client on TCP.
+                Handles a buffer being received. 
             </summary>
+            <param name="message">The message received.</param>
+            <param name="mode">The <see cref="T:DarkRift.SendMode"/> used to send the data.</param>
         </member>
-        <member name="P:DarkRift.Server.NetworkServerConnection.RemoteUdpEndPoint">
+        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessage(DarkRift.MessageBuffer,DarkRift.SendMode)">
             <summary>
-                The end point of the remote Client on TCP.
+                Sends a message using the appropriate protocol.
             </summary>
-        </member>
-        <member name="P:DarkRift.Server.NetworkServerConnection.AuthToken">
-            <summary>
-                The token used to authenticate this user's UDP connection.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.NetworkServerConnection.tcpSocket">
-            <summary>
-                The socket used in TCP communication.
-            </summary>
-        </member>
-        <member name="F:DarkRift.Server.NetworkServerConnection.networkListener">
-            <summary>
-                The listener used in UDP communication.
-            </summary>
+            <param name="message">The message to be sent.</param>
+            <param name="sendMode">How the message should be sent.</param>
+            <returns>Whether the send was successful.</returns>
+            <remarks>
+                <see cref="T:DarkRift.MessageBuffer"/> is an IDisposable type and therefore once you are done 
+                using it you should call <see cref="M:DarkRift.MessageBuffer.Dispose"/> to release resources.
+                Not doing this will result in memnory leaks.
+            </remarks>
         </member>
         <member name="M:DarkRift.Server.NetworkServerConnection.StartListening">
             <summary>
                 Begins listening for data.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessage(System.Byte[],System.Int32,System.Int32,DarkRift.SendMode)">
+        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessageReliable(DarkRift.MessageBuffer)">
             <summary>
-                Sends a message using the appropriate protocol.
+                Sends a message reliably.
             </summary>
-            <param name="data">The array of data to send</param>
-            <param name="offset">The offset of data in the array.</param>
-            <param name="count">The number of bytes to send.</param>
-            <param name="sendMode">How the message should be sent.</param>
+            <param name="message">The message to be sent.</param>
             <returns>Whether the send was successful.</returns>
+            <remarks>
+                <see cref="T:DarkRift.MessageBuffer"/> is an IDisposable type and therefore once you are done 
+                using it you should call <see cref="M:DarkRift.MessageBuffer.Dispose"/> to release resources.
+                Not doing this will result in memnory leaks.
+            </remarks>
         </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessageReliable(System.Byte[],System.Int32,System.Int32)">
+        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessageUnreliable(DarkRift.MessageBuffer)">
             <summary>
-                Sends a message using TCP.
+                Sends a message unreliably.
             </summary>
-            <param name="data">The array of data to send.</param>
-            <param name="offset">The offset of the data in the array.</param>
-            <param name="count">The number of bytes to send.</param>
+            <param name="message">The message to be sent.</param>
             <returns>Whether the send was successful.</returns>
-        </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.SendMessageUnreliable(System.Byte[],System.Int32,System.Int32)">
-            <summary>
-                Sends a message using UDP.
-            </summary>
-            <param name="data">The array of data to send.</param>
-            <param name="offset">The offset of the data in the array.</param>
-            <param name="count">The number of bytes to send.</param>
-            <returns>Whether the send was successful.</returns>
+            <remarks>
+                <see cref="T:DarkRift.MessageBuffer"/> is an IDisposable type and therefore once you are done 
+                using it you should call <see cref="M:DarkRift.MessageBuffer.Dispose"/> to release resources.
+                Not doing this will result in memnory leaks.
+            </remarks>
         </member>
         <member name="M:DarkRift.Server.NetworkServerConnection.Disconnect">
             <summary>
-                Disconnects this Client from the remote host.
+                Disconnects this client from the remote host.
             </summary>
             <returns>Whether the disconnect was successful.</returns>
         </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.TcpHeaderReceiveCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+        <member name="M:DarkRift.Server.NetworkServerConnection.HandleDisconnection">
             <summary>
-                Called when the 4 byte length header is received by TCP
+                Handles a disconnection.
             </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.TcpBodyReceiveCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
-            <summary>
-                Called when the body of a TCP message is received.
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.HandleUdpMessage(System.Byte[])">
-            <summary>
-                Handles a UDP message sent to the listener.
-            </summary>
-        </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.TcpSendCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
-            <summary>
-                Called when a TCP send has completed.
-            </summary>
-            <param name="sender"></param>
-            <param name="e"></param>
-        </member>
-        <member name="M:DarkRift.Server.NetworkServerConnection.UdpSendCompleted(System.Net.Sockets.SocketError)">
-            <summary>
-                Called when a UDP send has completed.
-            </summary>
-            <param name="e">The socket error that was returned.</param>
         </member>
         <member name="M:DarkRift.Server.NetworkServerConnection.HandleDisconnection(System.Net.Sockets.SocketError)">
             <summary>
-                Called when a socket error has occured.
+                Handles a disconnection.
             </summary>
-            <param name="error"></param>
+            <param name="error">The error that describes the cause of disconnection.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkServerConnection.HandleDisconnection(System.Exception)">
+            <summary>
+                Handles a disconnection.
+            </summary>
+            <param name="exception">An exception that describes the cause of disconnection.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkServerConnection.Strike(System.String,System.Int32)">
+            <summary>
+                Applies a strike on the associated client.
+            </summary>
+            <param name="message">An optional message describing the strike.</param>
+            <param name="weight">The number of strikes this accounts for.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkServerConnection.Dispose(System.Boolean)">
+            <summary>
+                Disposes of the server connection.
+            </summary>
+            <param name="disposing">Whether the object is bing disposed or not.</param>
+        </member>
+        <member name="M:DarkRift.Server.NetworkServerConnection.Dispose">
+            <summary>
+                Disposes of this server connection.
+            </summary>
         </member>
         <member name="T:DarkRift.Server.Plugin">
             <summary>
@@ -1609,6 +2311,11 @@
                 The manager for all plugins on this server.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.Plugin.NetworkListenerManager">
+            <summary>
+                The manager for all network listeners on this server.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.Plugin.ResourceDirectory">
             <summary>
                 The location of this plugins resource store.
@@ -1617,7 +2324,7 @@
                 The resource directory can be used to store any external resources your plugin requires such as web 
                 files etc. It will be removed when uninstalling your plugin so you should not store any files elsewhere.
                 
-                This location may not exist if called from the constructor, use the <see cref="!:Loaded"/> event instead.
+                This location may not exist if called from the constructor, use the <see cref="M:DarkRift.Server.ExtendedPluginBase.Loaded(DarkRift.Server.LoadedEventArgs)"/> event instead.
             </remarks>
         </member>
         <member name="M:DarkRift.Server.Plugin.#ctor(DarkRift.Server.PluginLoadData)">
@@ -1663,8 +2370,19 @@
         </member>
         <member name="P:DarkRift.Server.PluginBase.ThreadHelper">
             <summary>
-                The threadhelper for the server.
+                The thread helper for the server.
             </summary>
+        </member>
+        <member name="P:DarkRift.Server.PluginBase.LogManager">
+            <summary>
+                The server's log manager.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.PluginBase.Logger">
+            <summary>
+                Default logger for the plugin.
+            </summary>
+            <seealso cref="M:DarkRift.Server.ILogManager.GetLoggerFor(System.String)"/>
         </member>
         <member name="P:DarkRift.Server.PluginBase.Server">
             <summary>
@@ -1723,10 +2441,29 @@
                 The thread helper for the server.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.PluginBaseLoadData.LogManager">
+            <summary>
+                The server's log manager.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.PluginBaseLoadData.Logger">
+            <summary>
+                The logger this plugin will use.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.PluginBaseLoadData.Server">
             <summary>
                 The server we belong to.
             </summary>
+        </member>
+        <member name="M:DarkRift.Server.PluginBaseLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper)">
+            <summary>
+                Creates new load data with the given properties.
+            </summary>
+            <param name="name">The name of the plugin.</param>
+            <param name="settings">The settings to pass the plugin.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
         </member>
         <member name="T:DarkRift.Server.PluginFactory">
             <summary>
@@ -1738,16 +2475,16 @@
                 The list of types that can be loaded.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.PluginFactory.server">
+        <member name="F:DarkRift.Server.PluginFactory.logger">
             <summary>
-                The DarRiftServer that owns this PluginManager.
+                The logger this factory will use.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.PluginFactory.#ctor(DarkRift.Server.DarkRiftServer)">
+        <member name="M:DarkRift.Server.PluginFactory.#ctor(DarkRift.Server.Logger)">
             <summary>
                 Creates a new PluginFactory.
             </summary>
-            <param name="server">The server that owns this plugin factory.</param>
+            <param name="logger">The logger this factory will use.</param>
         </member>
         <member name="M:DarkRift.Server.PluginFactory.AddFromSettings(DarkRift.Server.ServerSpawnData.PluginSearchSettings)">
             <summary>
@@ -1755,18 +2492,21 @@
             </summary>
             <param name="settings">The settings defining where to find plugins.</param>
         </member>
-        <member name="M:DarkRift.Server.PluginFactory.AddDirectory(System.String,System.Boolean)">
+        <member name="M:DarkRift.Server.PluginFactory.AddDirectory(System.String,System.Boolean,DarkRift.Server.DependencyResolutionStrategy)">
             <summary>
                 Adds a directory of plugin files to the index.
             </summary>
             <param name="directory">The directory to add.</param>
             <param name="create">Whether to create the directory if not present.</param>
+            <param name="dependencyResolutionStrategy">The way to resolve dependencies for the plugin.</param>
         </member>
-        <member name="M:DarkRift.Server.PluginFactory.AddFiles(System.Collections.Generic.IEnumerable{System.String})">
+        <member name="M:DarkRift.Server.PluginFactory.AddFiles(System.Collections.Generic.IEnumerable{System.String},DarkRift.Server.DependencyResolutionStrategy,System.String)">
             <summary>
                 Adds the given plugin files into the index.
             </summary>
             <param name="files">An array of filepaths to the plugins.</param>
+            <param name="dependencyResolutionStrategy">The way to resolve dependencies for the plugin.</param>
+            <param name="searchedDirectory">the directory that was searched to find this file.</param>
         </member>
         <member name="M:DarkRift.Server.PluginFactory.AddTypes(System.Collections.Generic.IEnumerable{System.Type})">
             <summary>
@@ -1774,11 +2514,13 @@
             </summary>
             <param name="pluginTypes">The types of plugins to add.</param>
         </member>
-        <member name="M:DarkRift.Server.PluginFactory.AddFile(System.String)">
+        <member name="M:DarkRift.Server.PluginFactory.AddFile(System.String,DarkRift.Server.DependencyResolutionStrategy,System.String)">
             <summary>
                 Adds all plugin types in the file to the index.
             </summary>
             <param name="file">The file containing the types.</param>
+            <param name="dependencyResolutionStrategy">The way to resolve dependencies for the plugin.</param>
+            <param name="searchedDirectory">the directory that was searched to find this file.</param>
         </member>
         <member name="M:DarkRift.Server.PluginFactory.AddType(System.Type)">
             <summary>
@@ -1820,7 +2562,7 @@
         </member>
         <member name="P:DarkRift.Server.PluginLoadData.ClientManager">
             <summary>
-                The Client manager to pass to the server.
+                The client manager to pass to the server.
             </summary>
         </member>
         <member name="P:DarkRift.Server.PluginLoadData.PluginManager">
@@ -1828,21 +2570,75 @@
                 The plugin manager to pass to the plugin.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.PluginLoadData.NetworkListenerManager">
+            <summary>
+                The network listener manager to pass to the plugin.
+            </summary>
+        </member>
         <member name="P:DarkRift.Server.PluginLoadData.ResourceDirectory">
             <summary>
                 The resource directory to pass to the plugin.
             </summary>
+        </member>
+        <member name="M:DarkRift.Server.PluginLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.Logger,System.String)">
+            <summary>
+                Creates new load data with the given properties.
+            </summary>
+            <param name="name">The name of the plugin.</param>
+            <param name="settings">The settings to pass the plugin.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="logger">The logger this plugin will use.</param>
+            <param name="resourceDirectory">The directory to place this plugin's resources.</param>
+            <remarks>
+                This constructor ensures that the legacy <see cref="T:DarkRift.Server.WriteEventHandler"/> field is initialised to <see cref="M:DarkRift.Server.Logger.Log(System.String,DarkRift.LogType,System.Exception)"/> for backwards compatibility.
+            </remarks>
+        </member>
+        <member name="M:DarkRift.Server.PluginLoadData.#ctor(System.String,System.Collections.Specialized.NameValueCollection,DarkRift.Server.DarkRiftInfo,DarkRift.Server.DarkRiftThreadHelper,DarkRift.Server.WriteEventHandler,System.String)">
+            <summary>
+                Creates new load data with the given properties.
+            </summary>
+            <param name="name">The name of the plugin.</param>
+            <param name="settings">The settings to pass the plugin.</param>
+            <param name="serverInfo">The runtime details about the server.</param>
+            <param name="threadHelper">The server's thread helper.</param>
+            <param name="writeEventHandler"><see cref="T:DarkRift.Server.WriteEventHandler"/> for logging.</param>
+            <param name="resourceDirectory">The directory to place this plugin's resources.</param>
         </member>
         <member name="T:DarkRift.Server.PluginManager">
             <summary>
                 The manager of all plugins on the server.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.PluginManager.#ctor(DarkRift.Server.DarkRiftServer)">
+        <member name="F:DarkRift.Server.PluginManager.server">
+            <summary>
+                The server that owns this plugin manager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.PluginManager.dataManager">
+            <summary>
+                The server's datamanager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.PluginManager.logManager">
+            <summary>
+                The server's log manager.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.PluginManager.pluginFactory">
+            <summary>
+                The server's plugin factory.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.PluginManager.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.DataManager,DarkRift.Server.LogManager,DarkRift.Server.PluginFactory,DarkRift.Server.Logger)">
             <summary>
                 Creates a new PluginManager.
             </summary>
             <param name="server">The server that owns this plugin manager.</param>
+            <param name="dataManager">The server's datamanager.</param>
+            <param name="logManager">The server's log manager.</param>
+            <param name="pluginFactory">The server's plugin factory.</param>
+            <param name="logger">The logger for this manager.</param>
         </member>
         <member name="M:DarkRift.Server.PluginManager.LoadPlugins(DarkRift.Server.ServerSpawnData.PluginsSettings)">
             <summary>
@@ -1871,31 +2667,49 @@
             </summary>
             <typeparam name="T">The type of plugin being managed.</typeparam>
         </member>
-        <member name="F:DarkRift.Server.PluginManagerBase`1.loaded">
-            <summary>
-                Has the server finished loading yet?
-            </summary>
-        </member>
         <member name="F:DarkRift.Server.PluginManagerBase`1.plugins">
             <summary>
                 The plugins that have been loaded.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.PluginManagerBase`1.Server">
+        <member name="F:DarkRift.Server.PluginManagerBase`1.server">
             <summary>
-                The DarRiftServer that owns this PluginManagerBase.
+                The DarkRift server.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.PluginManagerBase`1.#ctor(DarkRift.Server.DarkRiftServer)">
+        <member name="F:DarkRift.Server.PluginManagerBase`1.dataManager">
             <summary>
-                Creates a new PluginManager.
+                The server's datamanager.
             </summary>
-            <param name="server">The server that owns this plugin manager.</param>
         </member>
-        <member name="M:DarkRift.Server.PluginManagerBase`1.LoadPlugin(System.Type,DarkRift.Server.PluginBaseLoadData,DarkRift.Server.PluginLoadData,System.Boolean)">
+        <member name="F:DarkRift.Server.PluginManagerBase`1.pluginFactory">
+            <summary>
+                The server's plugin factory.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.PluginManagerBase`1.#ctor(DarkRift.Server.DarkRiftServer,DarkRift.Server.DataManager,DarkRift.Server.PluginFactory)">
+            <summary>
+                Creates a new PluginManagerBase.
+            </summary>
+            <param name="server">The server we are part of.</param>
+            <param name="dataManager">The server's data manager.</param>
+            <param name="pluginFactory">The server's plugin factory.</param>
+        </member>
+        <member name="M:DarkRift.Server.PluginManagerBase`1.LoadPlugin(System.String,System.Type,DarkRift.Server.PluginBaseLoadData,DarkRift.Server.PluginLoadData,System.Boolean)">
             <summary>
                 Load the plugin given.
             </summary>
+            <param name="name">The name of the plugin instance.</param>
+            <param name="type">The plugin type to load.</param>
+            <param name="pluginLoadData">The data for this plugin.</param>
+            <param name="backupLoadData">The data for this plugin if the first fails.</param>
+            <param name="createResourceDirectory">Whether to create a resource directory or not.</param>
+        </member>
+        <member name="M:DarkRift.Server.PluginManagerBase`1.LoadPlugin(System.String,System.String,DarkRift.Server.PluginBaseLoadData,DarkRift.Server.PluginLoadData,System.Boolean)">
+            <summary>
+                Load the plugin given.
+            </summary>
+            <param name="name">The name of the plugin instance.</param>
             <param name="type">The plugin type to load.</param>
             <param name="pluginLoadData">The data for this plugin.</param>
             <param name="backupLoadData">The data for this plugin if the first fails.</param>
@@ -1911,19 +2725,12 @@
                 Gets a plugin by name.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.PluginManagerBase`1.GetInstalledVersion(System.String)">
-            <inheritdoc/>
-        </member>
-        <member name="M:DarkRift.Server.PluginManagerBase`1.Uninstall(System.String)">
+        <member name="M:DarkRift.Server.PluginManagerBase`1.ContainsPlugin(System.String)">
             <summary>
-                Uninstalls a plugin by name, it cannot be currently operating.
+                Searches for the given plugin name.
             </summary>
-            <param name="name">The name of the plugin to uninstall.</param>
-        </member>
-        <member name="M:DarkRift.Server.PluginManagerBase`1.Loaded">
-            <summary>
-                Invokes the Loaded event on all plugins.
-            </summary>
+            <param name="name">The name of the plugin.</param>
+            <returns>Whether the plugins was found.</returns>
         </member>
         <member name="M:DarkRift.Server.PluginManagerBase`1.Dispose">
             <summary>
@@ -1964,6 +2771,26 @@
             <param name="name">The name of the plugin.</param>
             <param name="version">The version of the plugin currently installed.</param>
         </member>
+        <member name="T:DarkRift.Server.Plugins.Commands.ClearCommand">
+            <summary>
+                Command to clear the console window.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Commands.ClientCommand.connections">
+            <summary>
+                The current mock clients.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Commands.ClientCommand.HandleDisconnection(DarkRift.Server.Plugins.Commands.MockedNetworkServerConnection)">
+            <summary>
+                Handles a mock connection being disconnected.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Commands.ClientCommand.HandleSend(DarkRift.Server.Plugins.Commands.MockedNetworkServerConnection,DarkRift.SendMode,DarkRift.MessageBuffer,System.Boolean)">
+            <summary>
+                Handles sending to a mock connection.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.Plugins.Commands.DemoCommand">
             <summary>
                 Demo command for showing off basic server routing in tutorials.
@@ -1989,6 +2816,16 @@
                 Helper plugin for pretending to receive messages using commands.
             </summary>
         </member>
+        <member name="F:DarkRift.Server.Plugins.Commands.MockedNetworkServerConnection.outputData">
+            <summary>
+                Whether the data in the message should be output in hex on receive.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Commands.MockedNetworkServerConnection.clientCommand">
+            <summary>
+                The client command plugin that owns us.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.Plugins.Commands.PluginController">
             <summary>
                 Plugin management plugin.
@@ -1997,6 +2834,11 @@
         <member name="T:DarkRift.Server.Plugins.Commands.RuleGroup">
             <summary>
                 Group of sniffer rules.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Commands.RuleGroup.OutputData">
+            <summary>
+                Whether this rull group should show data on log or not.
             </summary>
         </member>
         <member name="T:DarkRift.Server.Plugins.Commands.Sniffer">
@@ -2009,6 +2851,414 @@
                 The rules we are following
             </summary>
         </member>
+        <member name="T:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck">
+            <summary>
+                Implements a simple HTTP health check.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.emptyArray">
+            <summary>
+                Static empty array to reduce GC.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.httpListener">
+            <summary>
+                The HTTP listener in use.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.host">
+            <summary>
+                The HTTP host we are listening on.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.port">
+            <summary>
+                The HTTP port we are listening on.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.path">
+            <summary>
+                The HTTP path we are listening on.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.listenThread">
+            <summary>
+                The background thread listening for health check requests.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.HealthCheck.HttpHealthCheck.running">
+            <summary>
+                If the serevr is still running or not.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.Plugins.Listeners.Bichannel.AbstractBichannelListener">
+            <summary>
+                Abstract base class for bichannel listeners.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.AbstractBichannelListener.UdpPort">
+            <summary>
+                The UDP port being listened on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.AbstractBichannelListener.NoDelay">
+            <summary>
+                Whether Nagle's algorithm should be disabled.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.AbstractBichannelListener.MaxTcpBodyLength">
+            <summary>
+                The maximum size the client can ask a TCP body to be without being striked.
+            </summary>
+            <remarks>This defaults to 65KB.</remarks>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.AbstractBichannelListener.#ctor(DarkRift.Server.NetworkListenerLoadData)">
+            <summary>
+                Creates a new bichannel listener with the given load data.
+            </summary>
+            <param name="networkListenerLoadData">The load data for thsi listener.</param>
+        </member>
+        <member name="T:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListener">
+            <summary>
+                Listener for TCP/UDP bichannel network connections.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListener.#ctor(DarkRift.Server.NetworkListenerLoadData)">
+            <summary>
+                Creates a new network listener.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListener.StartListening">
+            <summary>
+                Begins accepting new connections.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListener.TcpAcceptCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Called when a new client has been accepted.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListener.UdpMessageReceived(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Called when a new UDP packet is received on the listening port.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.TcpListener">
+            <summary>
+                The TCP listening socket.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.UdpListener">
+            <summary>
+                The UDP listening socket.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.UdpPort">
+            <summary>
+                The UDP port being listened on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.NoDelay">
+            <summary>
+                Whether Nagle's algorithm should be disabled.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.PendingTcpSockets">
+            <summary>
+                Dictionary of TCP connections awaiting their UDP counterpart.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.PendingConnection">
+            <summary>
+                Represents a connection to the server awaiting the UDP channel to connect.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.PendingConnection.TcpSocket">
+            <summary>
+                The TCP socket connected.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.PendingConnection.Timer">
+            <summary>
+                The timer for timing out the connection request.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.UdpConnections">
+            <summary>
+                The UDP connections to the server.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.MaxTcpBodyLength">
+            <summary>
+                The maximum size the client can ask a TCP body to be without being striked.
+            </summary>
+            <remarks>This defaults to 65KB.</remarks>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.BindSockets">
+            <summary>
+                Binds the sockets to their ports.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.HandleTcpConnection(System.Net.Sockets.Socket)">
+            <summary>
+                Handles new TCP connections from main or fallback methods.
+            </summary>
+            <param name="acceptSocket">The socket accepted.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.ConnectionTimeoutHandler(System.Object)">
+            <summary>
+                Called when a connection times out due to lack the of a UDP connection.
+            </summary>
+            <param name="state">The token given to the connection.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.CancelPendingTcpConnection(System.Int64)">
+            <summary>
+                Cancels a pending TCP socket and timers.
+            </summary>
+            <param name="token">The identification token for the connection.</param>
+            <returns>The endpoint associated with the connection.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.HandleUdpConnection(DarkRift.MessageBuffer,System.Net.EndPoint)">
+            <summary>
+                Handles a new connection to the UDP listener.
+            </summary>
+            <param name="buffer">The buffer sent as an entry.</param>
+            <param name="remoteEndPoint">The originating endpoint.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.RegisterUdpConnection(DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection)">
+            <summary>
+                Subscribes a connection to receive messages.
+            </summary>
+            <param name="connection">The connection to subscribe.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.UnregisterUdpConnection(DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection)">
+            <summary>
+                Unsubscribes a connection from receiveing messages.
+            </summary>
+            <param name="connection">The connection to subscribe.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelListenerBase.SendUdpBuffer(System.Net.EndPoint,DarkRift.MessageBuffer,System.Action{System.Int32,System.Net.Sockets.SocketError})">
+            <summary>
+                Sends a buffer to the given endpoint using the UDP socket.
+            </summary>
+            <param name="remoteEndPoint">The end point to send to.</param>
+            <param name="message">The message to send.</param>
+            <param name="completed">The function to invoke once the send is completed.</param>
+        </member>
+        <member name="T:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection">
+            <summary>
+                A connection to a remote cliente and handles TCP and UDP channels.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.CanSend">
+            <summary>
+                Is this client able to send or not.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.IsListening">
+            <summary>
+                Is this client currently listening for messages or not.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.RemoteTcpEndPoint">
+            <summary>
+                The end point of the remote client on TCP.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.RemoteUdpEndPoint">
+            <summary>
+                The end point of the remote client on UDP.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.NoDelay">
+            <summary>
+                Whether Nagel's algorithm should be disabled or not.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.AuthToken">
+            <summary>
+                The token used to authenticate this user's UDP connection.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.ConnectionState">
+            <inheritdoc/>
+        </member>
+        <member name="P:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.RemoteEndPoints">
+            <inheritdoc/>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.tcpSocket">
+            <summary>
+                The socket used in TCP communication.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.networkListener">
+            <summary>
+                The listener used in UDP communication.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.StartListening">
+            <summary>
+                Begins listening for data.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.SendMessageReliable(DarkRift.MessageBuffer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.SendMessageUnreliable(DarkRift.MessageBuffer)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.Disconnect">
+            <summary>
+                Disconnects this client from the remote host.
+            </summary>
+            <returns>Whether the disconnect was successful.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.ReceiveHeaderAndBody(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Receives TCP header followed by a TCP body, looping until the operation becomes asynchronous.
+            </summary>
+            <param name="args">The socket args to use during the operations.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.AsyncReceiveHeaderCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Event handler for when a TCP header has been received.
+            </summary>
+            <param name="sender">The invoking object.</param>
+            <param name="args">The socket args used during the operation.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.AsyncReceiveBodyCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Event handler for when a TCP body has been received.
+            </summary>
+            <param name="sender">The invoking object.</param>
+            <param name="args">The socket args used during the operation.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.IsHeaderReceiveComplete(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Checks if a TCP header was received in its entirety.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>If the whole header has been received.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.IsBodyReceiveComplete(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Checks if a TCP body was received in its entirety.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>If the whole body has been received.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.ProcessHeader(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Processes a TCP header received.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>The number of bytes in the body.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.ProcessBody(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Processes a TCP body received.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>The buffer received.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.ProcessMessage(DarkRift.MessageBuffer)">
+            <summary>
+                Invokes message recevied events and cleans up.
+            </summary>
+            <param name="buffer">The TCP body received.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.WasHeaderReceiveSucessful(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Checks if a TCP header was received correctly.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>If the receive completed correctly.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.WasBodyReceiveSucessful(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Checks if a TCP body was received correctly.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+            <returns>If the receive completed correctly.</returns>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.HandleDisconnectionDuringHeaderReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Handles a disconnection while receiving a TCP header.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.HandleDisconnectionDuringBodyReceive(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Handles a disconnection while receiving a TCP body.
+            </summary>
+            <param name="args">The socket args used during the operation.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.SetupReceiveHeader(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Setup a listen operation for a new TCP header.
+            </summary>
+            <param name="args">The socket args to use during the operation.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.SetupReceiveBody(System.Net.Sockets.SocketAsyncEventArgs,System.Int32)">
+            <summary>
+                Setup a listen operation for a new TCP body.
+            </summary>
+            <param name="args">The socket args to use during the operation.</param>
+            <param name="length">The number of bytes in the body.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UpdateBufferPointers(System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Updates the pointers on the buffer to continue a receive operation.
+            </summary>
+            <param name="args">The socket args to update.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.HandleUdpMessage(DarkRift.MessageBuffer)">
+            <summary>
+                Handles a UDP message sent to the listener.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.TcpSendCompleted(System.Object,System.Net.Sockets.SocketAsyncEventArgs)">
+            <summary>
+                Called when a TCP send has completed.
+            </summary>
+            <param name="sender"></param>
+            <param name="e"></param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UdpSendCompleted(System.Int32,System.Net.Sockets.SocketError)">
+            <summary>
+                Called when a UDP send has completed.
+            </summary>
+            <param name="bytesSent">The number of bytes sent.</param>
+            <param name="e">The socket error that was returned.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.UnregisterAndDisconnect(System.Net.Sockets.SocketError)">
+            <summary>
+                Called when a socket error has occured.
+            </summary>
+            <param name="error"></param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.BichannelServerConnection.GetRemoteEndPoint(System.String)">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.CompatibilityBichannelListener.TcpAcceptCompleted(System.IAsyncResult)">
+            <summary>
+                Called when a new client has been accepted through the fallback accept.
+            </summary>
+            <param name="result">The result of the accept.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Listeners.Bichannel.CompatibilityBichannelListener.UdpMessageReceived(System.IAsyncResult)">
+            <summary>
+                Called when a UDP message is received on the fallback system.
+            </summary>
+            <param name="result">The result of the operation.</param>
+        </member>
+        <member name="T:DarkRift.Server.Plugins.LogWriters.ColorsOnWindows">
+            https://www.jerriepelser.com/blog/using-ansi-color-codes-in-net-console-apps/
+        </member>
         <member name="T:DarkRift.Server.Plugins.LogWriters.ConsoleWriter">
             <summary>
                 Log writer that outputs to the console.
@@ -2017,14 +3267,19 @@
         <member name="P:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.Version">
             <inheritdoc/>
         </member>
-        <member name="P:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.ForegroundColours">
+        <member name="F:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.foregroundColours">
             <summary>
                 The lookup table for the foreground colors to print with.
             </summary>
         </member>
-        <member name="P:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.BackgroundColours">
+        <member name="F:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.backgroundColours">
             <summary>
                 The lookup table for the background colours to print with.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.ansiColours">
+            <summary>
+                The lookup table for the ANSI colour codes to print with.
             </summary>
         </member>
         <member name="F:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.consoleLock">
@@ -2035,6 +3290,11 @@
                 Technically, Console is thread safe but if we don't have this then colours get mixed up with fast writes.
             </remarks>
         </member>
+        <member name="F:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.useFastAnsiColoring">
+            <summary>
+                Whether the faster ANSI color code coloring should be used for rendering or not.
+            </summary>
+        </member>
         <member name="M:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.#ctor(DarkRift.Server.LogWriterLoadData)">
             <summary>
                 Creates a new console writer with the plugins load data.
@@ -2043,6 +3303,18 @@
         </member>
         <member name="M:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.WriteEvent(DarkRift.Server.WriteEventArgs)">
             <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.WriteWithAnsiColorCodes(DarkRift.Server.WriteEventArgs)">
+            <summary>
+                Renders the output using ANSI color codes.
+            </summary>
+            <param name="args">The args passed to the event.</param>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.LogWriters.ConsoleWriter.WriteWithConsoleColor(DarkRift.Server.WriteEventArgs)">
+            <summary>
+                Renders the output using the console coloring methods.
+            </summary>
+            <param name="args">The args passed to the event.</param>
         </member>
         <member name="T:DarkRift.Server.Plugins.LogWriters.DebugWriter">
             <summary>
@@ -2091,49 +3363,225 @@
         <member name="M:DarkRift.Server.Plugins.LogWriters.FileWriter.Dispose(System.Boolean)">
             <inheritdoc/>
         </member>
+        <member name="T:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor">
+            <summary>
+                Plugin that monitors the object cache and logs of any problems.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.period">
+            <summary>
+                The number of miliseconds between checks.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.timer">
+            <summary>
+                Timer to trigger performance checks.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedDarkRiftReaders">
+            <summary>
+                The number of <see cref="T:DarkRift.DarkRiftReader"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedDarkRiftWriters">
+            <summary>
+                The number of <see cref="T:DarkRift.DarkRiftWriter"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedMessages">
+            <summary>
+                The number of <see cref="T:DarkRift.Message"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedMessageBuffers">
+            <summary>
+                The number of <see cref="T:DarkRift.MessageBuffer"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedMessageReceivedEventArgs">
+            <summary>
+                The number of <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.lastFinalizedAutoRecyclingArrays">
+            <summary>
+                The number of <see cref="T:DarkRift.AutoRecyclingArray"/> objects that were last not recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.Plugins.Performance.ObjectCacheMonitor.CheckObjectCache(System.Object)">
+            <summary>
+                Performs a check on the object cache.
+            </summary>
+            <param name="state">The timer state.</param>
+        </member>
+        <member name="T:DarkRift.Server.PluginTestUtil">
+            <summary>
+                Utility for testing plugins.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.PluginTestUtil.RunCommandOn(System.String,DarkRift.Server.ExtendedPluginBase)">
+            <summary>
+                Runs a command on the given plugin.
+            </summary>
+            <param name="command">The command to invoke. Plugin names will be ignored</param>
+            <param name="plugin">The plugin to invoke the command on.</param>
+        </member>
+        <member name="F:DarkRift.Server.ServerObjectCache.initialized">
+            <summary>
+                Whether this cache has been initialized yet.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ServerObjectCache.messageReceivedEventArgsPool">
+            <summary>
+                Object pool of <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> objects.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ServerObjectCache.settings">
+            <summary>
+                The settings for all object caches.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.ServerObjectCache.settingsLock">
+            <summary>
+                The lock for the settings field.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCache.Initialize(DarkRift.Server.ServerObjectCacheSettings)">
+            <summary>
+                Sets up the ObjectCache with the given settings.
+            </summary>
+            <returns>True if the object cache was set with the sepcified settings, false if it is already initialized.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCache.ThreadInitialize">
+            <summary>
+                Initializes the object cache with the stored settings.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCache.GetMessageReceivedEventArgs">
+            <summary>
+                Returns a pooled <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> or generates a new one if there are none available.
+            </summary>
+            <returns>A free <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/>.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCache.ReturnMessageReceivedEventArgs(DarkRift.Server.MessageReceivedEventArgs)">
+            <summary>
+                Returns a used <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> to the pool.
+            </summary>
+            <param name="writer">The <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> to return.</param>
+        </member>
+        <member name="T:DarkRift.Server.ServerObjectCacheHelper">
+            <summary>
+                Helper class for the server's object cache.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCacheHelper.InitializeObjectCache(DarkRift.Server.ServerObjectCacheSettings)">
+             <summary>
+                 Initializes the object cache.
+             </summary>
+             <remarks>
+                 Normally, initializing the object cache is handled for you when you create a server or client
+                 however there are times when it is necessary to initialize it without creating a server or client
+                 such as during testing. This method can be used to initialize the cache in those circumstances.
+            
+                 If the cache is already initialized this method will do nothing.
+            
+                 This method will also initialize the <see cref="T:DarkRift.ObjectCache"/>.
+             </remarks>
+             <param name="settings"></param>
+        </member>
+        <member name="P:DarkRift.Server.ServerObjectCacheHelper.FinalizedMessageReceivedEventArgs">
+            <summary>
+                The number of <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCacheHelper.MessageReceivedEventArgsWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.Server.MessageReceivedEventArgs"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerObjectCacheHelper.ResetCounters">
+            <summary>
+                Resets all counters to 0.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerObjectCacheSettings">
+            <summary>
+                Configuration for the <see cref="T:DarkRift.Server.ServerObjectCache"/>.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerObjectCacheSettings.DontUseCache">
+            <summary>
+                Return settings so no objects are cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerObjectCacheSettings.MaxMessageReceivedEventArgs">
+            <summary>
+                The maximum number of MessageReceivedEventArgs to cache per thread.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.ServerSpawnData">
             <summary>
                 Details of how to start a new server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Server">
+        <member name="P:DarkRift.Server.ServerSpawnData.Server">
             <summary>
                 The general settings for the server.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.PluginSearch">
+        <member name="P:DarkRift.Server.ServerSpawnData.PluginSearch">
             <summary>
                 The locations to search for plugins in.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Data">
+        <member name="P:DarkRift.Server.ServerSpawnData.Data">
             <summary>
                 The settings for the data handler plugins and general persistent storage.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Logging">
+        <member name="P:DarkRift.Server.ServerSpawnData.Logging">
             <summary>
                 The settings for the log writer plugins and general logging.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Plugins">
+        <member name="P:DarkRift.Server.ServerSpawnData.Plugins">
             <summary>
                 The settings for resolving and loading plugins.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Databases">
+        <member name="P:DarkRift.Server.ServerSpawnData.Databases">
             <summary>
                 The settings for database connections.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.ServerSpawnData.Cache">
+        <member name="P:DarkRift.Server.ServerSpawnData.Cache">
             <summary>
                 The settings for the object cache.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.Listeners">
+            <summary>
+                The settings for the server's listeners.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistry">
+            <summary>
+                The settings for the server regirsty.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.Metrics">
+            <summary>
+                The settings for the metrics writer plugins and general metrics.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.EventsFromDispatcher">
             <summary>
                 Whether events are executed through the dispatcher or not.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.DispatcherExecutorThreadID">
+            <summary>
+                The ID of the thread that will be executing dispatcher tasks for deadlock protection. Setting this to -1 will disable this.
             </summary>
         </member>
         <member name="T:DarkRift.Server.ServerSpawnData.ServerSettings">
@@ -2143,7 +3591,7 @@
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.Address">
             <summary>
-                The address the servver will listen on.
+                The address the server will listen on.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.Port">
@@ -2163,12 +3611,17 @@
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.MaxStrikes">
             <summary>
-                The number of strikes that can be received before the Client is automatically kicked.
+                The number of strikes that can be received before the client is automatically kicked.
             </summary>
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.UseFallbackNetworking">
             <summary>
                 Whether the fallback networking system should be used for compatability with Unity.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerSettings.ReconnectAttempts">
+            <summary>
+                The number of times to try to reconnect to a server before considering it unconnectable.
             </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.ServerSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
@@ -2208,6 +3661,11 @@
                 Whether the directory should be created if missing.
             </summary>
             <remarks>This has no effect when the path is a file.</remarks>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.PluginSearchSettings.PluginSearchPath.DependencyResolutionStrategy">
+            <summary>
+            The way to resolve dependencies for the plugin.
+            </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.PluginSearchSettings.PluginSearchPath.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
             <summary>
@@ -2250,6 +3708,11 @@
                 The log writers to use.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.LoggingSettings.StartupLogLevels">
+            <summary>
+                Log levels to log out to console before log writers are loaded.
+            </summary>
+        </member>
         <member name="T:DarkRift.Server.ServerSpawnData.LoggingSettings.LogWriterSettings">
             <summary>
                 Holds settings about a log writer.
@@ -2286,13 +3749,6 @@
             </summary>
             <param name="element">The XML element to load from.</param>
             <param name="helper">The XML configuration helper being used.</param>
-        </member>
-        <member name="M:DarkRift.Server.ServerSpawnData.LoggingSettings.LogWriterSettings.ParseLogType(System.String)">
-            <summary>
-                Parses a string to a log type.
-            </summary>
-            <param name="logType">The type to parse</param>
-            <returns>The parsed type.</returns>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.LoggingSettings.#ctor">
             <summary>
@@ -2338,7 +3794,7 @@
         </member>
         <member name="P:DarkRift.Server.ServerSpawnData.PluginsSettings.PluginSettings.Settings">
             <summary>
-                Settings that should be loaded for this writer.
+                Settings that should be loaded for this plugin.
             </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.PluginsSettings.PluginSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
@@ -2424,9 +3880,191 @@
                 The maximum number of <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> instances stored per thread.
             </summary>
         </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.CacheSettings.MaxAutoRecyclingArrays">
+            <summary>
+                The maximum number of <see cref="T:DarkRift.AutoRecyclingArray"/> instances stored per thread.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.CacheSettings.ObjectCacheSettings">
+            <summary>
+                The settings for the object cache.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.CacheSettings.ServerObjectCacheSettings">
+            <summary>
+                The settings for the object cache.
+            </summary>
+        </member>
         <member name="M:DarkRift.Server.ServerSpawnData.CacheSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
             <summary>
                 Loads the cache settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ListenersSettings">
+            <summary>
+                Holds settings related to loading the listeners system.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListeners">
+            <summary>
+                The listeners to use.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings">
+            <summary>
+                Holds settings about a network listener.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.Name">
+            <summary>
+                The name of the listener.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.Type">
+            <summary>
+                The type of listener.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.Address">
+            <summary>
+                The IP address this listener will listen on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.Port">
+            <summary>
+                The port this listener will listen on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.Settings">
+            <summary>
+                Settings that should be loaded for this listener.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.#ctor">
+            <summary>
+                Creates a new NetworkListenerSettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ListenersSettings.NetworkListenerSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the listener settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ListenersSettings.#ctor">
+            <summary>
+                Creates a new ListenerSettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ListenersSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the listener settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.MetricsSettings">
+            <summary>
+                Holds settings related to loading the metrics system.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriter">
+            <summary>
+                The metrics writer to use.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.EnablePerMessageMetrics">
+            <summary>
+                Whether to enable metrics that get emitted per message.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings">
+            <summary>
+                Holds settings about a metrics writer.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.Type">
+            <summary>
+                The type of plugin.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.Settings">
+            <summary>
+                Settings that should be loaded for this metrics writer.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.MetricsWriterSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the metrics writer settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.#ctor">
+            <summary>
+                Creates a new MetricsSettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.MetricsSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the metrics settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ServerRegistrySettings">
+            <summary>
+                Holds settings related to loading the server registry.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnector">
+            <summary>
+                The server registry connector to use.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.AdvertisedHost">
+            <summary>
+                The host the server is advertised on.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.AdvertisedPort">
+            <summary>
+                The port the server is advertised on.
+            </summary>
+        </member>
+        <member name="T:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings">
+            <summary>
+                Holds settings about a server registry connector.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.Type">
+            <summary>
+                The type of plugin.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.Settings">
+            <summary>
+                Settings that should be loaded for this server registry connector.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.ServerRegistryConnectorSettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the server registry connector settings from the specified XML element.
+            </summary>
+            <param name="element">The XML element to load from.</param>
+            <param name="helper">The XML configuration helper being used.</param>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.#ctor">
+            <summary>
+                Creates a new ServerRegistrySettings object.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.ServerRegistrySettings.LoadFromXmlElement(System.Xml.Linq.XElement,DarkRift.Server.ConfigurationFileHelper)">
+            <summary>
+                Loads the server registry settings from the specified XML element.
             </summary>
             <param name="element">The XML element to load from.</param>
             <param name="helper">The XML configuration helper being used.</param>
@@ -2446,6 +4084,11 @@
             <param name="document">The XML file.</param>
             <param name="variables">The variables to inject into the configuration.</param>
             <returns>The ServerSpawnData created.</returns>
+        </member>
+        <member name="M:DarkRift.Server.ServerSpawnData.#ctor">
+            <summary>
+                Default constructor.
+            </summary>
         </member>
         <member name="M:DarkRift.Server.ServerSpawnData.#ctor(System.Net.IPAddress,System.UInt16,DarkRift.IPVersion)">
             <summary>
@@ -2467,13 +4110,35 @@
         </member>
         <member name="F:DarkRift.Server.StrikeReason.InvalidCommand">
             <summary>
-                Specifies the command the Client sent was not accepted by the server.
+                Specifies the command the client sent was not accepted by the server.
             </summary>
         </member>
         <member name="F:DarkRift.Server.StrikeReason.PluginRequest">
             <summary>
                 Specifies a plugin requested the strike.
             </summary>
+        </member>
+        <member name="F:DarkRift.Server.StrikeReason.ConnectionRequest">
+            <summary>
+                Specifies the client's connection requested the strike.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.StrikeReason.UnidentifiedPing">
+            <summary>
+                Specifies a client sent a ping acknowledgement for a nonexistant ping.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Server.StrikeReason.RttToLarge">
+            <summary>
+                Specifies a client sent a ping acknowledgment with too long a total RTT.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.StringUtility.Format(System.Collections.Generic.IEnumerable{System.Net.IPEndPoint})">
+            <summary>
+                Formats a list of IPEndPoints nicely seperated by pipe characters.
+            </summary>
+            <param name="endPoints">The end points to format.</param>
+            <returns>The formatted string.</returns>
         </member>
         <member name="T:DarkRift.Server.UpgradeEventArgs">
             <summary>
@@ -2485,32 +4150,38 @@
                 The previous version of the plugin installed.
             </summary>
         </member>
+        <member name="M:DarkRift.Server.UpgradeEventArgs.#ctor(System.Version)">
+            <summary>
+                Creates a new UpgradeEventArgs object.
+            </summary>
+            <param name="previousVersion">The previous version of the plugin installed.</param>
+        </member>
         <member name="T:DarkRift.Server.WriteEventArgs">
             <summary>
                 Arguments passed to loggers when reporting an event.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.Sender">
+        <member name="P:DarkRift.Server.WriteEventArgs.Sender">
             <summary>
                 The component that sent the message.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.Message">
+        <member name="P:DarkRift.Server.WriteEventArgs.Message">
             <summary>
                 The message that was sent.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.LogType">
+        <member name="P:DarkRift.Server.WriteEventArgs.LogType">
             <summary>
                 The type of log that was sent.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.Exception">
+        <member name="P:DarkRift.Server.WriteEventArgs.Exception">
             <summary>
                 The exception (if present) that caused the event.
             </summary>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.FormattedMessage">
+        <member name="P:DarkRift.Server.WriteEventArgs.FormattedMessage">
             <summary>
                 A formatted version of the event.
             </summary>
@@ -2520,7 +4191,7 @@
                 It is also more consistent to those reading logs if tey are all the same format.
             </remarks>
         </member>
-        <member name="F:DarkRift.Server.WriteEventArgs.LogTime">
+        <member name="P:DarkRift.Server.WriteEventArgs.LogTime">
             <summary>
                 The time the log occured.
             </summary>
@@ -2549,17 +4220,31 @@
                 An exception raised for invalid XML configuration files.
             </summary>
         </member>
-        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String)">
+        <member name="P:DarkRift.Server.XmlConfigurationException.DocumentationLink">
+            <summary>
+            The location of documentation for this issue.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Server.XmlConfigurationException.LineInfo">
+            <summary>
+            The line information about where this issue is.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.String,System.Xml.IXmlLineInfo)">
             <summary>
                 Create and new exception for XML configurations with a message.
             </summary>
             <param name="msg">The message for the exception.</param>
+            <param name="documentationLink">The location of documentation for this issue.</param>
+            <param name="lineInfo">The line information about where this issue is.</param>
         </member>
-        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.Exception)">
+        <member name="M:DarkRift.Server.XmlConfigurationException.#ctor(System.String,System.String,System.Xml.IXmlLineInfo,System.Exception)">
             <summary>
                 Create and new exception for XML configurations with a message and inner exception.
             </summary>
             <param name="msg">The message for the exception.</param>
+            <param name="documentationLink">The location of documentation for this issue.</param>
+            <param name="lineInfo">The line information about where this issue is.</param>
             <param name="innerException">The inner exception.</param>
         </member>
     </members>

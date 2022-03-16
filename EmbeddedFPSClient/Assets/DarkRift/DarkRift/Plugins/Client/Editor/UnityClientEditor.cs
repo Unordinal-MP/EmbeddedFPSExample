@@ -10,39 +10,23 @@ namespace DarkRift.Client.Unity
     [CanEditMultipleObjects]
     public class UnityClientEditor : Editor
     {
-        UnityClient client;
-        string address;
-        SerializedProperty port;
-        SerializedProperty ipVersion;
-        SerializedProperty autoConnect;
-        SerializedProperty invokeFromDispatcher;
-        SerializedProperty sniffData;
+        private SerializedProperty host;
+        private SerializedProperty port;
+        private SerializedProperty connectOnStart;
+        private SerializedProperty eventsFromDispatcher;
+        private SerializedProperty sniffData;
 
-        SerializedProperty maxCachedWriters;
-        SerializedProperty maxCachedReaders;
-        SerializedProperty maxCachedMessages;
-        SerializedProperty maxCachedSocketAsyncEventArgs;
-        SerializedProperty maxCachedActionDispatcherTasks;
+        private SerializedProperty objectCacheSettings;
 
-        bool showCache;
-
-        void OnEnable()
+        private void OnEnable()
         {
-            client = ((UnityClient)serializedObject.targetObject);
+            host                    = serializedObject.FindProperty("host");
+            port                    = serializedObject.FindProperty("port");
+            connectOnStart          = serializedObject.FindProperty("connectOnStart");
+            eventsFromDispatcher    = serializedObject.FindProperty("eventsFromDispatcher");
+            sniffData               = serializedObject.FindProperty("sniffData");
 
-            address     = client.Address.ToString();
-            port        = serializedObject.FindProperty("port");
-            ipVersion   = serializedObject.FindProperty("ipVersion");
-            autoConnect = serializedObject.FindProperty("autoConnect");
-            invokeFromDispatcher
-                        = serializedObject.FindProperty("invokeFromDispatcher");
-            sniffData   = serializedObject.FindProperty("sniffData");
-
-            maxCachedWriters = serializedObject.FindProperty("maxCachedWriters");
-            maxCachedReaders = serializedObject.FindProperty("maxCachedReaders");
-            maxCachedMessages = serializedObject.FindProperty("maxCachedMessages");
-            maxCachedSocketAsyncEventArgs = serializedObject.FindProperty("maxCachedSocketAsyncEventArgs");
-            maxCachedActionDispatcherTasks = serializedObject.FindProperty("maxCachedActionDispatcherTasks");
+            objectCacheSettings     = serializedObject.FindProperty("objectCacheSettings");
         }
 
         public override void OnInspectorGUI()
@@ -50,34 +34,19 @@ namespace DarkRift.Client.Unity
             serializedObject.Update();
 
             //Display IP address
-            address = EditorGUILayout.TextField(new GUIContent("Address", "The address the Client will connect to."), address);
-            
-            try
-            {
-                client.Address = IPAddress.Parse(address);
-                EditorUtility.SetDirty(client);
-            }
-            catch (FormatException)
-            {
-                EditorGUILayout.HelpBox("Invalid IP address.", MessageType.Error);
-            }
-
+            EditorGUILayout.PropertyField(host);
             EditorGUILayout.PropertyField(port);
-            
-            //Draw IP versions manually else it gets formatted as "Ip Version" and "I Pv4" -_-
-            ipVersion.enumValueIndex = EditorGUILayout.Popup(new GUIContent("IP Version", "The IP protocol version to connect using."), ipVersion.enumValueIndex, Array.ConvertAll(ipVersion.enumNames, i => new GUIContent(i)));
-            
-            EditorGUILayout.PropertyField(autoConnect);
+            EditorGUILayout.PropertyField(connectOnStart);
 
             //Alert to changes when this is unticked!
-            bool old = invokeFromDispatcher.boolValue;
-            EditorGUILayout.PropertyField(invokeFromDispatcher);
+            bool old = eventsFromDispatcher.boolValue;
+            EditorGUILayout.PropertyField(eventsFromDispatcher);
 
-            if (invokeFromDispatcher.boolValue != old && !invokeFromDispatcher.boolValue)
+            if (eventsFromDispatcher.boolValue != old && !eventsFromDispatcher.boolValue)
             {
-                invokeFromDispatcher.boolValue = !EditorUtility.DisplayDialog(
+                eventsFromDispatcher.boolValue = !EditorUtility.DisplayDialog(
                     "Danger!",
-                    "Unchecking " + invokeFromDispatcher.displayName + " will cause DarkRift to fire events from the .NET thread pool, unless you are confident using multithreading with Unity you should not disable this. Are you 100% sure you want to proceed?",
+                    "Unchecking " + eventsFromDispatcher.displayName + " will cause DarkRift to fire events from the .NET thread pool, unless you are confident using multithreading with Unity you should not disable this. Are you 100% sure you want to proceed?",
                     "Yes",
                     "No (Save me!)"
                 );
@@ -85,14 +54,7 @@ namespace DarkRift.Client.Unity
 
             EditorGUILayout.PropertyField(sniffData);
             
-            if (showCache = EditorGUILayout.Foldout(showCache, "Cache"))
-            {
-                EditorGUILayout.PropertyField(maxCachedWriters);
-                EditorGUILayout.PropertyField(maxCachedReaders);
-                EditorGUILayout.PropertyField(maxCachedMessages);
-                EditorGUILayout.PropertyField(maxCachedSocketAsyncEventArgs);
-                EditorGUILayout.PropertyField(maxCachedActionDispatcherTasks);
-            }
+            EditorGUILayout.PropertyField(objectCacheSettings, true);
 
             serializedObject.ApplyModifiedProperties();
         }

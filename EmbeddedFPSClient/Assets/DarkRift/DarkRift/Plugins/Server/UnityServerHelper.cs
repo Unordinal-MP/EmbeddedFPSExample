@@ -37,7 +37,7 @@ public static class UnityServerHelper
 
             foreach (Type type in types)
             {
-                if (type.IsSubclassOf(typeof(Plugin)) && !type.IsAbstract)
+                if (type.IsSubclassOf(typeof(PluginBase)) && !type.IsAbstract)
                     yield return type;
             }
         }

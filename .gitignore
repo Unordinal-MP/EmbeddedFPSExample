@@ -71,7 +71,6 @@ StyleCopReport.xml
 *_p.c
 *_h.h
 *.ilk
-*.meta
 *.obj
 *.iobj
 *.pch
@@ -531,3 +530,11 @@ sysinfo.txt
 # Local History for Visual Studio
 
 # End of https://www.gitignore.io/api/unity,csharp,visualstudio
+/EmbeddedFPSClient/*.sln
+/EmbeddedFPSClient/*.csproj
+
+/EmbeddedFPSClient/Assets/DevIos
+/EmbeddedFPSClient/Assets/DevIos.meta
+/EmbeddedFPSClient/UserSettings
+/EmbeddedFPSClient_clone_*
+*/Hosting_builds

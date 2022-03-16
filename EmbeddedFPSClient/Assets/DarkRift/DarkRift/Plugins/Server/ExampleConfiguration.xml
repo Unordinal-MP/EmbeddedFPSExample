@@ -8,7 +8,7 @@
   <!--
     Defines the overall server settings.
   -->
-  <server address="0.0.0.0" port="4296" ipVersion="IPv4" maxStrikes="3" />
+  <server maxStrikes="3" />
 
   <!--
     Specifies where DarkRift should look for plugins.
@@ -54,4 +54,15 @@
   <databases>
 
   </databases>
+
+  <!--
+    Defines the listeners that will be loaded by the server.
+  -->
+  <listeners>
+    <!--
+    Unity requires the compatibilty network listener to work properly!
+    -->
+    <listener name="DefaultNetworkListener" type="CompatibilityBichannelListener" address="0.0.0.0" port="4296">
+    </listener>
+  </listeners>
 </configuration>

@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using System.Xml.Linq;
 using System.Collections.Specialized;
+using System.Threading;
 
 namespace DarkRift.Server.Unity
 {
@@ -14,26 +15,28 @@ namespace DarkRift.Server.Unity
         /// </summary>
         public DarkRiftServer Server { get; private set; }
 
+#pragma warning disable IDE0044 // Add readonly modifier, Unity can't serialize readonly fields
         [SerializeField]
         [Tooltip("The configuration file to use.")]
-        TextAsset configuration;
+        private TextAsset configuration;
 
         [SerializeField]
         [Tooltip("Indicates whether the server will be created in the OnEnable method.")]
-        bool createOnEnable = true;
+        private bool createOnEnable = true;
 
         [SerializeField]
         [Tooltip("Indicates whether the server events will be routed through the dispatcher or just invoked.")]
-        bool eventsFromDispatcher = true;
+        private bool eventsFromDispatcher = true;
+#pragma warning restore IDE0044 // Add readonly modifier, Unity can't serialize readonly fields
 
-        void OnEnable()
+        private void OnEnable()
         {
             //If createOnEnable is selected create a server
             if (createOnEnable)
                 Create();
         }
 
-        void Update()
+        private void Update()
         {
             //Execute all queued dispatcher tasks
             if (Server != null)
@@ -58,33 +61,39 @@ namespace DarkRift.Server.Unity
             
             if (configuration != null)
             {
-                //Create spawn data from config
+                // Create spawn data from config
                 ServerSpawnData spawnData = ServerSpawnData.CreateFromXml(XDocument.Parse(configuration.text), variables);
 
-                //Inaccessible from xml, set from inspector
+                // Allow only this thread to execute dispatcher tasks to enable deadlock protection
+                spawnData.DispatcherExecutorThreadID = Thread.CurrentThread.ManagedThreadId;
+
+                // Inaccessible from XML, set from inspector
                 spawnData.EventsFromDispatcher = eventsFromDispatcher;
 
-                //Unity is broken, work around it...
+                // Unity is broken, work around it...
+                // This is an obsolete property but is still used if the user is using obsolete <server> tag properties
+#pragma warning disable 0618
                 spawnData.Server.UseFallbackNetworking = true;
+#pragma warning restore 0618
 
-                //Add types
+                // Add types
                 spawnData.PluginSearch.PluginTypes.AddRange(UnityServerHelper.SearchForPlugins());
                 spawnData.PluginSearch.PluginTypes.Add(typeof(UnityConsoleWriter));
 
-                //Create server
+                // Create server
                 Server = new DarkRiftServer(spawnData);
-                Server.Start();
+                Server.StartServer();
             }
             else
-                Debug.LogError("No configuration file specified!");
+                Debug.LogError("No configuration file specified! Please ensure there is a configuration file set on the XmlUnityServer component before starting the server.");
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             Close();
         }
 
-        void OnApplicationQuit()
+        private void OnApplicationQuit()
         {
             Close();
         }

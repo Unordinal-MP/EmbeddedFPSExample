@@ -4,6 +4,60 @@
         <name>DarkRift</name>
     </assembly>
     <members>
+        <member name="T:DarkRift.AutoRecyclingArray">
+            <summary>
+                Reference counted array type that automatically recycles of itself when it has no references.
+            </summary>
+            <threadsafety static="true" instance="false"/>
+        </member>
+        <member name="P:DarkRift.AutoRecyclingArray.Buffer">
+            <summary>
+                The current backing array.
+            </summary>
+        </member>
+        <member name="F:DarkRift.AutoRecyclingArray.referenceCount">
+            <summary>
+                The number of references currently held to this array.
+            </summary>
+        </member>
+        <member name="F:DarkRift.AutoRecyclingArray.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this array is currently in an object pool waiting or not.
+            </summary>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.Create(System.Int32)">
+            <summary>
+                Gets an instance of an <see cref="T:DarkRift.AutoRecyclingArray"/>.
+            </summary>
+            <param name="minLength">The minimumn number of bytes to start with.</param>
+            <returns>The array.</returns>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.#ctor">
+            <summary>
+                Creates an empty auto recycling array.
+            </summary>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.#ctor(System.Byte[])">
+            <summary>
+                Creates an auto recycling array around the given buffer.
+            </summary>
+            <param name="buffer">The nuffer to wrap</param>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.IncrementReference">
+            <summary>
+                Marks that a new reference to this array has been created.
+            </summary>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.DecrementReference">
+            <summary>
+                Marks that a reference to this array has been removed and disposes if there are no more references.
+            </summary>
+        </member>
+        <member name="M:DarkRift.AutoRecyclingArray.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
+            </summary>
+        </member>
         <member name="T:DarkRift.BigEndianHelper">
             <summary>
                 Helper class for writing primitives to arrays in big endian format.
@@ -57,6 +111,22 @@
             <param name="offset">The position of the array to begin writing.</param>
             <param name="value">The value to write.</param>
         </member>
+        <member name="M:DarkRift.BigEndianHelper.WriteBytes(System.Byte[],System.Int32,System.Single)">
+            <summary>
+                Writes the bytes from the float to the destination array at offset.
+            </summary>
+            <param name="destination">The array to write to.</param>
+            <param name="offset">The position of the array to begin writing.</param>
+            <param name="value">The value to write.</param>
+        </member>
+        <member name="M:DarkRift.BigEndianHelper.WriteBytes(System.Byte[],System.Int32,System.Double)">
+            <summary>
+                Writes the bytes from the double to the destination array at offset.
+            </summary>
+            <param name="destination">The array to write to.</param>
+            <param name="offset">The position of the array to begin writing.</param>
+            <param name="value">The value to write.</param>
+        </member>
         <member name="M:DarkRift.BigEndianHelper.ReadInt16(System.Byte[],System.Int32)">
             <summary>
                 Reads an short from the array at offset.
@@ -105,6 +175,43 @@
             <param name="offset">The position to begin reading from.</param>
             <returns>The unsigned long read.</returns>
         </member>
+        <member name="M:DarkRift.BigEndianHelper.ReadSingle(System.Byte[],System.Int32)">
+            <summary>
+                Reads a single from the array at offset.
+            </summary>
+            <param name="source">The array to read from.</param>
+            <param name="offset">The position to begin reading from.</param>
+            <returns>The single read.</returns>
+        </member>
+        <member name="M:DarkRift.BigEndianHelper.ReadDouble(System.Byte[],System.Int32)">
+            <summary>
+                Reads a double from the array at offset.
+            </summary>
+            <param name="source">The array to read from.</param>
+            <param name="offset">The position to begin reading from.</param>
+            <returns>The double read.</returns>
+        </member>
+        <member name="M:DarkRift.BigEndianHelper.SwapBytes(System.UInt16)">
+            <summary>
+                Swaps the byte order of a ushort.
+            </summary>
+            <param name="value">The bytes to swap.</param>
+            <returns>The reversed bytes.</returns>
+        </member>
+        <member name="M:DarkRift.BigEndianHelper.SwapBytes(System.UInt32)">
+            <summary>
+                Swaps the byte order of a uint.
+            </summary>
+            <param name="value">The bytes to swap.</param>
+            <returns>The reversed bytes.</returns>
+        </member>
+        <member name="M:DarkRift.BigEndianHelper.SwapBytes(System.UInt64)">
+            <summary>
+                Swaps the byte order of a ulong.
+            </summary>
+            <param name="value">The bytes to swap.</param>
+            <returns>The reversed bytes.</returns>
+        </member>
         <member name="T:DarkRift.CommandCode">
             <summary>
                 Command codes for control sequences to clients/servers.
@@ -112,13 +219,52 @@
         </member>
         <member name="F:DarkRift.CommandCode.Configure">
             <summary>
-                A configuration packet to a Client.
+                A identification packet presenting a new ID to a client.
             </summary>
         </member>
-        <member name="F:DarkRift.CommandCode.ClientAssign">
+        <member name="F:DarkRift.CommandCode.Identify">
             <summary>
-                A new Client was assigned to the server.
+                An identification packet presenting a preknown ID to server.
             </summary>
+        </member>
+        <member name="T:DarkRift.ConnectionState">
+            <summary>
+                Indicated the current state of the connection between server and client.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ConnectionState.Disconnected">
+            <summary>
+                The server and client are disconnected.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ConnectionState.Connecting">
+            <summary>
+                The server and client are establishing a connection.
+            </summary>
+            <remarks>
+                This state might not be used by a connection and may be skipped over.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.ConnectionState.Connected">
+            <summary>
+                The server and client are connected and can send and receive data.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ConnectionState.Disconnecting">
+            <summary>
+                The server and client are closing the connection.
+            </summary>
+            <remarks>
+                This state might not be used by a connection and may be skipped over.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.ConnectionState.Interrupted">
+            <summary>
+                The server and client were connected but a fault has broken the connection. The entities are trying to reconnect.
+            </summary>
+            <remarks>
+                This state might not be used by a connection.
+            </remarks>
         </member>
         <member name="T:DarkRift.DarkRiftReader">
             <summary>
@@ -139,14 +285,9 @@
                 The string encoding to use when reading characters.
             </summary>
         </member>
-        <member name="F:DarkRift.DarkRiftReader.bytes">
+        <member name="F:DarkRift.DarkRiftReader.buffer">
             <summary>
-                The bytes we are reading from.
-            </summary>
-        </member>
-        <member name="F:DarkRift.DarkRiftReader.dataOffset">
-            <summary>
-                The position data starts in the array.
+                The buffer we are reading from.
             </summary>
         </member>
         <member name="P:DarkRift.DarkRiftReader.Length">
@@ -158,6 +299,30 @@
             <summary>
                 The number of bytes read so far.
             </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftReader.deserializeEventSingleton">
+            <summary>
+                A singleton event that exists with this reader for deserializing IDarkRiftSerializables.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftReader.singleCharArray">
+            <summary>
+                An array of a single char for caching.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftReader.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this reader is currently in an object pool waiting or not.
+            </summary>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.CreateFromArray(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Creates a reader that deserializes from a standard .NET byte array.
+            </summary>
+            <param name="array">The array to deserialize from.</param>
+            <param name="offset">The position in the array to begin deserializing from.</param>
+            <param name="count">The number of bytes to deserialize.</param>
+            <returns>The reader created for reading from the given array.</returns>
         </member>
         <member name="M:DarkRift.DarkRiftReader.#ctor">
             <summary>
@@ -262,7 +427,6 @@
             </summary>
             <typeparam name="T">The type of object to read.</typeparam>
             <param name="t">The object to deserialize the data into.</param>
-            <returns>The serializable object read.</returns>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadBytes">
             <summary>
@@ -270,11 +434,25 @@
             </summary>
             <returns>The array of bytes read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadBytesInto(System.Byte[],System.Int32)">
+            <summary>
+                Reads an array of bytes from the reader.
+            </summary>
+            <param name="destination">The array to read bytes into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadChars">
             <summary>
                 Reads a array of characters from the reader.
             </summary>
             <returns>The array of characters read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadCharsInto(System.Char[],System.Int32)">
+            <summary>
+                Reads a array of characters from the reader.
+            </summary>
+            <param name="destination">The array to read characters into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadChars(System.Text.Encoding)">
             <summary>
@@ -283,11 +461,26 @@
             <param name="encoding">The encoding to use during the deserialization.</param>
             <returns>The array of characters read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadCharsInto(System.Char[],System.Int32,System.Text.Encoding)">
+            <summary>
+                Reads an array of characters from the reader using the given encoding.
+            </summary>
+            <param name="destination">The array to read characters into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+            <param name="encoding">The encoding to use during the deserialization.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadBooleans">
             <summary>
                 Reads an array of booleans from the reader.
             </summary>
             <returns>The array of booleans read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadBooleansInto(System.Boolean[],System.Int32)">
+            <summary>
+                Reads an array of booleans from the reader.
+            </summary>
+            <param name="destination">The array to read booleans into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadDoubles">
             <summary>
@@ -295,11 +488,26 @@
             </summary>
             <returns>The array of doubles read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadDoublesInto(System.Double[],System.Int32)">
+            <summary>
+                Reads an array of doubles from the reader.
+            </summary>
+            <returns>The array of doubles read.</returns>
+            <param name="destination">The array to read doubles into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadInt16s">
             <summary>
                 Reads an array of 16bit integers from the reader.
             </summary>
             <returns>The array of 16bit integers read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadInt16sInto(System.Int16[],System.Int32)">
+            <summary>
+                Reads an array of 16bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read int16s into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadInt32s">
             <summary>
@@ -307,11 +515,25 @@
             </summary>
             <returns>The array of 32bit integers read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadInt32sInto(System.Int32[],System.Int32)">
+            <summary>
+                Reads an array of 32bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read int32s into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadInt64s">
             <summary>
                 Reads an array of 64bit integers from the reader.
             </summary>
             <returns>The array of 64bit integers read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadInt64sInto(System.Int64[],System.Int32)">
+            <summary>
+                Reads an array of 64bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read int64s into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadSBytes">
             <summary>
@@ -319,11 +541,25 @@
             </summary>
             <returns>The array of signed bytes read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadSBytesInto(System.SByte[],System.Int32)">
+            <summary>
+                Reads an array of signed bytes from the reader.
+            </summary>
+            <param name="destination">The array to read sbytes into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadSingles">
             <summary>
                 Reads an array of singles from the reader.
             </summary>
             <returns>The array of singles read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadSinglesInto(System.Single[],System.Int32)">
+            <summary>
+                Reads an array of singles from the reader.
+            </summary>
+            <param name="destination">The array to read singles into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadStrings">
             <summary>
@@ -331,11 +567,25 @@
             </summary>
             <returns>The array of strings read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadStringsInto(System.String[],System.Int32)">
+            <summary>
+                Reads an array of strings from the reader using the reader's encoding.
+            </summary>
+            <param name="destination">The array to read strings into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadUInt16s">
             <summary>
                 Reads an array unsigned 16bit integers from the reader.
             </summary>
             <returns>The array of unsigned 16bit integers read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadUInt16sInto(System.UInt16[],System.Int32)">
+            <summary>
+                Reads an array unsigned 16bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read strings into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
         </member>
         <member name="M:DarkRift.DarkRiftReader.ReadUInt32s">
             <summary>
@@ -343,13 +593,34 @@
             </summary>
             <returns>The array of unsigned 32bit integers read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadUInt32sInto(System.UInt32[],System.Int32)">
+            <summary>
+                Reads an array unsigned 32bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read strings into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadUInt64s">
             <summary>
                 Reads an array unsigned 64bit integers from the reader.
             </summary>
             <returns>The array of unsigned 64bit integers read.</returns>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadUInt64sInto(System.UInt64[],System.Int32)">
+            <summary>
+                Reads an array unsigned 64bit integers from the reader.
+            </summary>
+            <param name="destination">The array to read strings into.</param>
+            <param name="offset">The offset at which to write bytes into the array.</param>
+        </member>
         <member name="M:DarkRift.DarkRiftReader.ReadSerializables``1">
+            <summary>
+                Reads an array of a serializable object from the reader.
+            </summary>
+            <typeparam name="T">The type of the object to read.</typeparam>
+            <returns>The serializable objects read.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftReader.ReadSerializablesInto``1(``0[],System.Int32)">
             <summary>
                 Reads an array of a serializable object from the reader.
             </summary>
@@ -377,6 +648,11 @@
                 Recycles this object back into the pool.
             </summary>
         </member>
+        <member name="M:DarkRift.DarkRiftReader.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
+            </summary>
+        </member>
         <member name="T:DarkRift.DarkRiftWriter">
             <summary>
                 Helper class for serializing values into  byte buffers.
@@ -396,14 +672,9 @@
                 The string encoding to use when writing characters.
             </summary>
         </member>
-        <member name="F:DarkRift.DarkRiftWriter.data">
+        <member name="P:DarkRift.DarkRiftWriter.Position">
             <summary>
-                The backing array holding the data.
-            </summary>
-        </member>
-        <member name="P:DarkRift.DarkRiftWriter.Data">
-            <summary>
-                The backing array holding the data.
+                The position data is being written to in this writer.
             </summary>
         </member>
         <member name="P:DarkRift.DarkRiftWriter.Length">
@@ -414,6 +685,26 @@
         <member name="P:DarkRift.DarkRiftWriter.Capacity">
             <summary>
                 The current capacity of the base array for the writer.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftWriter.singleCharArray">
+            <summary>
+                An array of a single char for caching.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftWriter.serializeEventSingleton">
+            <summary>
+                A singleton event that exists with this writer for serializing IDarkRiftSerializables.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftWriter.buffer">
+            <summary>
+                The backing array holding the data.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DarkRiftWriter.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this writer is currently in an object pool waiting or not.
             </summary>
         </member>
         <member name="M:DarkRift.DarkRiftWriter.Create">
@@ -641,15 +932,97 @@
             <param name="offset">The start point in the array to write.</param>
             <param name="length">The number of bytes to write.</param>
         </member>
-        <member name="M:DarkRift.DarkRiftWriter.EnsureCapacity(System.Int32)">
+        <member name="M:DarkRift.DarkRiftWriter.Reserve(System.Int32)">
             <summary>
-                Ensures the buffer has the enough capacity to include new data.
+                Reserves blank space in the writer.
             </summary>
-            <param name="extraCapacity">The extra capacity that is needed.</param>
+            <param name="size">The number of bytes to reserve.</param>
+            <returns>The position of the space reserved.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftWriter.ToArray">
+            <summary>
+                Writes the contents of the writer to an array.
+            </summary>
+            <returns>An array containg the writer's contents.</returns>
+        </member>
+        <member name="M:DarkRift.DarkRiftWriter.CopyTo(System.Byte[],System.Int32)">
+            <summary>
+                Copies the contents of this writer to the given array.
+            </summary>
+            <param name="destination">The array to copy the contents into.</param>
+            <param name="offset">The offset to start writing contents at in the array.</param>
+        </member>
+        <member name="M:DarkRift.DarkRiftWriter.ToBuffer">
+            <summary>
+                Converts this writer into a <see cref="T:DarkRift.MessageBuffer"/>.
+            </summary>
+            <returns>A message buffer of this writer.</returns>
         </member>
         <member name="M:DarkRift.DarkRiftWriter.Dispose">
             <summary>
                 Recycles this object back into the pool.
+            </summary>
+        </member>
+        <member name="M:DarkRift.DarkRiftWriter.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
+            </summary>
+        </member>
+        <member name="T:DarkRift.DataStructures.CircularDictionary`2">
+            <summary>
+                A dictionary with limited spaces, once all spaces are filled the dictionary will remove the oldest elements to add new element.
+            </summary>
+            <typeparam name="K">The type of the key.</typeparam>
+            <typeparam name="V">The type of the value.</typeparam>
+            <remarks>
+                A number of standard dictionary methods are no implemented as they are not needed in DarkRift.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.DataStructures.CircularDictionary`2.backing">
+            <summary>
+                The backing array behind the dictionary.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DataStructures.CircularDictionary`2.ptr">
+            <summary>
+                The element we will next insert into.
+            </summary>
+        </member>
+        <member name="T:DarkRift.DataStructures.MovingAverageFilter">
+            <summary>
+                A simple moving average filter for smoothing changing values.
+            </summary>
+        </member>
+        <member name="P:DarkRift.DataStructures.MovingAverageFilter.Average">
+            <summary>
+                The average of the samples.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DataStructures.MovingAverageFilter.samples">
+            <summary>
+                The samples recorded.
+            </summary>
+        </member>
+        <member name="F:DarkRift.DataStructures.MovingAverageFilter.head">
+            <summary>
+                The next sample to overwrite.
+            </summary>
+        </member>
+        <member name="M:DarkRift.DataStructures.MovingAverageFilter.#ctor(System.Int32)">
+            <summary>
+                Creates a new moving average filter.
+            </summary>
+            <param name="size">The number of past samples to keep.</param>
+        </member>
+        <member name="M:DarkRift.DataStructures.MovingAverageFilter.Add(System.Single)">
+            <summary>
+                Adds a new sample to the filter.
+            </summary>
+            <param name="sample">The new sample value.</param>
+        </member>
+        <member name="M:DarkRift.DataStructures.MovingAverageFilter.Reset">
+            <summary>
+                Resets the filter and clears all history.
             </summary>
         </member>
         <member name="T:DarkRift.DeserializeEvent">
@@ -662,14 +1035,36 @@
                 The reader to read the data from.
             </summary>
         </member>
+        <member name="M:DarkRift.DeserializeEvent.#ctor(DarkRift.DarkRiftReader)">
+            <summary>
+                Creates a new DeserializeEvent.
+            </summary>
+            <param name="reader">The reader to deserialize from.</param>
+        </member>
+        <member name="T:DarkRift.Dispatching.ActionDispatchCompleteCallback">
+            <summary>
+                Delegate used when a dispatch call has completed.
+            </summary>
+            <param name="task">The task that was completed.</param>
+        </member>
         <member name="T:DarkRift.Dispatching.ActionDispatcherTask">
             <summary>
                 A <see cref="T:DarkRift.Dispatching.DispatcherTask"/> that has no return value.
             </summary>
         </member>
-        <member name="F:DarkRift.Dispatching.ActionDispatcherTask.Action">
+        <member name="F:DarkRift.Dispatching.ActionDispatcherTask.action">
             <summary>
                 The action to execute.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Dispatching.ActionDispatcherTask.callback">
+            <summary>
+                The callback to invoke once the task has been executed.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Dispatching.ActionDispatcherTask.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this task is currently in an object pool waiting or not.
             </summary>
         </member>
         <member name="M:DarkRift.Dispatching.ActionDispatcherTask.#ctor">
@@ -683,6 +1078,13 @@
             </summary>
             <param name="action">The action to execute.</param>
         </member>
+        <member name="M:DarkRift.Dispatching.ActionDispatcherTask.Create(System.Action,DarkRift.Dispatching.ActionDispatchCompleteCallback)">
+            <summary>
+                Creates a new action dispatcher task.
+            </summary>
+            <param name="action">The action to execute.</param>
+            <param name="callback">The callback to run when this task has been executed.</param>
+        </member>
         <member name="M:DarkRift.Dispatching.ActionDispatcherTask.Execute(System.Boolean)">
             <summary>
                 Executes the action.
@@ -692,6 +1094,17 @@
         <member name="M:DarkRift.Dispatching.ActionDispatcherTask.ActuallyDispose">
             <summary>
                 Actually disposes of the instance rather than recycling it.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Dispatching.ActionDispatcherTask.Dispose(System.Boolean)">
+            <summary>
+                Returns the instance to the object cache.
+            </summary>
+            <param name="disposing">If the object is being disposed.</param>
+        </member>
+        <member name="M:DarkRift.Dispatching.ActionDispatcherTask.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
             </summary>
         </member>
         <member name="T:DarkRift.Dispatching.Dispatcher">
@@ -744,9 +1157,21 @@
         </member>
         <member name="M:DarkRift.Dispatching.Dispatcher.#ctor(System.Boolean)">
             <summary>
-                Creates a new Dispatcher indicating whether exceptions should be thrown on the executing thread.
+                Creates a new Dispatcher indicating whether exceptions should be thrown on the executing thread and setting the executor thread to the calling thread.
             </summary>
             <param name="exceptionsOnExecutorThread">Whether exceptions should be thrown from the executing thread.</param>
+        </member>
+        <member name="M:DarkRift.Dispatching.Dispatcher.#ctor(System.Boolean,System.Int32)">
+            <summary>
+                Creates a new Dispatcher indicating whether exceptions should be thrown on the executing thread and specifying the executor thread.
+            </summary>
+            <remarks>
+                This overload allows the executor thread ID to be passed in so that a specific thread can be chosen. If the thread specified tried to enqueue a task 
+                it will immediately be processed synchronously to protect against deadlocks. No other threads can be used to call <see cref="M:DarkRift.Dispatching.Dispatcher.ExecuteDispatcherTasks"/>.
+                To disable this functionaility pass -1 as the thread ID.
+            </remarks>
+            <param name="exceptionsOnExecutorThread">Whether exceptions should be thrown from the executing thread.</param>
+            <param name="executorThreadID">The thread that will be dequeueing tasks.</param>
         </member>
         <member name="M:DarkRift.Dispatching.Dispatcher.InvokeWait(System.Action)">
             <summary>
@@ -789,6 +1214,31 @@
             </summary>
             <typeparam name="T">The type to return.</typeparam>
             <param name="function">The function to execute.</param>
+            <returns>A DispatcherTask for this operation.</returns>
+            <remarks>
+                This returns an IDisposable object, it is your responsibility to dispose of it when you're done!
+            </remarks>
+            <exception cref="T:DarkRift.Dispatching.DispatcherException">Thrown if an unhandled exception was raised while executing the dispatcher task when completing synchronously.</exception>
+        </member>
+        <member name="M:DarkRift.Dispatching.Dispatcher.InvokeAsync(System.Action,DarkRift.Dispatching.ActionDispatchCompleteCallback)">
+            <summary>
+                Queues the operation for execution on the main thread.
+            </summary>
+            <param name="action">The operation to execute.</param>
+            <param name="callback">The callback to invoke once this is complete.</param>
+            <returns>A DispatcherTask for this operation.</returns>
+            <remarks>
+                This returns an IDisposable object, it is your responsibility to dispose of it when you're done!
+            </remarks>
+            <exception cref="T:DarkRift.Dispatching.DispatcherException">Thrown if an unhandled exception was raised while executing the dispatcher task when completing synchronously.</exception>
+        </member>
+        <member name="M:DarkRift.Dispatching.Dispatcher.InvokeAsync``1(System.Func{``0},DarkRift.Dispatching.FunctionDispatchCompleteCallback{``0})">
+            <summary>
+                Queues the operation for execution on the main thread.
+            </summary>
+            <typeparam name="T">The type to return.</typeparam>
+            <param name="function">The function to execute.</param>
+            <param name="callback">The callback to invoke once this is complete.</param>
             <returns>A DispatcherTask for this operation.</returns>
             <remarks>
                 This returns an IDisposable object, it is your responsibility to dispose of it when you're done!
@@ -919,14 +1369,26 @@
                 The task was run but threw an exception.
             </summary>
         </member>
+        <member name="T:DarkRift.Dispatching.FunctionDispatchCompleteCallback`1">
+            <summary>
+                Delegate used when a dispatch call has completed with return value.
+            </summary>
+            <param name="task">The task that was completed.</param>
+            <typeparam name="T">The type of the value being returned.</typeparam>
+        </member>
         <member name="T:DarkRift.Dispatching.FunctionDispatcherTask`1">
             <summary>
                 A <see cref="T:DarkRift.Dispatching.DispatcherTask"/> that has no return value.
             </summary>
         </member>
-        <member name="F:DarkRift.Dispatching.FunctionDispatcherTask`1.Function">
+        <member name="F:DarkRift.Dispatching.FunctionDispatcherTask`1.function">
             <summary>
                 The function to execute.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Dispatching.FunctionDispatcherTask`1.callback">
+            <summary>
+                The callback to invoke once the task has been executed.
             </summary>
         </member>
         <member name="P:DarkRift.Dispatching.FunctionDispatcherTask`1.Result">
@@ -981,6 +1443,31 @@
             <returns>A DispatcherTask for this operation.</returns>
             <remarks>This returns an IDisposable object, it is your responsibility to dispose of it when you're done!</remarks>
         </member>
+        <member name="M:DarkRift.Dispatching.IDispatcher.InvokeAsync(System.Action,DarkRift.Dispatching.ActionDispatchCompleteCallback)">
+            <summary>
+                Queues the operation for execution on the main thread.
+            </summary>
+            <param name="action">The operation to execute.</param>
+            <param name="callback">The callback to invoke once this is complete.</param>
+            <returns>A DispatcherTask for this operation.</returns>
+            <remarks>
+                This returns an IDisposable object, it is your responsibility to dispose of it when you're done!
+            </remarks>
+            <exception cref="T:DarkRift.Dispatching.DispatcherException">Thrown if an unhandled exception was raised while executing the dispatcher task when completing synchronously.</exception>
+        </member>
+        <member name="M:DarkRift.Dispatching.IDispatcher.InvokeAsync``1(System.Func{``0},DarkRift.Dispatching.FunctionDispatchCompleteCallback{``0})">
+            <summary>
+                Queues the operation for execution on the main thread.
+            </summary>
+            <typeparam name="T">The type to return.</typeparam>
+            <param name="function">The function to execute.</param>
+            <param name="callback">The callback to invoke once this is complete.</param>
+            <returns>A DispatcherTask for this operation.</returns>
+            <remarks>
+                This returns an IDisposable object, it is your responsibility to dispose of it when you're done!
+            </remarks>
+            <exception cref="T:DarkRift.Dispatching.DispatcherException">Thrown if an unhandled exception was raised while executing the dispatcher task when completing synchronously.</exception>
+        </member>
         <member name="T:DarkRift.IDarkRiftSerializable">
             <summary>
                 Interface for specifying how an object is serialized and deserialized.
@@ -997,6 +1484,32 @@
                 Serializes the object to the DarkRiftWriter.
             </summary>
             <param name="e">Details about the serialization.</param>
+        </member>
+        <member name="T:DarkRift.IMessageBuffer">
+            <summary>
+                Holds raw data related to a message.
+            </summary>
+        </member>
+        <member name="P:DarkRift.IMessageBuffer.Buffer">
+            <summary>
+                The array containing the data.
+            </summary>
+        </member>
+        <member name="P:DarkRift.IMessageBuffer.Count">
+            <summary>
+                The number of bytes of data in the array.
+            </summary>
+        </member>
+        <member name="P:DarkRift.IMessageBuffer.Offset">
+            <summary>
+                The offset at which bytes of data start in the array.
+            </summary>
+        </member>
+        <member name="M:DarkRift.IMessageBuffer.Clone">
+            <summary>
+                Create a shallow copy of the <see cref="T:DarkRift.IMessageBuffer"/> that points to the same memory.
+            </summary>
+            <returns>A new <see cref="T:DarkRift.IMessageBuffer"/> with the same values as this.</returns>
         </member>
         <member name="T:DarkRift.IPVersion">
             <summary>
@@ -1043,6 +1556,77 @@
                 Indicates the information is the result of a fatal error that cannot be recovered from.
             </summary>
         </member>
+        <member name="T:DarkRift.MemoryPool">
+            <summary>
+                A pool for byte arrays of different lengths for recycling.
+            </summary>
+            <remarks>
+                This object is not thread safe as it is intended to be used with the ThreadStatic attribute.
+            </remarks>
+        </member>
+        <member name="F:DarkRift.MemoryPool.extraLargePool">
+            <summary>
+                Pool of extra large byte arrays.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MemoryPool.ExtraLargeSize">
+            <summary>
+                The minimum number of bytes in an extra large pool.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MemoryPool.largePool">
+            <summary>
+                Pool of large byte arrays.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MemoryPool.LargeSize">
+            <summary>
+                The minimum number of bytes in a large pool.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MemoryPool.mediumPool">
+            <summary>
+                Pool of medium byte arrays.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MemoryPool.MediumSize">
+            <summary>
+                The minimum number of bytes in a medium pool.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MemoryPool.smallPool">
+            <summary>
+                Pool of small byte arrays.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MemoryPool.SmallSize">
+            <summary>
+                The minimum number of bytes in a small pool.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MemoryPool.extraSmallPool">
+            <summary>
+                Pool of extra small byte arrays.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MemoryPool.ExtraSmallSize">
+            <summary>
+                The minimum number of bytes in an extra small pool.
+            </summary>
+        </member>
+        <member name="M:DarkRift.MemoryPool.GetInstance(System.Int32)">
+            <summary>
+                Provides a byte array greater than or equal to the specified size.
+            </summary>
+            <param name="minSize">The minimum size of the byte array.</param>
+            <returns>The new byte array.</returns>
+        </member>
+        <member name="M:DarkRift.MemoryPool.ReturnInstance(System.Byte[])">
+            <summary>
+                Returns a byte array back to the pool.
+            </summary>
+            <param name="buffer">The byte array to return.</param>
+        </member>
         <member name="T:DarkRift.Message">
             <summary>
                 Message class for all messages sent through DarkRift.
@@ -1056,17 +1640,19 @@
                 Bitmask for the command message flag.
             </summary>
         </member>
+        <member name="F:DarkRift.Message.IS_PING_FLAG_MASK">
+            <summary>
+                Bitmask for the ping message flag.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Message.PING_TYPE_FLAG_MASK">
+            <summary>
+                Bitmask for the type of ping message flag.
+            </summary>
+        </member>
         <member name="F:DarkRift.Message.buffer">
             <summary>
-                The data buffer received.
-            </summary>
-            <remarks>
-                WARNING! Modifying the data in this buffer will alter the data of all clones of this message! Only ever change the reference!
-            </remarks>
-        </member>
-        <member name="F:DarkRift.Message.dataOffset">
-            <summary>
-                The offset of data in the buffer.
+                The buffer behind the message.
             </summary>
         </member>
         <member name="P:DarkRift.Message.DataLength">
@@ -1083,15 +1669,26 @@
             <summary>
                 Indicates whether this message is a command message or not.
             </summary>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
+        </member>
+        <member name="P:DarkRift.Message.IsPingMessage">
+            <summary>
+                Indicates whether this message is a ping message or not.
+            </summary>
+        </member>
+        <member name="P:DarkRift.Message.IsPingAcknowledgementMessage">
+            <summary>
+                Indicates whether this message is a ping acknowledegment message or not.
+            </summary>
         </member>
         <member name="F:DarkRift.Message.flags">
             <summary>
                 The flags attached to this message.
             </summary>
             <remarks>
-                8th bit - Command
-                7th bit - Not used
-                6th bit - Not used
+                8th bit - Is Command
+                7th bit - Is Ping Attached
+                6th bit - Ping (0)/Ping Acknowledgement (1)
                 5th bit - Not used
                 4th bit - Not used
                 3rd bit - Not used
@@ -1103,10 +1700,26 @@
             <summary>
                 The tag of the message.
             </summary>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
+        </member>
+        <member name="P:DarkRift.Message.PingCode">
+            <summary>
+                Code to identify pings and acknowledgements.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Message.random">
+            <summary>
+                Random number generator for each thread.
+            </summary>
+        </member>
+        <member name="F:DarkRift.Message.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this message is currently in an object pool waiting or not.
+            </summary>
         </member>
         <member name="M:DarkRift.Message.CreateEmpty(System.UInt16)">
             <summary>
-                Creates a new message with the given tag and a null payload.
+                Creates a new message with the given tag and an empty payload.
             </summary>
             <param name="tag">The tag the message has.</param>
         </member>
@@ -1117,6 +1730,13 @@
             <param name="tag">The tag the message has.</param>
             <param name="writer">The initial data in the message.</param>
         </member>
+        <member name="M:DarkRift.Message.Create``1(System.UInt16,``0)">
+            <summary>
+                Creates a new message with the given tag and serializable object.
+            </summary>
+            <param name="tag">The tag the message has.</param>
+            <param name="obj">The initial object in the message data.</param>
+        </member>
         <member name="M:DarkRift.Message.Create(System.UInt16,DarkRift.IDarkRiftSerializable)">
             <summary>
                 Creates a new message with the given tag and serializable object.
@@ -1124,12 +1744,11 @@
             <param name="tag">The tag the message has.</param>
             <param name="obj">The initial object in the message data.</param>
         </member>
-        <member name="M:DarkRift.Message.Create(System.Byte[],System.Int32,System.Boolean)">
+        <member name="M:DarkRift.Message.Create(DarkRift.IMessageBuffer,System.Boolean)">
             <summary>
                 Creates a new message from the given buffer.
             </summary>
             <param name="buffer">The buffer containing the message.</param>
-            <param name="offset">The offset of the message in the buffer.</param>
             <param name="isReadOnly">Whether the message should be created read only or not.</param>
         </member>
         <member name="M:DarkRift.Message.#ctor">
@@ -1153,25 +1772,51 @@
                 Serializes a <see cref="T:DarkRift.DarkRiftWriter"/> into the data of this message.
             </summary>
             <param name="writer">The writer to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
         <member name="M:DarkRift.Message.Deserialize``1">
+            <summary>
+                Deserializes the data to the given object type.
+            </summary>
+            <typeparam name="T">The type of object to deserialize to.</typeparam>
+            <returns>The deserialized object.</returns>
+        </member>
+        <member name="M:DarkRift.Message.DeserializeInto``1(``0@)">
             <summary>
                 Deserializes the data to the given object.
             </summary>
             <typeparam name="T">The type of object to deserialize to.</typeparam>
-            <returns>The deserialized object.</returns>
+            <param name="t">The object to deserialize the data into.</param>
         </member>
         <member name="M:DarkRift.Message.Serialize(DarkRift.IDarkRiftSerializable)">
             <summary>
                 Serializes an object into the data of this message.
             </summary>
             <param name="obj">The object to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
         </member>
-        <member name="M:DarkRift.Message.ToBuffer(System.Int32)">
+        <member name="M:DarkRift.Message.Serialize``1(``0)">
+            <summary>
+                Serializes an object into the data of this message.
+            </summary>
+            <param name="obj">The object to serialize.</param>
+            <exception cref="T:System.AccessViolationException">If the message is readonly.</exception>
+        </member>
+        <member name="M:DarkRift.Message.MakePingMessage">
+            <summary>
+                Makes this a ping message and generates it a random ping identification.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Message.MakePingAcknowledgementMessage(DarkRift.Message)">
+            <summary>
+                Makes this a ping acknowledgement message for the given ping message.
+            </summary>
+            <exception cref="T:System.ArgumentException">If the message passed is not a ping message.</exception>
+        </member>
+        <member name="M:DarkRift.Message.ToBuffer">
             <summary>
                 Converts this message into a buffer.
             </summary>
-            <param name="offset">The offset of the data in this buffer.</param>
             <returns>The buffer.</returns>
         </member>
         <member name="M:DarkRift.Message.Clone">
@@ -1186,6 +1831,79 @@
         <member name="M:DarkRift.Message.Dispose">
             <summary>
                 Recycles this object back into the pool.
+            </summary>
+        </member>
+        <member name="M:DarkRift.Message.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
+            </summary>
+        </member>
+        <member name="T:DarkRift.MessageBuffer">
+            <summary>
+                Holds raw data related to a message.
+            </summary>
+            <remarks>
+                On dispose <see cref="P:DarkRift.MessageBuffer.Buffer" /> may be recycled, therefore you should only dispose once you have completely 
+                finished with the array, else you may find the data is changed seemingly randomly.
+            </remarks>
+        </member>
+        <member name="P:DarkRift.MessageBuffer.Buffer">
+            <summary>
+                The array containing the data.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MessageBuffer.Offset">
+            <summary>
+                The offset at which bytes of data start in the array.
+            </summary>
+        </member>
+        <member name="P:DarkRift.MessageBuffer.Count">
+            <summary>
+                The number of bytes of data in the array.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MessageBuffer.backingBuffer">
+            <summary>
+                Backing array that can automatically dispose correctly.
+            </summary>
+        </member>
+        <member name="F:DarkRift.MessageBuffer.isCurrentlyLoungingInAPool">
+            <summary>
+                Whether this message buffer is currently in an object pool waiting or not.
+            </summary>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.#ctor">
+            <summary>
+                Creates a new message buffer.
+            </summary>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.Create(System.Int32)">
+            <summary>
+                Creates a new message buffer with a given minimum capacity in the backing buffer.
+            </summary>
+            <param name="minCapacity">The minimum number of bytes in the buffer.</param>
+            <returns>The new message buffer.</returns>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.Clone">
+            <summary>
+                Create a shallow copy of the <see cref="T:DarkRift.MessageBuffer"/> that points to the same memory.
+            </summary>
+            <returns>A new <see cref="T:DarkRift.MessageBuffer"/> with the same values as this.</returns>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.EnsureLength(System.Int32)">
+            <summary>
+                Ensures the buffer is greater than or equal to the specified length.
+            </summary>
+            <param name="newLength">The desired length.</param>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.Dispose">
+            <summary>
+                Recycles the backing array behind the message buffer. 
+            </summary>
+        </member>
+        <member name="M:DarkRift.MessageBuffer.Finalize">
+            <summary>
+                Finalizer so we can inform the cache system we were not recycled correctly.
             </summary>
         </member>
         <member name="T:DarkRift.ObjectCache">
@@ -1203,27 +1921,42 @@
         </member>
         <member name="F:DarkRift.ObjectCache.writerPool">
             <summary>
-                Object pool of DarkRiftWriters.
+                Object pool of <see cref="T:DarkRift.DarkRiftWriter"/> objects.
             </summary>
         </member>
         <member name="F:DarkRift.ObjectCache.readerPool">
             <summary>
-                Object pool of DarkRiftReaders.
+                Object pool of <see cref="T:DarkRift.DarkRiftReader"/> objects.
             </summary>
         </member>
         <member name="F:DarkRift.ObjectCache.messagePool">
             <summary>
-                Object pool of Messages.
+                Object pool of <see cref="T:DarkRift.Message"/> objects.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ObjectCache.messageBufferPool">
+            <summary>
+                Object pool of <see cref="T:DarkRift.MessageBuffer"/> objects.
             </summary>
         </member>
         <member name="F:DarkRift.ObjectCache.socketAsyncEventArgsPool">
             <summary>
-                Object pool of SocketAsyncEventArgs.
+                Object pool of <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> objects.
             </summary>
         </member>
         <member name="F:DarkRift.ObjectCache.actionDispatcherTaskPool">
             <summary>
-                Object pool of ActionDispatcherTasks.
+                Object pool of <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> objects.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ObjectCache.autoRecyclingArrayPool">
+            <summary>
+                Object pool of <see cref="T:DarkRift.AutoRecyclingArray"/> objects.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ObjectCache.memoryPool">
+            <summary>
+                Pool of byte arrays.
             </summary>
         </member>
         <member name="F:DarkRift.ObjectCache.settings">
@@ -1249,63 +1982,183 @@
         </member>
         <member name="M:DarkRift.ObjectCache.GetWriter">
             <summary>
-                Returns a pooled DarkRiftWriter or generates a new one if there are none available.
+                Returns a pooled <see cref="T:DarkRift.DarkRiftWriter"/> or generates a new one if there are none available.
             </summary>
-            <returns>A free DarkRiftWriter.</returns>
+            <returns>A free <see cref="T:DarkRift.DarkRiftWriter"/>.</returns>
         </member>
         <member name="M:DarkRift.ObjectCache.ReturnWriter(DarkRift.DarkRiftWriter)">
             <summary>
-                Returns a used DarkRiftWriter to the pool.
+                Returns a used <see cref="T:DarkRift.DarkRiftWriter"/> to the pool.
             </summary>
-            <param name="writer">The DarkRiftWriter to return.</param>
+            <param name="writer">The <see cref="T:DarkRift.DarkRiftWriter"/> to return.</param>
         </member>
         <member name="M:DarkRift.ObjectCache.GetReader">
             <summary>
-                Returns a pooled DarkRiftReader or generates a new one if there are none available.
+                Returns a pooled <see cref="T:DarkRift.DarkRiftReader"/> or generates a new one if there are none available.
             </summary>
-            <returns>A free DarkRiftReader.</returns>
+            <returns>A free <see cref="T:DarkRift.DarkRiftReader"/>.</returns>
         </member>
         <member name="M:DarkRift.ObjectCache.ReturnReader(DarkRift.DarkRiftReader)">
             <summary>
-                Returns a used DarkRiftReader to the pool.
+                Returns a used <see cref="T:DarkRift.DarkRiftReader"/> to the pool.
             </summary>
-            <param name="reader">The DarkRifReader to return.</param>
+            <param name="reader">The <see cref="T:DarkRift.DarkRiftReader"/> to return.</param>
         </member>
         <member name="M:DarkRift.ObjectCache.GetMessage">
             <summary>
-                Returns a pooled Message or generates a new one if there are none available.
+                Returns a pooled <see cref="T:DarkRift.Message"/> or generates a new one if there are none available.
             </summary>
-            <returns>A free Message.</returns>
+            <returns>A free <see cref="T:DarkRift.Message"/>.</returns>
         </member>
         <member name="M:DarkRift.ObjectCache.ReturnMessage(DarkRift.Message)">
             <summary>
-                Returns a used Message to the pool.
+                Returns a used <see cref="T:DarkRift.Message"/> to the pool.
             </summary>
-            <param name="message">The Message to return.</param>
+            <param name="message">The <see cref="T:DarkRift.Message"/> to return.</param>
+        </member>
+        <member name="M:DarkRift.ObjectCache.GetMessageBuffer">
+            <summary>
+                Returns a pooled <see cref="T:DarkRift.MessageBuffer"/> or generates a new one if there are none available.
+            </summary>
+            <returns>A free <see cref="T:DarkRift.MessageBuffer"/>.</returns>
+        </member>
+        <member name="M:DarkRift.ObjectCache.ReturnMessageBuffer(DarkRift.MessageBuffer)">
+            <summary>
+                Returns a used <see cref="T:DarkRift.MessageBuffer"/> to the pool.
+            </summary>
+            <param name="messageBuffer">The <see cref="T:DarkRift.MessageBuffer"/> to return.</param>
         </member>
         <member name="M:DarkRift.ObjectCache.GetSocketAsyncEventArgs">
             <summary>
-                Returns a pooled SocketAsyncEventArgs object or generates a new one if there are none available.
+                Returns a pooled <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> object or generates a new one if there are none available.
             </summary>
-            <returns>A free SocketAsyncEventArgs object.</returns>
+            <returns>A free <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> object.</returns>
         </member>
         <member name="M:DarkRift.ObjectCache.ReturnSocketAsyncEventArgs(System.Net.Sockets.SocketAsyncEventArgs)">
             <summary>
-                Returns a used SocketAsyncEventArgs object to the pool or disposes of it if there are already enough.
+                Returns a used <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> object to the pool or disposes of it if there are already enough.
             </summary>
-            <param name="socketAsyncEventArgs">The SocketAsyncEventArgs object to return.</param>
+            <param name="socketAsyncEventArgs">The <see cref="T:System.Net.Sockets.SocketAsyncEventArgs"/> object to return.</param>
         </member>
         <member name="M:DarkRift.ObjectCache.GetActionDispatcherTask">
             <summary>
-                Returns a pooled ActionDispatcherTask or generates a new one if there are none available.
+                Returns a pooled <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> or generates a new one if there are none available.
             </summary>
-            <returns>A free ActionDispatcherTask.</returns>
+            <returns>A free <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/>.</returns>
         </member>
         <member name="M:DarkRift.ObjectCache.ReturnActionDispatcherTask(DarkRift.Dispatching.ActionDispatcherTask)">
             <summary>
-                Returns a used ActionDispatcherTask to the pool.
+                Returns a used <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> to the pool.
             </summary>
-            <param name="task">The ActionDispatcherTask to return.</param>
+            <param name="task">The <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> to return.</param>
+        </member>
+        <member name="M:DarkRift.ObjectCache.GetAutoRecyclingArray">
+            <summary>
+                Returns a pooled <see cref="T:DarkRift.AutoRecyclingArray"/> object or generates a new one if there are none available.
+            </summary>
+            <returns>A free <see cref="T:DarkRift.AutoRecyclingArray"/> object.</returns>
+        </member>
+        <member name="M:DarkRift.ObjectCache.ReturnAutoRecyclingArray(DarkRift.AutoRecyclingArray)">
+            <summary>
+                Returns a used <see cref="T:DarkRift.AutoRecyclingArray"/> object to the pool or disposes of it if there are already enough.
+            </summary>
+            <param name="autoRecyclingArray">The <see cref="T:DarkRift.AutoRecyclingArray"/> object to return.</param>
+        </member>
+        <member name="M:DarkRift.ObjectCache.GetMemory(System.Int32)">
+            <summary>
+                Returns a pooled byte array or allocates a new one if there are none available.
+            </summary>
+            <param name="minLength">The minimum length of memory to allocate.</param>
+            <returns>A free byte array of sufficient size.</returns>
+        </member>
+        <member name="M:DarkRift.ObjectCache.ReturnMemory(System.Byte[])">
+            <summary>
+                Returns a used byte array to the pool or disposes of it if there are already enough.
+            </summary>
+            <param name="memory">The byte array to return.</param>
+        </member>
+        <member name="T:DarkRift.ObjectCacheHelper">
+            <summary>
+                Helper class for the object cache.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.InitializeObjectCache(DarkRift.ObjectCacheSettings)">
+             <summary>
+                 Initializes the object cache.
+             </summary>
+             <remarks>
+                 Normally, initializing the object cache is handled for you when you create a server or client
+                 however there are times when it is necessary to initialize it without creating a server or client
+                 such as during testing. This method can be used to initialize the cache in those circumstances.
+            
+                 If the cache is already initialized this method will do nothing.
+             </remarks>
+             <param name="settings"></param>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedAutoRecyclingArrays">
+            <summary>
+                The number of <see cref="T:DarkRift.AutoRecyclingArray"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedDarkRiftReaders">
+            <summary>
+                The number of <see cref="T:DarkRift.DarkRiftReader"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedDarkRiftWriters">
+            <summary>
+                The number of <see cref="T:DarkRift.DarkRiftWriter"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedMessages">
+            <summary>
+                The number of <see cref="T:DarkRift.Message"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedMessageBuffers">
+            <summary>
+                The number of <see cref="T:DarkRift.MessageBuffer"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheHelper.FinalizedActionDispatcherTasks">
+            <summary>
+                The number of <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> objects that were not recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.AutoRecyclingArrayWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.AutoRecyclingArray"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.DarkRiftReaderWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.DarkRiftReader"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.DarkRiftWriterWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.DarkRiftWriter"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.MessageWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.Message"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.MessageBufferWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.MessageBuffer"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.ActionDispatcherTaskWasFinalized">
+            <summary>
+                Indcates an <see cref="T:DarkRift.Dispatching.ActionDispatcherTask"/> did not get recycled properly.
+            </summary>
+        </member>
+        <member name="M:DarkRift.ObjectCacheHelper.ResetCounters">
+            <summary>
+                Resets all counters to 0.
+            </summary>
         </member>
         <member name="T:DarkRift.ObjectCacheSettings">
             <summary>
@@ -1327,6 +2180,11 @@
                 The maximum number of Messages to cache per thread.
             </summary>
         </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxMessageBuffers">
+            <summary>
+                The maximum number of MessageBuffers to cache per thread.
+            </summary>
+        </member>
         <member name="P:DarkRift.ObjectCacheSettings.MaxSocketAsyncEventArgs">
             <summary>
                 The maximum number of SocketAsyncEventArgs to cache per thread.
@@ -1337,15 +2195,65 @@
                 The maximum number of ActionDisapatcherTasks to cache per thread.
             </summary>
         </member>
-        <member name="M:DarkRift.ObjectCacheSettings.#ctor(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+        <member name="P:DarkRift.ObjectCacheSettings.MaxAutoRecyclingArrays">
             <summary>
-                Creates a new configuration for the <see cref="T:DarkRift.ObjectCache"/>.
+                The maximum number of <see cref="T:DarkRift.AutoRecyclingArray"/> instances stored per thread.
             </summary>
-            <param name="maxWriters">The maximum number of DarkRiftWriters to cache per thread.</param>
-            <param name="maxReaders">The maximum number of DarkRiftReaders to cache per thread.</param>
-            <param name="maxMessages">The maximum number of Messages to cache per thread.</param>
-            <param name="maxSocketAsyncEventArgs">The maximum number of SocketAsyncEventArgs to cache per thread.</param>
-            <param name="maxActionDispatcherTasks">The maximum number of ActionDispatcherTasks to cache per thread.</param>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.ExtraSmallMemoryBlockSize">
+            <summary>
+                The number of bytes in the extra small memory bocks cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxExtraSmallMemoryBlocks">
+            <summary>
+                The maximum number of extra small memory blocks stored per thread.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.SmallMemoryBlockSize">
+            <summary>
+                The number of bytes in the small memory bocks cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxSmallMemoryBlocks">
+            <summary>
+                The maximum number of small memory blocks stored per thread.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MediumMemoryBlockSize">
+            <summary>
+                The number of bytes in the medium memory bocks cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxMediumMemoryBlocks">
+            <summary>
+                The maximum number of extra small memory blocks stored per thread.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.LargeMemoryBlockSize">
+            <summary>
+                The number of bytes in the large memory bocks cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxLargeMemoryBlocks">
+            <summary>
+                The maximum number of large memory blocks stored per thread.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.ExtraLargeMemoryBlockSize">
+            <summary>
+                The number of bytes in the extra large memory bocks cached.
+            </summary>
+        </member>
+        <member name="P:DarkRift.ObjectCacheSettings.MaxExtraLargeMemoryBlocks">
+            <summary>
+                The maximum number of extra large memory blocks stored per thread.
+            </summary>
+        </member>
+        <member name="F:DarkRift.ObjectCacheSettings.DontUseCache">
+            <summary>
+                Return settings so no objects are cached.
+            </summary>
         </member>
         <member name="T:DarkRift.ObjectPool`1">
             <summary>
@@ -1395,6 +2303,58 @@
             <param name="t">The instance to return.</param>
             <returns>Whether the instance was returned <c>true</c> or should be disposed of <c>false</c>.</returns>
         </member>
+        <member name="T:DarkRift.RoundTripTimeHelper">
+            <summary>
+                Helper class for calculating the round trip time of messages.
+            </summary>
+        </member>
+        <member name="P:DarkRift.RoundTripTimeHelper.SmothedRtt">
+            <summary>
+                Returns the smoothed round trip time to the remote and back in seconds.
+            </summary>
+        </member>
+        <member name="P:DarkRift.RoundTripTimeHelper.SmoothedRtt">
+            <summary>
+                Returns the smoothed round trip time to the remote and back in seconds.
+            </summary>
+        </member>
+        <member name="P:DarkRift.RoundTripTimeHelper.LatestRtt">
+            <summary>
+                Returns the latest recorded round trip time to the remote and back in seconds.
+            </summary>
+        </member>
+        <member name="P:DarkRift.RoundTripTimeHelper.RttSampleCount">
+            <summary>
+                The number of samples used to calculate the smoothed round trip time.
+            </summary>
+        </member>
+        <member name="F:DarkRift.RoundTripTimeHelper.movingAverage">
+            <summary>
+                Moving average filter for round trip time.
+            </summary>
+        </member>
+        <member name="F:DarkRift.RoundTripTimeHelper.waitingPings">
+            <summary>
+                The pings currently awaiting a response.
+            </summary>
+        </member>
+        <member name="M:DarkRift.RoundTripTimeHelper.#ctor(System.Int32,System.Int32)">
+            <summary>
+                Creates a new RoundTripTimeHelper.
+            </summary>
+        </member>
+        <member name="M:DarkRift.RoundTripTimeHelper.RecordOutboundPing(System.UInt16)">
+            <summary>
+                Records a ping being sent to this client.
+            </summary>
+            <param name="pingCode">The code to identify the ping.</param>
+        </member>
+        <member name="M:DarkRift.RoundTripTimeHelper.RecordInboundPing(System.UInt16)">
+            <summary>
+                Records a ping being acknowledged by this client.
+            </summary>
+            <param name="pingCode">The code to identify the ping.</param>
+        </member>
         <member name="T:DarkRift.SendMode">
             <summary>
                 The send mode to govern how messages are sent.
@@ -1425,6 +2385,37 @@
             <summary>
                 The writer to write the object data to.
             </summary>
+        </member>
+        <member name="M:DarkRift.SerializeEvent.#ctor(DarkRift.DarkRiftWriter)">
+            <summary>
+                Creates a new SerializeEvent.
+            </summary>
+            <param name="writer">The writer to serialize to.</param>
+        </member>
+        <member name="T:DarkRift.UnmanagedMemoryBuffer">
+            <summary>
+                Provides an implementation of <see cref="T:DarkRift.IMessageBuffer"/> for arrays not managed by DarkRift.
+            </summary>
+        </member>
+        <member name="P:DarkRift.UnmanagedMemoryBuffer.Buffer">
+            <inheritdoc/>
+        </member>
+        <member name="P:DarkRift.UnmanagedMemoryBuffer.Count">
+            <inheritdoc/>
+        </member>
+        <member name="P:DarkRift.UnmanagedMemoryBuffer.Offset">
+            <inheritdoc/>
+        </member>
+        <member name="M:DarkRift.UnmanagedMemoryBuffer.#ctor(System.Byte[],System.Int32,System.Int32)">
+            <summary>
+                Creates an <see cref="T:DarkRift.IMessageBuffer"/> for arrays not managed by DarkRift.
+            </summary>
+            <param name="buffer">The buffer to wrap.</param>
+            <param name="offset">The offset to wrap.</param>
+            <param name="count">The count to wrap.</param>
+        </member>
+        <member name="M:DarkRift.UnmanagedMemoryBuffer.Clone">
+            <inheritdoc/>
         </member>
     </members>
 </doc>

@@ -27,7 +27,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The address the server will listen on.")]
-        IPAddress address = IPAddress.Any;
+        private IPAddress address = IPAddress.Any;
 
         /// <summary>
         ///     The port the server listens on.
@@ -40,23 +40,10 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The port the server will listen on.")]
-        ushort port = 4296;
+        private ushort port = 4296;
 
         /// <summary>
-        ///     The IP protocol version the server listens on.
-        /// </summary>
-        public IPVersion IPVersion
-        {
-            get { return ipVersion; }
-            set { ipVersion = value; }
-        }
-
-        [SerializeField]
-        [Tooltip("The IP protocol version the server will listen on.")] //Declared in custom editor
-        IPVersion ipVersion = IPVersion.IPv4;
-
-        /// <summary>
-        ///     The number of strikes that can be received before the Client is automatically kicked.
+        ///     The number of strikes that can be received before the client is automatically kicked.
         /// </summary>
         public byte MaxStrikes
         {
@@ -65,8 +52,8 @@ namespace DarkRift.Server.Unity
         }
 
         [SerializeField]
-        [Tooltip("The number of strikes that can be received before the Client is automatically kicked.")]
-        byte maxStrikes = 3;
+        [Tooltip("The number of strikes that can be received before the client is automatically kicked.")]
+        private byte maxStrikes = 3;
 
         #endregion
         
@@ -83,7 +70,7 @@ namespace DarkRift.Server.Unity
             
         [SerializeField]
         [Tooltip("The location DarkRift will store persistant data.")]
-        string dataDirectory = "Data/";
+        private string dataDirectory = "Data/";
 
         #endregion
 
@@ -100,7 +87,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("Indicates whether logs should be written to file.")]
-        bool logToFile = true;
+        private bool logToFile = true;
 
         /// <summary>
         ///     The location that log files will be placed when using recommended logging settings.
@@ -113,7 +100,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The location log files will be written to.")]
-        string logFileString = @"Logs/{0:d-M-yyyy}/{0:HH-mm-ss tt}.txt";
+        private string logFileString = @"Logs/{0:d-M-yyyy}/{0:HH-mm-ss tt}.txt";
 
         /// <summary>
         ///     Whether logs should be written to the unity console.
@@ -126,7 +113,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("Indicates whether logs should be written to the unity console.")]
-        bool logToUnityConsole = true;
+        private bool logToUnityConsole = true;
 
         /// <summary>
         ///     Whether logs should be written to debug.
@@ -139,7 +126,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("Indicates whether logs should be written to debug.")]
-        bool logToDebug = true;
+        private bool logToDebug = true;
 
         #endregion
 
@@ -156,7 +143,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("Indicates whether plugins should be loaded by default.")]
-        bool loadByDefault = true;
+        private bool loadByDefault = true;
 
         /// <summary>
         ///     The plugins that should be loaded.
@@ -167,7 +154,7 @@ namespace DarkRift.Server.Unity
         }
         
         [HideInInspector]
-        List<ServerSpawnData.PluginsSettings.PluginSettings> plugins = new List<ServerSpawnData.PluginsSettings.PluginSettings>();
+        private readonly List<ServerSpawnData.PluginsSettings.PluginSettings> plugins = new List<ServerSpawnData.PluginsSettings.PluginSettings>();
         
         #endregion
 
@@ -182,7 +169,7 @@ namespace DarkRift.Server.Unity
         }
 
         [HideInInspector]
-        List<ServerSpawnData.DatabaseSettings.DatabaseConnectionData> databases = new List<ServerSpawnData.DatabaseSettings.DatabaseConnectionData>();
+        private readonly List<ServerSpawnData.DatabaseSettings.DatabaseConnectionData> databases = new List<ServerSpawnData.DatabaseSettings.DatabaseConnectionData>();
 
         #endregion
 
@@ -206,7 +193,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The maximum number of DarkRiftWriter instances stored per thread.")]
-        int maxCachedWriters = 2;
+        private int maxCachedWriters = 2;
 
         /// <summary>
         ///     The maximum number of <see cref="DarkRiftReader"/> instances stored per thread.
@@ -226,7 +213,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The maximum number of DarkRiftReader instances stored per thread.")]
-        int maxCachedReaders = 2;
+        private int maxCachedReaders = 2;
 
         /// <summary>
         ///     The maximum number of <see cref="Message"/> instances stored per thread.
@@ -246,7 +233,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The maximum number of Message instances stored per thread.")]
-        int maxCachedMessages = 8;
+        private int maxCachedMessages = 8;
 
         /// <summary>
         ///     The maximum number of <see cref="System.Net.Sockets.SocketAsyncEventArgs"/> instances stored per thread.
@@ -266,7 +253,7 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The maximum number of SocketAsyncEventArg instances stored per thread.")]
-        int maxCachedSocketAsyncEventArgs = 32;
+        private int maxCachedSocketAsyncEventArgs = 32;
 
         /// <summary>
         ///     The maximum number of <see cref="DarkRift.Dispatching.ActionDispatcherTask"/> instances stored per thread.
@@ -286,32 +273,34 @@ namespace DarkRift.Server.Unity
 
         [SerializeField]
         [Tooltip("The maximum number of ActionDispatcherTask instances stored per thread.")]
-        int maxCachedActionDispatcherTasks = 16;
+        private int maxCachedActionDispatcherTasks = 16;
 
 
         #endregion
 
+#pragma warning disable IDE0044 // Add readonly modifier, Unity can't serialize readonly fields
         [SerializeField]
         [Tooltip("Indicates whether the server will be created in the OnEnable method.")]
-        bool createOnEnable = true;
+        private bool createOnEnable = true;
 
         [SerializeField]
         [Tooltip("Indicates whether the server events will be routed through the dispatcher or just invoked.")]
-        bool eventsFromDispatcher = true;
+        private bool eventsFromDispatcher = true;
+#pragma warning restore IDE0044 // Add readonly modifier, Unity can't serialize readonly fields
 
         /// <summary>
         ///     The actual server.
         /// </summary>
         public DarkRiftServer Server { get; private set; }
 
-        void OnEnable()
+        private void OnEnable()
         {
             //If createOnEnable is selected create a server
             if (createOnEnable)
                 Create();
         }
 
-        void Update()
+        private void Update()
         {
             //Execute all queued dispatcher tasks
             if (Server != null)
@@ -326,11 +315,16 @@ namespace DarkRift.Server.Unity
             if (Server != null)
                 throw new InvalidOperationException("The server has already been created! (Is CreateOnEnable enabled?)");
 
-            ServerSpawnData spawnData = new ServerSpawnData(address, port, ipVersion);
+            ServerSpawnData spawnData = new ServerSpawnData();
+            spawnData.Server.Address = address;
+            spawnData.Server.Port = port;
 
             //Server settings
             spawnData.Server.MaxStrikes = maxStrikes;
+            //This is an obsolete property but is still used if the user is using obsolete Server properties as we are
+#pragma warning disable 0618
             spawnData.Server.UseFallbackNetworking = true;      //Unity is broken, work around it...
+#pragma warning restore 0618
             spawnData.EventsFromDispatcher = eventsFromDispatcher;
 
             //Plugin search settings
@@ -345,29 +339,32 @@ namespace DarkRift.Server.Unity
 
             if (logToFile)
             {
-                ServerSpawnData.LoggingSettings.LogWriterSettings fileWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings();
-                fileWriter.Name = "FileWriter1";
-                fileWriter.Type = "FileWriter";
-                fileWriter.LogLevels = new LogType[] { LogType.Trace, LogType.Info, LogType.Warning, LogType.Error, LogType.Fatal };
+                ServerSpawnData.LoggingSettings.LogWriterSettings fileWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings {
+                    Name = "FileWriter1",
+                    Type = "FileWriter",
+                    LogLevels = new LogType[] { LogType.Trace, LogType.Info, LogType.Warning, LogType.Error, LogType.Fatal }
+                };
                 fileWriter.Settings["file"] = logFileString;
                 spawnData.Logging.LogWriters.Add(fileWriter);
             }
 
             if (logToUnityConsole)
             {
-                ServerSpawnData.LoggingSettings.LogWriterSettings consoleWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings();
-                consoleWriter.Name = "UnityConsoleWriter1";
-                consoleWriter.Type = "UnityConsoleWriter";
-                consoleWriter.LogLevels = new LogType[] { LogType.Info, LogType.Warning, LogType.Error, LogType.Fatal };
+                ServerSpawnData.LoggingSettings.LogWriterSettings consoleWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings {
+                    Name = "UnityConsoleWriter1",
+                    Type = "UnityConsoleWriter",
+                    LogLevels = new LogType[] { LogType.Info, LogType.Warning, LogType.Error, LogType.Fatal }
+                };
                 spawnData.Logging.LogWriters.Add(consoleWriter);
             }
 
             if (logToDebug)
             {
-                ServerSpawnData.LoggingSettings.LogWriterSettings debugWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings();
-                debugWriter.Name = "DebugWriter1";
-                debugWriter.Type = "DebugWriter";
-                debugWriter.LogLevels = new LogType[] { LogType.Warning, LogType.Error, LogType.Fatal };
+                ServerSpawnData.LoggingSettings.LogWriterSettings debugWriter = new ServerSpawnData.LoggingSettings.LogWriterSettings {
+                    Name = "DebugWriter1",
+                    Type = "DebugWriter",
+                    LogLevels = new LogType[] { LogType.Warning, LogType.Error, LogType.Fatal }
+                };
                 spawnData.Logging.LogWriters.Add(debugWriter);
             }
 
@@ -389,12 +386,12 @@ namespace DarkRift.Server.Unity
             Server.Start();
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             Close();
         }
 
-        void OnApplicationQuit()
+        private void OnApplicationQuit()
         {
             Close();
         }

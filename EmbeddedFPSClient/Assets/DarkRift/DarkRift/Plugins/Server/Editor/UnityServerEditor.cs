@@ -16,35 +16,34 @@ namespace DarkRift.Server.Unity
     public class UnityClientEditor : Editor
     {
 #pragma warning disable 0618
-        UnityServer server;
+        private UnityServer server;
 #pragma warning restore 0618
 
-        SerializedProperty createOnEnable;
-        SerializedProperty eventsFromDispatcher;
+        private SerializedProperty createOnEnable;
+        private SerializedProperty eventsFromDispatcher;
 
-        string address;
-        SerializedProperty port;
-        SerializedProperty ipVersion;
-        SerializedProperty maxStrikes;
+        private string address;
+        private SerializedProperty port;
+        private SerializedProperty maxStrikes;
 
-        SerializedProperty dataDirectory;
+        private SerializedProperty dataDirectory;
 
-        SerializedProperty logToFile;
-        SerializedProperty logFileString;
-        SerializedProperty logToUnityConsole;
-        SerializedProperty logToDebug;
+        private SerializedProperty logToFile;
+        private SerializedProperty logFileString;
+        private SerializedProperty logToUnityConsole;
+        private SerializedProperty logToDebug;
 
-        SerializedProperty loadByDefault;
+        private SerializedProperty loadByDefault;
 
-        SerializedProperty maxCachedWriters;
-        SerializedProperty maxCachedReaders;
-        SerializedProperty maxCachedMessages;
-        SerializedProperty maxCachedSocketAsyncEventArgs;
-        SerializedProperty maxCachedActionDispatcherTasks;
+        private SerializedProperty maxCachedWriters;
+        private SerializedProperty maxCachedReaders;
+        private SerializedProperty maxCachedMessages;
+        private SerializedProperty maxCachedSocketAsyncEventArgs;
+        private SerializedProperty maxCachedActionDispatcherTasks;
 
-        bool showServer, showData, showLogging, showPlugins, showDatabases, showCache;
+        private bool showServer, showData, showLogging, showPlugins, showDatabases, showCache;
 
-        void OnEnable()
+        private void OnEnable()
         {
 #pragma warning disable 0618
             server = (UnityServer)serializedObject.targetObject;
@@ -55,7 +54,6 @@ namespace DarkRift.Server.Unity
 
             address         = server.Address.ToString();
             port            = serializedObject.FindProperty("port");
-            ipVersion       = serializedObject.FindProperty("ipVersion");
             maxStrikes      = serializedObject.FindProperty("maxStrikes");
 
             dataDirectory   = serializedObject.FindProperty("dataDirectory");
@@ -99,7 +97,7 @@ namespace DarkRift.Server.Unity
                 EditorGUI.indentLevel++;
 
                 //Display IP address
-                address = EditorGUILayout.TextField(new GUIContent("Address", "The address the Client will connect to."), address);
+                address = EditorGUILayout.TextField(new GUIContent("Address", "The address the client will connect to."), address);
 
                 try
                 {
@@ -111,10 +109,6 @@ namespace DarkRift.Server.Unity
                 }
                 
                 EditorGUILayout.PropertyField(port);
-
-                //Draw IP versions manually else it gets formatted as "Ip Version" and "I Pv4" -_-
-                ipVersion.enumValueIndex = EditorGUILayout.Popup(new GUIContent("IP Version", "The IP protocol version the server will listen on."), ipVersion.enumValueIndex, Array.ConvertAll(ipVersion.enumNames, i => new GUIContent(i)));
-
                 EditorGUILayout.PropertyField(maxStrikes);
 
                 EditorGUI.indentLevel--;
@@ -182,8 +176,11 @@ namespace DarkRift.Server.Unity
             }
 
             //Draw databases manually
+#pragma warning disable 0618 // Implementing obsolete functionality
             if (showDatabases = EditorGUILayout.Foldout(showDatabases, "Databases"))
             {
+                EditorGUILayout.HelpBox("Management of database connection strings with DarkRift is deprecated. Consider declaring connection strings as a setting on the plugins that require it.", MessageType.Warning);
+
                 EditorGUI.indentLevel++;
                 for (int i = 0; i < server.Databases.Count; i++)
                 {
@@ -206,6 +203,7 @@ namespace DarkRift.Server.Unity
                 Rect addRect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(true));
                 if (GUI.Button(addRect, "Add Database"))
                     server.Databases.Add(new ServerSpawnData.DatabaseSettings.DatabaseConnectionData("NewDatabase", "Server=myServerAddress;Database=myDataBase;Uid=myUsername;Pwd=myPassword;"));
+#pragma warning restore 0618 // Implementing obsolete functionality
 
                 EditorGUI.indentLevel--;
             }
