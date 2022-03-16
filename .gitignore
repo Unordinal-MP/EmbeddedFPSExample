@@ -538,3 +538,5 @@ sysinfo.txt
 /EmbeddedFPSClient/UserSettings
 /EmbeddedFPSClient_clone_*
 */Hosting_builds
+/EmbeddedFPSClient/*.vsconfig
+/EmbeddedFPSClient/Data
