@@ -1,87 +1,23 @@
 using StarterAssets;
 using UnityEngine;
 
-public class CharacterAnimator : MonoBehaviour
+public class CharacterAnimator : MonoBehaviour, IStreamData
 {
     [SerializeField]
-    Transform debugTransform;
-
-    Animator anim;
-
-    public Camera cam;
-    
-    [SerializeField]
-    private LayerMask aimColliderMask;
-
-    [SerializeField]
-    Transform leftHandPoint;
-
-    [SerializeField]
-    GameObject bullet;
-    [SerializeField]
-    Transform bulletSpawnPoint;
-    [SerializeField]
-    float shootForce;
-    [SerializeField]
-    float rateOfFire;
-
-    float lastFired;
-
-    bool rifle;
-    private StarterAssetsInputs input;
+    private Animator anim;
 
     private void Awake()
     {
-        input = GetComponent<StarterAssetsInputs>();
         anim = GetComponent<Animator>();
-
-        //The cam will be disabled by default
-        //cam = GetComponentInChildren<Camera>();
-
-        rifle = true;
     }
 
-    private void LateUpdate()
+    public void OnServerDataUpdate(PlayerStateData playerStateData)
     {
-        GetTarget();
+        //TODO: Implement this once the new model is implemented
+        //Vector3 _movement = (playerStateData.Position - transform.position).normalized;
 
-        //if (rifle)
-        //{
-        //    if (Input.GetMouseButton(0) && Time.time - lastFired > 1 / rateOfFire)
-        //    {
-        //        Shoot();
-        //        lastFired = Time.time;
-        //    }
-        //}
-        //else
-        //{
-        //    if(Input.GetMouseButtonDown(0))
-        //    Shoot();
-        //}
+        //animator.SetFloat(animIDSpeedHorizontal, _movement.x * speedModifier, Time.deltaTime, Time.deltaTime);
+        //animator.SetFloat(animIDSpeedVertical, _movement.y * speedModifier, Time.deltaTime, Time.deltaTime);
+        //animator.SetFloat(animIDMotionSpeed, new Vector2(_movement.y, _movement.x).magnitude);
     }
-
-    public void GetTarget()
-    {
-        if (!debugTransform || !cam) return;
-
-        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, cam.farClipPlane, aimColliderMask))
-            debugTransform.position = hit.point;
-        else
-            debugTransform.transform.position = cam.transform.position + cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0)).direction.normalized * cam.farClipPlane;
-    }
-
-    private void OnAnimatorIK(int layerIndex)
-    {
-        anim.SetIKPosition(AvatarIKGoal.LeftHand, leftHandPoint.position);
-        anim.SetIKRotation(AvatarIKGoal.LeftHand, leftHandPoint.rotation);
-    }
-
-    //void Shoot()
-    //{
-    //    GameObject go = Instantiate(bullet, bulletSpawnPoint.position, Quaternion.identity);
-    //    go.transform.forward = bulletSpawnPoint.forward;
-    //    go.GetComponent<Rigidbody>().AddForce(bulletSpawnPoint.forward * shootForce);
-    //    Destroy(go, 20);
-    //}
 }

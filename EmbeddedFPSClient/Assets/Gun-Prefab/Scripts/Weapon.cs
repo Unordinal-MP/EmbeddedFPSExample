@@ -7,11 +7,25 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     protected Animator animator;
 
+    [SerializeField]
+    protected GameObject bullet;
+
+    [SerializeField]
+    protected float bulletForce;
+
+    [SerializeField]
+    protected Transform bulletTransform;
+
+    [Header("Stats")]
+    public float shootCooldown = 0.1f;
+
     protected bool isPuttingAway;
 
     protected bool isGettingWeapon;
 
     public bool isReloading { get; private set; }
+
+    public bool isShooting { get; private set; }
 
     public bool isReady { get => !isPuttingAway && !isPuttingAway; }
 
@@ -34,9 +48,18 @@ public class Weapon : MonoBehaviour
 
     public void Fire()
     {
-        if (!isReady || isReloading) return;
+        if (!isReady || isReloading || isShooting) return;
+
+        isShooting = true;
 
         animator.Play("Fire");
+
+        GameObject go = Instantiate(bullet, bulletTransform.position, Quaternion.identity);
+        go.transform.forward = bulletTransform.forward;
+        go.GetComponent<Rigidbody>().AddForce(bulletTransform.forward * bulletForce);
+        Destroy(go, 20);
+
+        StartCoroutine(ShootCooldown());
     }
 
     public void Reload()
@@ -79,6 +102,13 @@ public class Weapon : MonoBehaviour
         animator.Play("Putaway");
 
         switchOutRoutine = StartCoroutine(SwitchOutFinished());
+    }
+
+    private IEnumerator ShootCooldown()
+    {
+        yield return new WaitForSecondsRealtime(shootCooldown);
+
+        isShooting = false;
     }
 
     public IEnumerator SwitchInFinished()

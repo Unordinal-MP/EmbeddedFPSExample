@@ -70,7 +70,7 @@ public class GameManager : MonoBehaviour
 
         if (_player)
         {
-            _player.ShootBullet();
+            //_player.ShootBullet();
         }
     }
 

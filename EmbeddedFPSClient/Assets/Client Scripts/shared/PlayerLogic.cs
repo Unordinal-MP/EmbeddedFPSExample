@@ -3,9 +3,6 @@
 [RequireComponent(typeof(CharacterController))]
 public class PlayerLogic : MonoBehaviour
 {
-    [SerializeField]
-    bool serverSidePlayer;
-
     private Vector3 gravity;
 
     [Header("Settings")]
@@ -16,18 +13,18 @@ public class PlayerLogic : MonoBehaviour
     [SerializeField]
     private float jumpStrength;
 
-    ClientPlayer clientPlayer;
-    ServerPlayer serverPlayer;
+    //ClientPlayer clientPlayer;
+    //ServerPlayer serverPlayer;
 
     public CharacterController CharacterController { get; private set; }
 
     void Awake()
     {
         CharacterController = GetComponent<CharacterController>();
-        if (serverSidePlayer)
-            serverPlayer = GetComponent<ServerPlayer>();
-        else
-            clientPlayer = GetComponent<ClientPlayer>();
+        //if (serverSidePlayer)
+        //    serverPlayer = GetComponent<ServerPlayer>();
+        //else
+        //    clientPlayer = GetComponent<ClientPlayer>();
     }
 
     public void ConfigureSettings(float walkSpeed, float jumpStrength, float gravityConstant = 9.81f)
@@ -51,32 +48,28 @@ public class PlayerLogic : MonoBehaviour
 
         Vector3 movement = new Vector3(h, 0, v);
 
-        float speed = 0;
-
-        if (serverSidePlayer)
-        {
-            serverPlayer.grounded = input.Keyinputs[3];
-            speed = sprint ? serverPlayer.sprintSpeed : serverPlayer.moveSpeed;
-        }
-        else
-        {
-            clientPlayer.grounded = input.Keyinputs[3];
-            speed = sprint ? clientPlayer.sprintSpeed : clientPlayer.moveSpeed;
-        }
+        //if (serverSidePlayer)
+        //{
+        //    serverPlayer.grounded = input.Keyinputs[3];
+        //    speed = sprint ? serverPlayer.sprintSpeed : serverPlayer.moveSpeed;
+        //}
+        //else
+        //{
+        //    clientPlayer.grounded = input.Keyinputs[3];
+        //    speed = sprint ? clientPlayer.sprintSpeed : clientPlayer.moveSpeed;
+        //}
         /*if (CharacterController.isGrounded && jump)
         {
             clientPlayer.Jump();//gravity = new Vector3(0, jumpStrength, 0);
         }*/
 
-        movement = Quaternion.Euler(0, rotation.y, 0) * movement; // Move towards the look direction.
         movement.Normalize();
-        movement = movement * speed;
+        movement = transform.TransformDirection(movement);
 
-        movement = movement * Time.deltaTime;
-        movement = movement + gravity * Time.fixedDeltaTime;
+        movement.y += gravity.y * Time.deltaTime;
 
         // The following code fixes character controller issues from unity. It makes sure that the controller stays connected to the ground by adding a little bit of down movement.
-        CharacterController.Move(movement);
+        CharacterController.Move(movement * Time.fixedDeltaTime);
 
         return new PlayerStateData(currentStateData.Id, gravity.y, transform.position, input.LookDirection);
     }
