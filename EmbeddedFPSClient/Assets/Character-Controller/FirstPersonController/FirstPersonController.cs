@@ -40,6 +40,8 @@ public class FirstPersonController : MonoBehaviour
 
     private float cachedJumpTimer = 0f;
 
+    public float MouseSensitivity = 1;
+
     public Weapon currentWeapon { get; private set; }
 
     protected int currentWeaponIndex = 0;
@@ -73,8 +75,8 @@ public class FirstPersonController : MonoBehaviour
     {
         if (!camera) return;
 
-        float _axisX = Input.GetAxisRaw("Mouse X"),
-            _axisY = Input.GetAxisRaw("Mouse Y");
+        float _axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
+        float _axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
         transform.localRotation = Quaternion.Euler(new Vector3(0f, transform.localEulerAngles.y + _axisX, 0f));
         camera.transform.localRotation = Quaternion.Euler(new Vector3(camera.transform.localEulerAngles.x - _axisY, 0f, 0f));
