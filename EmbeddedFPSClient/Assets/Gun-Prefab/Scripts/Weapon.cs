@@ -16,6 +16,15 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     protected Transform bulletTransform;
 
+    [SerializeField]
+    protected GameObject tpWeapon;
+
+    [SerializeField]
+    protected AnimatorOverrideController tpAnimator;
+
+    [SerializeField]
+    private ParticleSystem muzzleFlash;
+
     [Header("Stats")]
     public float shootCooldown = 0.1f;
 
@@ -53,6 +62,7 @@ public class Weapon : MonoBehaviour
         isShooting = true;
 
         animator.Play("Fire");
+        muzzleFlash.Play();
 
         GameObject go = Instantiate(bullet, bulletTransform.position, Quaternion.identity);
         go.transform.forward = bulletTransform.forward;

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class FirstPersonController : MonoBehaviour
+public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
 {
     [SerializeField]
     protected float movementSpeed = 5f;
@@ -13,9 +13,6 @@ public class FirstPersonController : MonoBehaviour
 
     [SerializeField]
     protected Camera camera;
-
-    [SerializeField]
-    protected ParticleSystem muzzleFlash;
 
     [SerializeField]
     protected float clampCamAngle = 70f;
@@ -38,6 +35,9 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField]
     private float gravityMultiplier = 8f;
 
+    [SerializeField]
+    private Transform tpWeaponHolder;
+
     private float cachedJumpTimer = 0f;
 
     public float MouseSensitivity = 1;
@@ -54,55 +54,87 @@ public class FirstPersonController : MonoBehaviour
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+    }
+
+    private void OnEnable()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
 
         switchCoroutine = StartCoroutine(SwitchWeapon(0));
-
-        Cursor.lockState = CursorLockMode.Locked;
     }
 
-    // Update is called once per frame
-    private void Update()
+    // 
+    //private void Update()
+    //{
+    //    ComputeInputs();
+    //
+    //    CameraMovement();
+    //}
+
+    public PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time)
     {
-        ComputeInputs();
+        ComputeInputsAndRotations(out float[] _movement, out bool[] _inputs, out Vector3 _lookRotation);
+
+        return new PlayerStateData(currentStateData.Id, Physics.gravity.y, transform.position, _lookRotation, _movement, _inputs, time);
     }
 
-    private void LateUpdate()
+    public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
     {
-        CameraMovement();
+        if (isOwn) return;
+
+        if (playerStateData.isSwitchingWeapon)
+        {
+            StartCoroutine(SwitchWeapon(currentWeaponIndex + 1));
+        }
     }
 
-    private void CameraMovement()
+    private Vector3 CameraMovement()
     {
-        if (!camera) return;
+        if (!camera) return Vector3.zero;
 
         float _axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
         float _axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
         transform.localRotation = Quaternion.Euler(new Vector3(0f, transform.localEulerAngles.y + _axisX, 0f));
         camera.transform.localRotation = Quaternion.Euler(new Vector3(camera.transform.localEulerAngles.x - _axisY, 0f, 0f));
+
+        return new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
     }
 
-    private void ComputeInputs()
+    private void ComputeInputsAndRotations(out float[] movement, out bool[] inputs, out Vector3 rotation)
     {
-        MoveInputs();
+        inputs = new bool[8];
 
-        if (Input.GetMouseButton(0))
+        inputs[3] = isGrounded;
+
+        MoveInputs(out movement, out inputs[0]);
+
+        if (inputs[1] = Input.GetKeyDown(KeyCode.LeftShift))
         {
-            currentWeapon.Fire();
-            muzzleFlash.Play();
+
         }
 
-        if (Input.GetKeyDown(KeyCode.R))
+        if (inputs[2] = Input.GetMouseButton(0))
+        {
+            currentWeapon.Fire();
+        }
+
+        if (inputs[4] = Input.GetMouseButton(1))
+        { 
+        
+        }
+
+        if (inputs[5] = Input.GetKeyDown(KeyCode.R))
         {
             currentWeapon.Reload();
         }
 
-        if (Input.GetKeyDown(KeyCode.I))
+        if (inputs[6] = Input.GetKeyDown(KeyCode.I))
         {
             currentWeapon.Inspect();
         }
 
-        if (Input.GetKeyDown(KeyCode.V))
+        if (inputs[7] = Input.GetKeyDown(KeyCode.V))
         {
             if (switchCoroutine != null)
             {
@@ -113,13 +145,15 @@ public class FirstPersonController : MonoBehaviour
 
             switchCoroutine = StartCoroutine(SwitchWeapon(currentWeaponIndex + 1));
         }
+
+        rotation = CameraMovement();
     }
 
     private float cachedX = 0f, cachedZ = 0f;
 
     private float fallingTimer = 0f;
 
-    private Vector3 MoveInputs()
+    private void MoveInputs(out float[] movement, out bool jump)
     {
         GroundCheck();
 
@@ -168,7 +202,7 @@ public class FirstPersonController : MonoBehaviour
             jumpTimer = cachedJumpTimer;
         }
 
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (jump = Input.GetKeyDown(KeyCode.Space))
         {
             if (isGrounded && !isJumping)
             {
@@ -181,9 +215,7 @@ public class FirstPersonController : MonoBehaviour
 
         controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * Time.deltaTime);
 
-        //controller.Move(new Vector3(0f, , 0f) * Time.deltaTime);
-
-        return _movementDir;
+        movement = new float[] { _movementDir.x, _movementDir.z };
     }
 
     private IEnumerator SwitchWeapon(int index)
@@ -195,7 +227,7 @@ public class FirstPersonController : MonoBehaviour
             index = 0;
         }
 
-        if (currentWeapon)
+        if (currentWeapon && currentWeapon.enabled)
         {
             if (currentWeapon == weapons[index]) yield break;
 
@@ -208,7 +240,12 @@ public class FirstPersonController : MonoBehaviour
 
         currentWeapon = weapons[currentWeaponIndex];
 
-        currentWeapon.SwitchIn();
+        if (currentWeapon.enabled)
+        {
+            currentWeapon.SwitchIn();
+        }
+
+
     }
 
     private void GroundCheck()
@@ -223,7 +260,7 @@ public class FirstPersonController : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
+    private void OnDisable()
     {
         Cursor.lockState = CursorLockMode.None;
     }

@@ -6,28 +6,30 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+using UnityEngine.Events;
+
 public struct ReconciliationInfo
 {
-    public ReconciliationInfo(uint frame, PlayerStateData data, PlayerInputData input)
+    public ReconciliationInfo(uint frame, PlayerStateData data /*PlayerInputData input*/)
     {
         Frame = frame;
         Data = data;
-        Input = input;
+        //Input = input;
     }
 
     public uint Frame;
     public PlayerStateData Data;
-    public PlayerInputData Input;
+    //public PlayerInputData Input;
 }
 
 public interface IStreamData
 {
-    void OnServerDataUpdate(PlayerStateData playerStateData);
+    void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn);
 }
 
-[RequireComponent(typeof(PlayerLogic))]
+[RequireComponent(typeof(IPlayerLogic))]
 [RequireComponent(typeof(PlayerInterpolation))]
-public class ClientPlayer : MonoBehaviour, IStreamData
+public class ClientPlayer : MonoBehaviour
 {
     [SerializeField]
     float positionError = 5;
@@ -35,7 +37,10 @@ public class ClientPlayer : MonoBehaviour, IStreamData
     [SerializeField]
     private Camera playerCamera;
 
-    protected PlayerLogic playerLogic;
+    [SerializeField]
+    private UnityEvent localControllerInitalized = new UnityEvent();
+
+    protected IPlayerLogic playerLogic;
 
     protected PlayerInterpolation interpolation;
 
@@ -56,8 +61,7 @@ public class ClientPlayer : MonoBehaviour, IStreamData
 
     protected void Awake()
     {
-        // Will have to change this
-        playerLogic = GetComponent<PlayerLogic>();
+        playerLogic = GetComponent<IPlayerLogic>();
         interpolation = GetComponent<PlayerInterpolation>();
         playerHealth = GetComponent<PlayerHealth>();
 
@@ -65,15 +69,14 @@ public class ClientPlayer : MonoBehaviour, IStreamData
 
         foreach (var _streamData in _streamDatas)
         {
-            if ((object)_streamData == this)
-                continue;
-
             streamDatas.Add(_streamData);
         }
     }
 
     private void Update()
     {
+        if (!isOwn) return;
+
         PlayerUpdate();
     }
 
@@ -89,13 +92,9 @@ public class ClientPlayer : MonoBehaviour, IStreamData
         {
             isOwn = true;
 
-            playerCamera.gameObject.SetActive(true);
+            interpolation.CurrentData = new PlayerStateData(id);
 
-            interpolation.CurrentData = new PlayerStateData(this.id, 0, Vector3.zero, Quaternion.identity.eulerAngles);
-        }
-        else
-        {
-            playerCamera.gameObject.SetActive(false);
+            localControllerInitalized.Invoke();
         }
     }
 
@@ -111,14 +110,16 @@ public class ClientPlayer : MonoBehaviour, IStreamData
             if (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
+
                 if (Vector3.Distance(info.Data.Position, playerStateData.Position) > 0.05f)
                 {
                     List<ReconciliationInfo> infos = reconciliationHistory.ToList();
                     interpolation.CurrentData = playerStateData;
                     //transform.position = playerStateData.Position;
+
                     for (int i = 0; i < infos.Count; i++)
                     {
-                        playerStateData = playerLogic.GetNextFrameData(infos[i].Input, interpolation.CurrentData);
+                        playerStateData = playerLogic.GetNextFrameData(interpolation.CurrentData, GameManager.Instance.LastReceivedServerTick - 1);
                     }
                 }
             }
@@ -130,7 +131,7 @@ public class ClientPlayer : MonoBehaviour, IStreamData
         }
 
         foreach (var _streamData in streamDatas)
-            _streamData.OnServerDataUpdate(playerStateData);
+            _streamData.OnServerDataUpdate(playerStateData, isOwn);
     }
 
     public virtual void SetHealth(float value)
@@ -141,48 +142,27 @@ public class ClientPlayer : MonoBehaviour, IStreamData
 
     public void PlayerUpdate()
     {
-        if (!isOwn) return;
-
-        float[] moveInputs = new float[2];
-        moveInputs[0] = Input.GetKey(KeyCode.A) ? -1f : Input.GetKey(KeyCode.D) ? 1f : 0f;
-        moveInputs[1] = Input.GetKey(KeyCode.W) ? -1f : Input.GetKey(KeyCode.S) ? 1f : 0f;
-
-        bool[] inputs = new bool[4];
-        inputs[0] = Input.GetKeyDown(KeyCode.Space);
-        inputs[1] = Input.GetKey(KeyCode.LeftShift);
-        inputs[2] = Input.GetMouseButton(0);
-        inputs[3] = true;
-
-        Vector3 rotation = new Vector3(playerCamera.transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 0);
-
-        PlayerInputData inputData = new PlayerInputData(moveInputs, inputs, rotation, GameManager.Instance.LastReceivedServerTick - 1);
-        
-        //check position here
-        Vector3 newPosition = transform.position + transform.forward * moveInputs[1] + transform.right * moveInputs[0];
+        PlayerStateData currentData = new PlayerStateData(id);
 
         //transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime);
+        //interpolation.CurrentData = currentData;
 
-        PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
+        PlayerStateData nextStateData = playerLogic.GetNextFrameData(currentData, GameManager.Instance.LastReceivedServerTick - 1);
+        interpolation.CurrentData = nextStateData;
+
         interpolation.SetFramePosition(nextStateData);
 
-        using (Message message = Message.Create((ushort)Tags.GamePlayerInput, inputData))
+        using (Message message = Message.Create((ushort)Tags.GamePlayerInput, nextStateData))
         {
             ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
         }
+
         if (reconciliationHistory.Count < 20)
-            reconciliationHistory.Enqueue(new ReconciliationInfo(GameManager.Instance.ClientTick, nextStateData, inputData));
+            reconciliationHistory.Enqueue(new ReconciliationInfo(GameManager.Instance.ClientTick, nextStateData));
         else
         {
             reconciliationHistory.Dequeue();
-            reconciliationHistory.Enqueue(new ReconciliationInfo(GameManager.Instance.ClientTick, nextStateData, inputData));
+            reconciliationHistory.Enqueue(new ReconciliationInfo(GameManager.Instance.ClientTick, nextStateData));
         }
     }
-
-    //public void ShootBullet()
-    //{
-    //    GameObject go = Instantiate(shotPrefab, bulletSpawnPoint.position, Quaternion.identity);
-    //    go.transform.forward = bulletSpawnPoint.forward;
-    //    go.GetComponent<Rigidbody>().AddForce(bulletSpawnPoint.forward * shootForce);
-    //    Destroy(go, 20);
-    //}
 }

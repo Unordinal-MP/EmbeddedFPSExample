@@ -22,7 +22,7 @@ public class ServerPlayer : MonoBehaviour
     private PlayerStateData currentPlayerStateData;
 
     [SerializeField]
-    private Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
+    private Buffer<PlayerStateData> inputBuffer = new Buffer<PlayerStateData>(1, 2);
 
     private int health;
 
@@ -33,7 +33,7 @@ public class ServerPlayer : MonoBehaviour
     public List<PlayerStateData> PlayerStateDataHistory { get; } = new List<PlayerStateData>();
 
     [SerializeField]
-    private PlayerInputData[] inputs;
+    private PlayerStateData[] inputs;
 
     [SerializeField]
     private float syncSpeed = 10f;
@@ -52,7 +52,7 @@ public class ServerPlayer : MonoBehaviour
         Client = clientConnection.Client;
         this.clientConnection.Player = this;
         characterController = GetComponent<CharacterController>();
-        currentPlayerStateData = new PlayerStateData(Client.ID,0, position, Quaternion.identity.eulerAngles);
+        currentPlayerStateData = new PlayerStateData(Client.ID);
         InputTick = room.ServerTick;
         health = 100;
 
@@ -63,7 +63,7 @@ public class ServerPlayer : MonoBehaviour
         }
     }
 
-    public void RecieveInput(PlayerInputData input)
+    public void RecieveInput(PlayerStateData input)
     {
         inputBuffer.Add(input);
     }
@@ -96,13 +96,30 @@ public class ServerPlayer : MonoBehaviour
 
     public PlayerStateData PlayerUpdate()
     {
-        float inputX=0;
-        float inputY = 0;
-        bool sprint = false;
+        PlayerStateData playerStateData = RetrieveProperInputsFromQueue();
+        
+        PlayerStateDataHistory.Add(currentPlayerStateData);
+        if (PlayerStateDataHistory.Count > 10)
+        {
+            PlayerStateDataHistory.RemoveAt(0);
+        }
 
+        Vector3 newPosition = transform.position + transform.forward * playerStateData.vertical + transform.right * playerStateData.horizontal;
+
+        transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime);
+
+        transform.rotation = Quaternion.Euler(0, currentPlayerStateData.LookDirection.y, 0);
+        cinemachineCameraTarget.transform.rotation = Quaternion.Euler(currentPlayerStateData.LookDirection.x, 0, 0);
+
+        return playerStateData;
+    }
+
+    private PlayerStateData RetrieveProperInputsFromQueue()
+    {
         if (inputs.Length > 0)
         {
-            PlayerInputData input = inputs.First();
+            var input = inputs.First();
+
             InputTick++;
 
             for (int i = 1; i < inputs.Length; i++)
@@ -112,27 +129,13 @@ public class ServerPlayer : MonoBehaviour
                 {
                     input.Keyinputs[j] = input.Keyinputs[j] || inputs[i].Keyinputs[j];
                 }
+
                 input.LookDirection = inputs[i].LookDirection;
-                inputX = input.MovementInputs[0];
-                inputY = input.MovementInputs[1];
-                sprint = input.Keyinputs[1];
             }
 
-            currentPlayerStateData = PlayerLogic.GetNextFrameData(input, currentPlayerStateData);
-        }
-        
-        PlayerStateDataHistory.Add(currentPlayerStateData);
-        if (PlayerStateDataHistory.Count > 10)
-        {
-            PlayerStateDataHistory.RemoveAt(0);
+            currentPlayerStateData = PlayerLogic.GetNextFrameData(input, currentPlayerStateData.Time);
         }
 
-        Vector3 newPosition= transform.position+ transform.forward * inputY + transform.right * inputX;
-
-        transform.position = Vector3.Lerp(transform.position, newPosition, Time.deltaTime);
-
-        transform.rotation = Quaternion.Euler(0, currentPlayerStateData.LookDirection.y,0);
-        cinemachineCameraTarget.transform.rotation = Quaternion.Euler(currentPlayerStateData.LookDirection.x, 0, 0);
         return currentPlayerStateData;
     }
 

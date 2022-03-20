@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using DarkRift;
+﻿using DarkRift;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -83,6 +83,7 @@ public class Room : MonoBehaviour
         PlayerSpawnData[] playerSpawnDataArray = playerSpawnData.ToArray();
         PlayerDespawnData[] playerDespawnDataArray = playerDespawnData.ToArray();
         PlayerHealthUpdateData[] healthUpdateDataArray = healthUpdateData.ToArray();
+
         foreach (ServerPlayer p in serverPlayers)
         {
             using (Message m = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(p.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray)))
@@ -90,7 +91,7 @@ public class Room : MonoBehaviour
                 p.Client.SendMessage(m, SendMode.Reliable);
             }
         }
-        
+
         playerSpawnData.Clear();
         playerDespawnData.Clear();
         healthUpdateData.Clear();
@@ -136,7 +137,7 @@ public class Room : MonoBehaviour
         GameObject go = Instantiate(playerPrefab, transform);
         ServerPlayer player = go.GetComponent<ServerPlayer>();
         serverPlayers.Add(player);
-        playerStateData.Add(default);
+        playerStateData.Add(new PlayerStateData(clientConnection.Client.ID));
         player.Initialize(Vector3.zero, clientConnection);
 
         playerSpawnData.Add(player.GetPlayerSpawnData());

@@ -14,14 +14,18 @@ public class PlayerInterpolation : MonoBehaviour, IStreamData
         lastInputTime = Time.time;
     }
 
-    public void OnServerDataUpdate(PlayerStateData data)
+    public void OnServerDataUpdate(PlayerStateData data, bool isOwn)
     {
+        //Needs to be removed once the player controller is setup for the server, so the movement actually is authorative
+        if (isOwn) return;
+
         SetFramePosition(data);
 
         float timeSinceLastInput = Time.time - lastInputTime;
         float t = timeSinceLastInput / Time.fixedDeltaTime;
-        transform.position = Vector3.Lerp(PreviousData.Position, CurrentData.Position, t);
+        transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
+
         Vector3 lookRotation = new Vector3(0, CurrentData.LookDirection.y, 0);
-        transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.Euler(lookRotation), t); // remove but cause auto rotation
+        transform.rotation = Quaternion.SlerpUnclamped(Quaternion.Euler(new Vector3(0f, PreviousData.LookDirection.y, 0f)), Quaternion.Euler(lookRotation), t);
     }
 }

@@ -1,7 +1,12 @@
 ﻿using UnityEngine;
 
+public interface IPlayerLogic
+{
+    PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time);
+}
+
 [RequireComponent(typeof(CharacterController))]
-public class PlayerLogic : MonoBehaviour
+public class PlayerLogic : MonoBehaviour, IPlayerLogic
 {
     private Vector3 gravity;
 
@@ -34,16 +39,16 @@ public class PlayerLogic : MonoBehaviour
         this.gravityConstant = gravityConstant;
     }
 
-    public PlayerStateData GetNextFrameData(PlayerInputData input, PlayerStateData currentStateData)
+    public PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time)
     {
-        float h = input.MovementInputs[0];
-        float v = input.MovementInputs[1];
+        float h = currentStateData.horizontal;
+        float v = currentStateData.vertical;
 
-        bool jump = input.Keyinputs[0];
-        bool sprint = input.Keyinputs[1];
-        bool shoot = input.Keyinputs[2];
+        bool jump = currentStateData.isJumping;
+        bool sprint = currentStateData.isSprinting;
+        bool shoot = currentStateData.isShooting;
 
-        Vector3 rotation = transform.rotation.eulerAngles;
+        transform.rotation = Quaternion.Euler(new Vector3(0f, currentStateData.LookDirection.y, 0f));
         gravity.y = currentStateData.Gravity;
 
         Vector3 movement = new Vector3(h, 0, v);
@@ -71,6 +76,7 @@ public class PlayerLogic : MonoBehaviour
         // The following code fixes character controller issues from unity. It makes sure that the controller stays connected to the ground by adding a little bit of down movement.
         CharacterController.Move(movement * Time.fixedDeltaTime);
 
-        return new PlayerStateData(currentStateData.Id, gravity.y, transform.position, input.LookDirection);
+        //Parsing over the data from what was received instead of applying the movement from the server player is temporary, since the server player isn't finished yet
+        return new PlayerStateData(currentStateData.Id, gravity.y, currentStateData.Position, currentStateData.LookDirection, currentStateData.MovementInputs, currentStateData.Keyinputs, time);
     }
 }
