@@ -21,9 +21,6 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
     protected float jumpSpeed = 4f;
 
     [SerializeField]
-    protected List<Weapon> weapons = new List<Weapon>();
-
-    [SerializeField]
     private bool isGrounded = false;
 
     [SerializeField]
@@ -35,41 +32,25 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
     [SerializeField]
     private float gravityMultiplier = 8f;
 
-    [SerializeField]
-    private Transform tpWeaponHolder;
-
     private float cachedJumpTimer = 0f;
 
     public float MouseSensitivity = 1;
 
-    public Weapon currentWeapon { get; private set; }
-
-    protected int currentWeaponIndex = 0;
-
-    private Coroutine switchCoroutine;
-
     private bool isJumping = false;
+
+    private WeaponController weaponController;
 
     // Start is called before the first frame updateok
     private void Start()
     {
         controller = GetComponent<CharacterController>();
+        weaponController = GetComponent<WeaponController>();
     }
 
     private void OnEnable()
     {
         Cursor.lockState = CursorLockMode.Locked;
-
-        switchCoroutine = StartCoroutine(SwitchWeapon(0));
     }
-
-    // 
-    //private void Update()
-    //{
-    //    ComputeInputs();
-    //
-    //    CameraMovement();
-    //}
 
     public PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time)
     {
@@ -81,11 +62,6 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
     public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
     {
         if (isOwn) return;
-
-        if (playerStateData.isSwitchingWeapon)
-        {
-            StartCoroutine(SwitchWeapon(currentWeaponIndex + 1));
-        }
     }
 
     private Vector3 CameraMovement()
@@ -116,34 +92,27 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
 
         if (inputs[2] = Input.GetMouseButton(0))
         {
-            currentWeapon.Fire();
+            weaponController.Fire();
         }
 
         if (inputs[4] = Input.GetMouseButton(1))
-        { 
-        
+        {
+            
         }
 
         if (inputs[5] = Input.GetKeyDown(KeyCode.R))
         {
-            currentWeapon.Reload();
+            weaponController.Reload();
         }
 
         if (inputs[6] = Input.GetKeyDown(KeyCode.I))
         {
-            currentWeapon.Inspect();
+            weaponController.Inspect();
         }
 
         if (inputs[7] = Input.GetKeyDown(KeyCode.V))
         {
-            if (switchCoroutine != null)
-            {
-                StopCoroutine(switchCoroutine);
-
-                switchCoroutine = null;
-            }
-
-            switchCoroutine = StartCoroutine(SwitchWeapon(currentWeaponIndex + 1));
+            weaponController.SwitchWeapon();
         }
 
         rotation = CameraMovement();
@@ -216,36 +185,6 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
         controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * Time.deltaTime);
 
         movement = new float[] { _movementDir.x, _movementDir.z };
-    }
-
-    private IEnumerator SwitchWeapon(int index)
-    {
-        if (weapons.Count == 0) yield break;
-
-        if (index >= weapons.Count)
-        {
-            index = 0;
-        }
-
-        if (currentWeapon && currentWeapon.enabled)
-        {
-            if (currentWeapon == weapons[index]) yield break;
-
-            currentWeapon.SwitchOut();
-
-            yield return new WaitUntil(() => !currentWeapon.gameObject.activeSelf);
-        }
-
-        currentWeaponIndex = index;
-
-        currentWeapon = weapons[currentWeaponIndex];
-
-        if (currentWeapon.enabled)
-        {
-            currentWeapon.SwitchIn();
-        }
-
-
     }
 
     private void GroundCheck()

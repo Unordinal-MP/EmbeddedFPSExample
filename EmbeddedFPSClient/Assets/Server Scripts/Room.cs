@@ -58,6 +58,7 @@ public class Room : MonoBehaviour
     public List<ClientConnection> ClientConnections = new List<ClientConnection>();
     public byte MaxSlots;
     public uint ServerTick;
+    public LayerMask hitLayers;
 
     [Header("Prefabs")]
     [SerializeField]
@@ -167,8 +168,8 @@ public class Room : MonoBehaviour
         }
         else
         {
-            startPosition = shooter.CurrentPlayerStateData.Position;
-            direction = shooter.CurrentPlayerStateData.LookDirection + transform.forward;
+            startPosition = shooter.cinemachineCameraTarget.transform.position;
+            direction = shooter.cinemachineCameraTarget.transform.forward;
         }
 
         startPosition += direction * 3f;
@@ -183,12 +184,16 @@ public class Room : MonoBehaviour
             }
         }
 
+        Debug.DrawRay(startPosition, direction, Color.red, 20f);
+
         RaycastHit hit;
-        if (physicsScene.Raycast(startPosition, direction,out hit, 200f))
+        if (physicsScene.Raycast(startPosition, direction,out hit, 200f, hitLayers))
         {
             if (hit.transform.CompareTag("Unit"))
             {
                 hit.transform.GetComponent<ServerPlayer>().TakeDamage(5);
+
+                Debug.Log("Player was hit");
             }
         }
 

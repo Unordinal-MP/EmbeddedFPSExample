@@ -17,10 +17,10 @@ public class Weapon : MonoBehaviour
     protected Transform bulletTransform;
 
     [SerializeField]
-    protected GameObject tpWeapon;
+    public GameObject tpWeapon;
 
     [SerializeField]
-    protected AnimatorOverrideController tpAnimator;
+    public AnimatorOverrideController characterAnimatorOverrider;
 
     [SerializeField]
     private ParticleSystem muzzleFlash;
@@ -100,7 +100,10 @@ public class Weapon : MonoBehaviour
 
         animator.Play("Draw");
 
-        switchInRoutine = StartCoroutine(SwitchInFinished());
+        if (gameObject.activeInHierarchy)
+        {
+            switchInRoutine = StartCoroutine(SwitchInFinished());
+        }
     }
 
     public void SwitchOut()
