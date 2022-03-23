@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
@@ -49,7 +50,35 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
 
     private void OnEnable()
     {
+        LockCursor();
+    }
+
+    private void OnDisable()
+    {
+        UnlockCursor();
+    }
+
+    private void LockCursor()
+    {
+        if (IsCursorLocked())
+            return;
+
+        Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
+    }
+
+    private void UnlockCursor()
+    {
+        if (!IsCursorLocked())
+            return;
+
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+    }
+
+    private bool IsCursorLocked()
+    {
+        return Cursor.lockState != CursorLockMode.None;
     }
 
     public PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time)
@@ -85,19 +114,41 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
 
         MoveInputs(out movement, out inputs[0]);
 
+        if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
+        {
+            if (!EventSystem.current.IsPointerOverGameObject())
+            {
+                LockCursor();
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (IsCursorLocked())
+            {
+                UnlockCursor(); 
+            }
+            else
+            {
+                Application.Quit();
+            }
+        }
+
+        if (IsCursorLocked())
+        {
+            if (inputs[2] = Input.GetMouseButton(0))
+            {
+                weaponController.Fire();
+            }
+
+            if (inputs[4] = Input.GetMouseButton(1))
+            {
+
+            }
+        }
+
         if (inputs[1] = Input.GetKeyDown(KeyCode.LeftShift))
         {
 
-        }
-
-        if (inputs[2] = Input.GetMouseButton(0))
-        {
-            weaponController.Fire();
-        }
-
-        if (inputs[4] = Input.GetMouseButton(1))
-        {
-            
         }
 
         if (inputs[5] = Input.GetKeyDown(KeyCode.R))
@@ -197,10 +248,5 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
         {
             isGrounded = false;
         }
-    }
-
-    private void OnDisable()
-    {
-        Cursor.lockState = CursorLockMode.None;
     }
 }
