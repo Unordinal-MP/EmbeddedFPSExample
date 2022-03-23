@@ -26,6 +26,8 @@ public class ConnectionManager : MonoBehaviour
 
     public LobbyInfoData LobbyInfoData { get; set; }
 
+    private LiteNetNetworkClientConnection _clientConnection;
+
     public delegate void OnConnectedDelegate();
     public event OnConnectedDelegate OnConnected;
     void Awake()
@@ -49,8 +51,16 @@ public class ConnectionManager : MonoBehaviour
         {
             ip = Dns.GetHostEntry(hostname).AddressList[0];
         }
+
+        _clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
         
-        Client.ConnectInBackground(ip, port, udport,true, ConnectCallback);
+        Client.Client.ConnectInBackground(_clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
+    }
+
+    private void Update()
+    {
+        if (_clientConnection != null)
+            _clientConnection.Update();
     }
 
     private void ConnectCallback(Exception exception)
