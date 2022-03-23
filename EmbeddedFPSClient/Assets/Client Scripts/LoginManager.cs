@@ -12,27 +12,41 @@ public class LoginManager : MonoBehaviour
     private GameObject loginWindow;
     [SerializeField]
     private InputField nameInput;
+    [SerializeField]
+    private InputField hostInput;
     [SerializeField] 
     private Button submitLoginButton;
 
     void Start()
     {
-        ConnectionManager.Instance.OnConnected += StartLoginProcess;
-        submitLoginButton.onClick.AddListener(OnSubmitLogin);
+        ConnectionManager.Instance.OnConnected += OnConnected;
+        submitLoginButton.onClick.AddListener(StartConnectingIfPossible);
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
-
-        loginWindow.SetActive(false);
     }
 
     void OnDestroy()
     {
-        ConnectionManager.Instance.OnConnected -= StartLoginProcess;
+        ConnectionManager.Instance.OnConnected -= OnConnected;
         ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
     }
 
-    public void StartLoginProcess()
+    public void OnConnected()
     {
-        loginWindow.SetActive(true);
+        SubmitLogin();
+    }
+
+    void StartConnectingIfPossible()
+    {
+        if (nameInput.text == "")
+        {
+            nameInput.text = "Beginner";
+            return;
+        }
+
+        string hostname = hostInput.text;
+        if (hostname == "")
+            hostname = ConnectionManager.Instance.Hostname;
+        ConnectionManager.Instance.Connect(hostname);
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
@@ -51,16 +65,16 @@ public class LoginManager : MonoBehaviour
         }
     }
 
-    public void OnSubmitLogin()
+    public void SubmitLogin()
     {
-        if (!String.IsNullOrEmpty(nameInput.text))
-        {
-            loginWindow.SetActive(false);
+        if (String.IsNullOrEmpty(nameInput.text))
+            nameInput.text = "Unnamed Player";
 
-            using (Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(nameInput.text)))
-            {
-                ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
-            }
+        loginWindow.SetActive(false);
+
+        using (Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(nameInput.text)))
+        {
+            ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
         }
     }
 

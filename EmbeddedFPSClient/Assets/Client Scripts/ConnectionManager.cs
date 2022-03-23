@@ -11,7 +11,7 @@ public class ConnectionManager : MonoBehaviour
 
     [Header("Settings")]
     [SerializeField]
-    private string ipAdress;
+    public string Hostname;
     [SerializeField]
     private int port;
     private int udport = 4297;
@@ -30,7 +30,6 @@ public class ConnectionManager : MonoBehaviour
     public event OnConnectedDelegate OnConnected;
     void Awake()
     {
-        Debug.Log("Has been called");
         if (Instance != null)
         {
             Destroy(gameObject);
@@ -41,9 +40,17 @@ public class ConnectionManager : MonoBehaviour
         Client = GetComponent<UnityClient>();
     }
 
-    void Start()
+    public void Connect(string hostname)
     {
-        Client.ConnectInBackground(IPAddress.Parse(ipAdress), port,udport,true, ConnectCallback);
+        if (hostname == "localhost")
+            hostname = "127.0.0.1";
+
+        if (!IPAddress.TryParse(hostname, out var ip))
+        {
+            ip = Dns.GetHostEntry(hostname).AddressList[0];
+        }
+        
+        Client.ConnectInBackground(ip, port, udport,true, ConnectCallback);
     }
 
     private void ConnectCallback(Exception exception)
