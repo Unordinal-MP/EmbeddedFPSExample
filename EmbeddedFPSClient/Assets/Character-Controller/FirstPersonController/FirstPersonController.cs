@@ -31,6 +31,10 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
     private float jumpTimer = 0f;
 
     [SerializeField]
+
+    private float GroundHieght = 0.6f;
+
+    [SerializeField]
     private float gravityMultiplier = 8f;
 
     private float cachedJumpTimer = 0f;
@@ -240,7 +244,7 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
 
     private void GroundCheck()
     {
-        if (Physics.Linecast(controller.bounds.center, controller.bounds.center + (-Vector3.up * (controller.height * 0.6f)), out RaycastHit _hit, groundLayer))
+        if (Physics.Linecast(controller.bounds.center, controller.bounds.center + (-Vector3.up * (controller.height * GroundHieght)), out RaycastHit _hit, groundLayer))
         {
             isGrounded = true;
         }
