@@ -16,6 +16,9 @@ public class GameManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject PlayerPrefab;
 
+    [SerializeField]
+    private Transform[] spawners;
+
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
 
@@ -43,6 +46,7 @@ public class GameManager : MonoBehaviour
         {
             ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
         }
+
     }
 
     void OnMessage(object sender, MessageReceivedEventArgs e)
@@ -88,10 +92,9 @@ public class GameManager : MonoBehaviour
     {
         gameUpdateDataBuffer.Add(gameUpdateData);
     }
-
     void SpawnPlayer(PlayerSpawnData playerSpawnData)
     {
-        GameObject go = Instantiate(PlayerPrefab);
+        GameObject go = Instantiate(PlayerPrefab, spawners[Random.Range(0, spawners.Length)].position , Quaternion.identity);
         ClientPlayer player = go.GetComponent<ClientPlayer>();
         player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
         players.Add(playerSpawnData.Id, player);

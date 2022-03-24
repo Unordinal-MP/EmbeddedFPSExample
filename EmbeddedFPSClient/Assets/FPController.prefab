@@ -408,7 +408,7 @@ GameObject:
   - component: {fileID: 7092378570143529942}
   m_Layer: 0
   m_Name: FPController
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -469,6 +469,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   jumpTimer: 0.4
+  GroundHieght: 0.6
   gravityMultiplier: 8
   MouseSensitivity: 1
 --- !u!82 &1872722314698896247
