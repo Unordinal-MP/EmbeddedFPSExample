@@ -16,8 +16,6 @@ public class GameManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject PlayerPrefab;
 
-    [SerializeField]
-    private Transform[] spawners;
 
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
@@ -92,12 +90,31 @@ public class GameManager : MonoBehaviour
     {
         gameUpdateDataBuffer.Add(gameUpdateData);
     }
+
     void SpawnPlayer(PlayerSpawnData playerSpawnData)
     {
-        GameObject go = Instantiate(PlayerPrefab, spawners[Random.Range(0, spawners.Length)].position , Quaternion.identity);
-        ClientPlayer player = go.GetComponent<ClientPlayer>();
-        player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
-        players.Add(playerSpawnData.Id, player);
+        Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
+        GameObject go;
+        if (spawnpoint != null)
+        {
+            go = Instantiate(PlayerPrefab, spawnpoint.position, Quaternion.identity);
+
+        }
+        else
+        { 
+
+            go = Instantiate(PlayerPrefab, SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, Quaternion.identity);
+
+        }
+
+        if (go != null)
+        {
+            ClientPlayer player = go.GetComponent<ClientPlayer>();
+            player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
+            players.Add(playerSpawnData.Id, player);
+        }
+       
+
     }
 
     void FixedUpdate()
