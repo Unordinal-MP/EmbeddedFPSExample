@@ -1,44 +1,7 @@
-﻿using DarkRift;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using DarkRift;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-
-public struct BulletShotMessage : IDarkRiftSerializable
-{
-    public Vector3 startPosition;
-
-    public Vector3 direction;
-
-    public ushort clientID;
-
-    public BulletShotMessage(Vector3 pos, Vector3 dir, ushort id)
-    {
-        startPosition = pos;
-        direction = dir;
-        clientID = id;
-    }
-
-    public void Deserialize(DeserializeEvent e)
-    {
-        startPosition = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-        direction = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-
-        clientID = e.Reader.ReadUInt16();
-    }
-
-    public void Serialize(SerializeEvent e)
-    {
-        e.Writer.Write(startPosition.x);
-        e.Writer.Write(startPosition.y);
-        e.Writer.Write(startPosition.z);
-
-        e.Writer.Write(direction.x);
-        e.Writer.Write(direction.y);
-        e.Writer.Write(direction.z);
-
-        e.Writer.Write(clientID);
-    }
-}
 
 public class Room : MonoBehaviour
 {
@@ -64,7 +27,7 @@ public class Room : MonoBehaviour
     [SerializeField]
     private GameObject playerPrefab;
 
-    void Update()
+    void FixedUpdate()
     {
         ServerTick++;
 
@@ -84,7 +47,6 @@ public class Room : MonoBehaviour
         PlayerSpawnData[] playerSpawnDataArray = playerSpawnData.ToArray();
         PlayerDespawnData[] playerDespawnDataArray = playerDespawnData.ToArray();
         PlayerHealthUpdateData[] healthUpdateDataArray = healthUpdateData.ToArray();
-
         foreach (ServerPlayer p in serverPlayers)
         {
             using (Message m = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(p.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray)))
@@ -92,7 +54,7 @@ public class Room : MonoBehaviour
                 p.Client.SendMessage(m, SendMode.Reliable);
             }
         }
-
+        
         playerSpawnData.Clear();
         playerDespawnData.Clear();
         healthUpdateData.Clear();
@@ -123,10 +85,7 @@ public class Room : MonoBehaviour
 
     public void RemovePlayerFromRoom(ClientConnection clientConnection)
     {
-        if (clientConnection.Player != null)
-            Destroy(clientConnection.Player.gameObject);
-        else
-            Debug.LogError("clientConnection.Player should not be null"); //TODO: pls fix Shubham
+        Destroy(clientConnection.Player.gameObject);
         playerDespawnData.Add(new PlayerDespawnData(clientConnection.Client.ID));
         ClientConnections.Remove(clientConnection);
         serverPlayers.Remove(clientConnection.Player);
@@ -138,7 +97,7 @@ public class Room : MonoBehaviour
         GameObject go = Instantiate(playerPrefab, transform);
         ServerPlayer player = go.GetComponent<ServerPlayer>();
         serverPlayers.Add(player);
-        playerStateData.Add(new PlayerStateData(clientConnection.Client.ID));
+        playerStateData.Add(default);
         player.Initialize(Vector3.zero, clientConnection);
 
         playerSpawnData.Add(player.GetPlayerSpawnData());
@@ -164,12 +123,12 @@ public class Room : MonoBehaviour
         if (shooter.PlayerStateDataHistory.Count > dif)
         {
             startPosition = shooter.PlayerStateDataHistory[dif].Position;
-            direction =  shooter.PlayerStateDataHistory[dif].LookDirection + transform.forward;
+            direction = shooter.PlayerStateDataHistory[dif].Input.LookDirection * Vector3.forward;
         }
         else
         {
-            startPosition = shooter.cinemachineCameraTarget.transform.position;
-            direction = shooter.cinemachineCameraTarget.transform.forward;
+            startPosition = shooter.CurrentPlayerStateData.Position;
+            direction = shooter.CurrentPlayerStateData.Input.LookDirection * Vector3.forward;
         }
 
         startPosition += direction * 3f;
@@ -184,34 +143,20 @@ public class Room : MonoBehaviour
             }
         }
 
-        Debug.DrawRay(startPosition, direction, Color.red, 20f);
-
         RaycastHit hit;
         if (physicsScene.Raycast(startPosition, direction,out hit, 200f, hitLayers))
         {
             if (hit.transform.CompareTag("Unit"))
             {
                 hit.transform.GetComponent<ServerPlayer>().TakeDamage(5);
-
-                Debug.Log("Player was hit");
             }
         }
 
-        Debug.Log("Shooting bullet");
-
-        using (Message _msg = Message.Create((ushort)Tags.ShotBullet, new BulletShotMessage(startPosition, direction, shooter.Client.ID)))
+        // Set all players back.
+        foreach (ServerPlayer player in serverPlayers)
         {
-            // Set all players back.
-            foreach (ServerPlayer player in serverPlayers)
-            {
-                player.transform.localPosition = player.CurrentPlayerStateData.Position;
-                player.PlayerLogic.CharacterController.enabled = true;
-
-                if (player.Client.ID == shooter.Client.ID)
-                    continue;
-
-                player.Client.SendMessage(_msg, SendMode.Unreliable);
-            }
+            player.transform.localPosition = player.CurrentPlayerStateData.Position;
+            player.PlayerLogic.CharacterController.enabled = true;
         }
     }
 

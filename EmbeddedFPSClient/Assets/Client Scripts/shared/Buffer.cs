@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-[System.Serializable]
 public class Buffer<T>
 {
     private Queue<T> elements;

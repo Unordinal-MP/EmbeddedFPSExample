@@ -19,10 +19,6 @@ public class GameManager : MonoBehaviour
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
 
-    private const double _windowSize = 10;
-    public TimeBuffer MessageStat { get; private set; } = new TimeBuffer() { WindowInSeconds = _windowSize };
-    public TimeBuffer ByteStat { get; private set; } = new TimeBuffer() { WindowInSeconds = _windowSize };
-
     void Awake()
     {
         if (Instance != null)
@@ -53,8 +49,8 @@ public class GameManager : MonoBehaviour
     {
         using (Message message = e.GetMessage())
         {
-            MessageStat.AddNow();
-            ByteStat.AddNow(message.DataLength);
+            ClientStats.instance.MessagesIn.AddNow();
+            ClientStats.instance.BytesIn.AddNow(message.DataLength);
 
             switch ((Tags)message.Tag)
             {
@@ -134,7 +130,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        foreach (PlayerStateData data in gameUpdateData.PlayerStateData)
+        foreach (PlayerStateData data in gameUpdateData.UpdateData)
         {
             ClientPlayer p;
             if (players.TryGetValue(data.Id, out p))

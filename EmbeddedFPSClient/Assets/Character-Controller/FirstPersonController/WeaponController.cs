@@ -23,7 +23,7 @@ public class WeaponController : MonoBehaviour, IStreamData
     {
         if (isOwn) return;
 
-        if(playerStateData.isSwitchingWeapon)
+        if(playerStateData.Input.isSwitchingWeapon)
         {
             switchCoroutine = StartCoroutine(SwitchWeapon(currentWeaponIndex + 1));
         }

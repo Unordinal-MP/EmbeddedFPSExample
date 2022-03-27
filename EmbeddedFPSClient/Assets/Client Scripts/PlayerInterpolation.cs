@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class PlayerInterpolation : MonoBehaviour, IStreamData
+public class PlayerInterpolation : MonoBehaviour
 {
     private float lastInputTime;
 
@@ -9,23 +9,22 @@ public class PlayerInterpolation : MonoBehaviour, IStreamData
 
     public void SetFramePosition(PlayerStateData data)
     {
-        PreviousData = CurrentData;
-        CurrentData = data;
-        lastInputTime = Time.time;
+        RefreshToPosition(data, CurrentData);
     }
 
-    public void OnServerDataUpdate(PlayerStateData data, bool isOwn)
+    public void RefreshToPosition(PlayerStateData data, PlayerStateData prevData)
     {
-        //Needs to be removed once the player controller is setup for the server, so the movement actually is authorative
-        if (isOwn) return;
+        PreviousData = prevData;
+        CurrentData = data;
+        lastInputTime = Time.fixedTime;
+    }
 
-        SetFramePosition(data);
-
+    public void Update()
+    {
         float timeSinceLastInput = Time.time - lastInputTime;
         float t = timeSinceLastInput / Time.fixedDeltaTime;
         transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
-
-        Vector3 lookRotation = new Vector3(0, CurrentData.LookDirection.y, 0);
-        transform.rotation = Quaternion.SlerpUnclamped(Quaternion.Euler(new Vector3(0f, PreviousData.LookDirection.y, 0f)), Quaternion.Euler(lookRotation), t);
+        transform.rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
     }
 }
+

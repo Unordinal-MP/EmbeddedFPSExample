@@ -15,6 +15,7 @@ public class HudManager : MonoBehaviour
 
     private string _messageInRate;
     private string _byteInRate;
+    private string _reconciliationRate;
 
     void Start()
     {
@@ -56,12 +57,11 @@ public class HudManager : MonoBehaviour
 
     private void UpdateStats()
     {
-        if (GameManager.Instance == null)
-            return;
-
         //this primarily serves a purpose of being more visually appealing and readable than values changing every frame
-        _messageInRate = GameManager.Instance.MessageStat.GetWindowRate().ToString("N3", CultureInfo.InvariantCulture);
-        _byteInRate = GameManager.Instance.ByteStat.GetWindowRate().ToString("N3", CultureInfo.InvariantCulture);
+        var culture = CultureInfo.InvariantCulture;
+        _messageInRate = ClientStats.instance.MessagesIn.GetWindowRate().ToString("N3", culture);
+        _byteInRate = ClientStats.instance.BytesIn.GetWindowRate().ToString("N3", culture);
+        _reconciliationRate = ClientStats.instance.Reconciliations.GetWindowRate().ToString("N3", culture);
     }
 
     private void OnGUI()
@@ -86,5 +86,6 @@ public class HudManager : MonoBehaviour
         GUILayout.Label("RTT: " + _client.Client.RoundTripTime.LatestRtt);
         GUILayout.Label("In messages/s: " + _messageInRate);
         GUILayout.Label("In bytes/s: " + _byteInRate);
+        GUILayout.Label("Reconciliations/s: " + _reconciliationRate);
     }
 }

@@ -4,44 +4,34 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(CharacterController))]
-public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
+public class FirstPersonController : MonoBehaviour
 {
     [SerializeField]
-    protected float movementSpeed = 5f;
+    public float movementSpeed = 5f;
 
     [SerializeField]
     protected CharacterController controller;
 
     [SerializeField]
-    protected Camera camera;
+    public new Camera camera;
 
     [SerializeField]
     protected float clampCamAngle = 70f;
 
     [SerializeField]
-    protected float jumpSpeed = 4f;
+    public float jumpSpeed = 4f;
 
     [SerializeField]
-    private bool isGrounded = false;
-
-    [SerializeField]
-    private LayerMask groundLayer;
-
-    [SerializeField]
-    private float jumpTimer = 0f;
+    public LayerMask groundLayer;
 
     [SerializeField]
 
-    private float GroundHieght = 0.6f;
+    public float GroundHieght = 0.6f;
 
     [SerializeField]
-    private float gravityMultiplier = 8f;
+    public float gravityMultiplier = 8f;
 
-    private float cachedJumpTimer = 0f;
-
-    public float MouseSensitivity = 1;
-
-    private bool isJumping = false;
+    public float MouseSensitivity { get; set; } = 1;
 
     private WeaponController weaponController;
 
@@ -85,11 +75,11 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
         return Cursor.lockState != CursorLockMode.None;
     }
 
-    public PlayerStateData GetNextFrameData(PlayerStateData currentStateData, uint time)
+    public PlayerInputData GetInputs(uint time)
     {
-        ComputeInputsAndRotations(out float[] _movement, out bool[] _inputs, out Vector3 _lookRotation);
+        ComputeInputsAndRotations(out bool[] _inputs, out Quaternion _lookRotation);
 
-        return new PlayerStateData(currentStateData.Id, Physics.gravity.y, transform.position, _lookRotation, _movement, _inputs, time);
+        return new PlayerInputData(_inputs, _lookRotation, time);
     }
 
     public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
@@ -97,26 +87,42 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
         if (isOwn) return;
     }
 
-    private Vector3 CameraMovement()
+    public void Update()
     {
-        if (!camera) return Vector3.zero;
+        CameraMovement();
+    }
 
+    void CameraMovement()
+    {
         float _axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
         float _axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
         transform.localRotation = Quaternion.Euler(new Vector3(0f, transform.localEulerAngles.y + _axisX, 0f));
         camera.transform.localRotation = Quaternion.Euler(new Vector3(camera.transform.localEulerAngles.x - _axisY, 0f, 0f));
-
-        return new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
     }
 
-    private void ComputeInputsAndRotations(out float[] movement, out bool[] inputs, out Vector3 rotation)
+    private void ComputeInputsAndRotations(out bool[] outInputs, out Quaternion rotation)
     {
-        inputs = new bool[8];
+        var inputs = new bool[(int)PlayerAction.NumActions];
+        outInputs = inputs;
 
-        inputs[3] = isGrounded;
+        inputs[(int)PlayerAction.Jump] = Input.GetKeyDown(KeyCode.Space);
+        inputs[(int)PlayerAction.Sprint] = Input.GetKeyDown(KeyCode.LeftShift);
+        inputs[(int)PlayerAction.Fire] = Input.GetMouseButton(0);
+        inputs[(int)PlayerAction.Grounded] = true; //TODO: must compute locally until we have server auth map loading
+        inputs[(int)PlayerAction.Aim] = Input.GetMouseButton(1);
+        inputs[(int)PlayerAction.Reload] = Input.GetKeyDown(KeyCode.R);
+        inputs[(int)PlayerAction.Inspect] = Input.GetKeyDown(KeyCode.I);
+        inputs[(int)PlayerAction.SwitchWeapon] = Input.GetKeyDown(KeyCode.V);
+        inputs[(int)PlayerAction.Forward] = Input.GetKey(KeyCode.W);
+        inputs[(int)PlayerAction.Left] = Input.GetKey(KeyCode.A);
+        inputs[(int)PlayerAction.Right] = Input.GetKey(KeyCode.S);
+        inputs[(int)PlayerAction.Back] = Input.GetKey(KeyCode.D);
 
-        MoveInputs(out movement, out inputs[0]);
+        bool HasAction(PlayerAction which)
+        {
+            return inputs[(int)which];
+        }
 
         if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
         {
@@ -137,120 +143,47 @@ public class FirstPersonController : MonoBehaviour, IPlayerLogic, IStreamData
             }
         }
 
+        //TODO: move synchronizing actions to PlayerLogic
         if (IsCursorLocked())
         {
-            if (inputs[2] = Input.GetMouseButton(0))
+            if (HasAction(PlayerAction.Fire))
             {
                 weaponController.Fire();
             }
 
-            if (inputs[4] = Input.GetMouseButton(1))
+            if (HasAction(PlayerAction.Aim))
             {
 
             }
         }
 
-        if (inputs[1] = Input.GetKeyDown(KeyCode.LeftShift))
+        if (HasAction(PlayerAction.Sprint))
         {
 
         }
 
-        if (inputs[5] = Input.GetKeyDown(KeyCode.R))
+        if (HasAction(PlayerAction.Reload))
         {
             weaponController.Reload();
         }
 
-        if (inputs[6] = Input.GetKeyDown(KeyCode.I))
+        if (HasAction(PlayerAction.Inspect))
         {
             weaponController.Inspect();
         }
 
-        if (inputs[7] = Input.GetKeyDown(KeyCode.V))
+        if (HasAction(PlayerAction.SwitchWeapon))
         {
             weaponController.SwitchWeapon();
         }
 
-        rotation = CameraMovement();
-    }
-
-    private float cachedX = 0f, cachedZ = 0f;
-
-    private float fallingTimer = 0f;
-
-    private void MoveInputs(out float[] movement, out bool jump)
-    {
-        GroundCheck();
-
-        Vector3 _movementDir = Vector3.zero;
-
-        if (Input.GetKey(KeyCode.W))
+        if (camera)
         {
-            _movementDir.z += 1f;
-        }
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            _movementDir.x += -1f;
-        }
-
-        if (Input.GetKey(KeyCode.S))
-        {
-            _movementDir.z += -1f;
-        }
-
-        if (Input.GetKey(KeyCode.D))
-        {
-            _movementDir.x += 1f;
-        }
-
-        if (!isGrounded)
-        {
-            fallingTimer += Time.deltaTime * gravityMultiplier;
-
-            _movementDir.x = cachedX;
-            _movementDir.z = cachedZ;
+            rotation = camera.transform.rotation;//new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
         }
         else
         {
-            fallingTimer = 0f;
-
-            cachedX = _movementDir.x;
-            cachedZ = _movementDir.z;
-        }
-
-        _movementDir.y = Physics.gravity.y * Time.deltaTime * fallingTimer;
-
-        if (isJumping && isGrounded)
-        {
-            isJumping = false;
-            jumpTimer = cachedJumpTimer;
-        }
-
-        if (jump = Input.GetKeyDown(KeyCode.Space))
-        {
-            if (isGrounded && !isJumping)
-            {
-                cachedJumpTimer = jumpTimer;
-                isJumping = true;
-            }
-        }
-
-        _movementDir.y += isJumping ? jumpSpeed * (Mathf.Clamp(jumpTimer -= Time.deltaTime, 0f, cachedJumpTimer)) : 0f;
-
-        controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * Time.deltaTime);
-
-        movement = new float[] { _movementDir.x, _movementDir.z };
-    }
-
-    private void GroundCheck()
-    {
-        if (Physics.Linecast(controller.bounds.center, controller.bounds.center + (-Vector3.up * (controller.height * GroundHieght)), out RaycastHit _hit, groundLayer))
-        {
-            isGrounded = true;
-        }
-        else
-        {
-            isGrounded = false;
+            rotation = Quaternion.identity;
         }
     }
 }
