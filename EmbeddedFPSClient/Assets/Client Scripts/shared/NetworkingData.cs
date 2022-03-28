@@ -19,6 +19,24 @@ public enum Tags
     ShotBullet = 204
 }
 
+public enum PlayerAction
+{
+    Jump,
+    Sprint,
+    Fire,
+    Grounded,
+    Aim,
+    Reload,
+    Inspect,
+    SwitchWeapon,
+    Forward,
+    Left,
+    Right,
+    Back,
+
+    NumActions
+}
+
 public struct LoginRequestData : IDarkRiftSerializable
 {
     public string Name;
@@ -108,6 +126,43 @@ public struct RoomData : IDarkRiftSerializable
         e.Writer.Write(Name);
         e.Writer.Write(Slots);
         e.Writer.Write(MaxSlots);
+    }
+}
+
+public struct BulletShotMessage : IDarkRiftSerializable
+{
+    public Vector3 startPosition;
+
+    public Vector3 direction;
+
+    public ushort clientID;
+
+    public BulletShotMessage(Vector3 pos, Vector3 dir, ushort id)
+    {
+        startPosition = pos;
+        direction = dir;
+        clientID = id;
+    }
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        startPosition = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
+        direction = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
+
+        clientID = e.Reader.ReadUInt16();
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        e.Writer.Write(startPosition.x);
+        e.Writer.Write(startPosition.y);
+        e.Writer.Write(startPosition.z);
+
+        e.Writer.Write(direction.x);
+        e.Writer.Write(direction.y);
+        e.Writer.Write(direction.z);
+
+        e.Writer.Write(clientID);
     }
 }
 
@@ -209,123 +264,45 @@ public struct PlayerDespawnData : IDarkRiftSerializable
 
 public struct PlayerStateData : IDarkRiftSerializable
 {
-    /// <summary>
-    /// Mainly for movement Inputs
-    /// </summary>
-    public float[] MovementInputs;
-    /// <summary>
-    /// KeyInputs are mostly for separate inputs such as 
-    /// shoot, jump, sprint
-    /// </summary>
-    public bool[] Keyinputs;
-    public Vector3 LookDirection;
-    public uint Time;
+
+    public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation)
+    {
+        Id = id;
+        Input = input;
+        Position = position;
+        Rotation = rotation;
+        Gravity = gravity;
+    }
 
     public ushort Id;
+    public PlayerInputData Input;
     public Vector3 Position;
+    public Quaternion Rotation;
     public float Gravity;
-
-    public float horizontal { get => MovementInputs[0]; }
-
-    public float vertical { get => MovementInputs[1]; }
-
-    public bool isJumping { get => Keyinputs[0]; }
-
-    public bool isSprinting { get => Keyinputs[1]; }
-
-    public bool isShooting { get => Keyinputs[2]; }
-
-    public bool isGrounded { get => Keyinputs[3]; }
-
-    public bool isAiming { get => Keyinputs[4]; }
-
-    public bool isReloading { get => Keyinputs[5]; }
-
-    public bool isSwitchingWeapon { get => Keyinputs[7]; }
-
-    public bool isInspecting { get => Keyinputs[6]; }
-
-    public PlayerStateData(ushort id)
-    {
-        Id = id;
-        Gravity = -9.81f;
-        Position = Vector3.zero;
-        LookDirection = Vector3.zero;
-
-        MovementInputs = new float[2];
-        Keyinputs = new bool[8];
-
-        Time = 0;
-    }
-
-    public PlayerStateData(ushort id, float gravity, Vector3 position, Vector3 lookDirection, float[] movementInputs, bool[] keyInputs, uint time)
-    {
-        Id = id;
-        Position = position;
-        LookDirection = lookDirection;
-        Gravity = gravity;
-
-        MovementInputs = movementInputs;
-        Keyinputs = keyInputs;
-        Time = time;
-    }
 
     public void Deserialize(DeserializeEvent e)
     {
+        Input = e.Reader.ReadSerializable<PlayerInputData>();
         Position = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-        LookDirection = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-
+        Rotation = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
         Id = e.Reader.ReadUInt16();
         Gravity = e.Reader.ReadSingle();
-
-        MovementInputs = new float[2];
-
-        for (int i = 0; i < MovementInputs.Length; i++)
-        {
-            MovementInputs[i] = e.Reader.ReadSingle();
-        }
-
-        Keyinputs = new bool[8];
-
-        for (int q = 0; q < Keyinputs.Length; q++)
-        {
-            Keyinputs[q] = e.Reader.ReadBoolean();
-        }
-
-        if (Keyinputs[3])
-        {
-            Time = e.Reader.ReadUInt32();
-        }
     }
 
     public void Serialize(SerializeEvent e)
     {
+        e.Writer.Write(Input);
+
         e.Writer.Write(Position.x);
         e.Writer.Write(Position.y);
         e.Writer.Write(Position.z);
  
-        e.Writer.Write(LookDirection.x);
-        e.Writer.Write(LookDirection.y);
-        e.Writer.Write(LookDirection.z);
-
+        e.Writer.Write(Rotation.x);
+        e.Writer.Write(Rotation.y);
+        e.Writer.Write(Rotation.z);
+        e.Writer.Write(Rotation.w);
         e.Writer.Write(Id);
         e.Writer.Write(Gravity);
-
-        //e.Writer.Write(MovementInputs.Length);
-
-        for(int i = 0; i < MovementInputs.Length; i++)
-        {
-            e.Writer.Write(MovementInputs[i]);
-        }
-
-        //e.Writer.Write(Keyinputs.Length);
-
-        for (int q = 0; q < Keyinputs.Length; q++)
-        {
-            e.Writer.Write(Keyinputs[q]);
-        }
-
-        e.Writer.Write(Time);
     }
 }
 
@@ -335,13 +312,13 @@ public struct GameUpdateData : IDarkRiftSerializable
     public uint Frame;
     public PlayerSpawnData[] SpawnDataData;
     public PlayerDespawnData[] DespawnDataData;
-    public PlayerStateData[] PlayerStateData;
+    public PlayerStateData[] UpdateData;
     public PlayerHealthUpdateData[] HealthData;
 
-    public GameUpdateData(uint frame, PlayerStateData[] playerData, PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerHealthUpdateData[] healthData)
+    public GameUpdateData(uint frame, PlayerStateData[] updateData, PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerHealthUpdateData[] healthData)
     {
         Frame = frame;
-        PlayerStateData = playerData;
+        UpdateData = updateData;
         DespawnDataData = despawnData;
         SpawnDataData = spawnData;
         HealthData = healthData;
@@ -351,7 +328,7 @@ public struct GameUpdateData : IDarkRiftSerializable
         Frame = e.Reader.ReadUInt32();
         SpawnDataData = e.Reader.ReadSerializables<PlayerSpawnData>();
         DespawnDataData = e.Reader.ReadSerializables<PlayerDespawnData>();
-        PlayerStateData = e.Reader.ReadSerializables<PlayerStateData>();
+        UpdateData = e.Reader.ReadSerializables<PlayerStateData>();
         HealthData = e.Reader.ReadSerializables<PlayerHealthUpdateData>();
     }
 
@@ -360,7 +337,7 @@ public struct GameUpdateData : IDarkRiftSerializable
         e.Writer.Write(Frame);
         e.Writer.Write(SpawnDataData);
         e.Writer.Write(DespawnDataData);
-        e.Writer.Write(PlayerStateData);
+        e.Writer.Write(UpdateData);
         e.Writer.Write(HealthData);
     }
 }
@@ -376,6 +353,7 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
         Value = val;
     }
 
+
     public void Deserialize(DeserializeEvent e)
     {
         PlayerId = e.Reader.ReadUInt16();
@@ -389,59 +367,73 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
     }
 }
 
-//[System.Serializable]
-//public struct PlayerInputData : IDarkRiftSerializable
-//{
-//    /// <summary>
-//    /// Mainly for movement Inputs
-//    /// </summary>
-//    public float[] MovementInputs;
-//    /// <summary>
-//    /// KeyInputs are mostly for separate inputs such as 
-//    /// shoot, jump, sprint
-//    /// </summary>
-//    public bool[] Keyinputs; 
-//    public Vector3 LookDirection;
-//    public uint Time;
+public struct PlayerInputData : IDarkRiftSerializable
+{
+    public bool[] Keyinputs; //0 = w, 1 = a, 2 = s, 3 = d, 4 = space, 5 = leftClick
+    public Quaternion LookDirection;
+    public uint Time;
 
-//    public PlayerInputData(float[] movementInputs, bool[] keyInputs, Vector3 lookdirection, uint time)
-//    {
-//        MovementInputs = movementInputs;
-//        Keyinputs = keyInputs;
-//        LookDirection = lookdirection;
-//        Time = time;
-//    }
+    public bool HasAction(PlayerAction action)
+    {
+        return Keyinputs[(int)action];
+    }
 
-//    public void Deserialize(DeserializeEvent e)
-//    {
-//        MovementInputs = new float[2];
-//        MovementInputs[0] = e.Reader.ReadSingle();
-//        MovementInputs[1] = e.Reader.ReadSingle();
+    public float horizontal => HasAction(PlayerAction.Left) ? -1 : (HasAction(PlayerAction.Right) ? 1 : 0);
 
-//        Keyinputs = new bool[4];
-//        for (int q = 0; q < 4; q++)
-//        {
-//            Keyinputs[q] = e.Reader.ReadBoolean();
-//        }
-//        LookDirection = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), 0);
-//        if (Keyinputs[3])
-//        {
-//            Time = e.Reader.ReadUInt32();
-//        }
-//    }
+    public float vertical => HasAction(PlayerAction.Back) ? -1 : (HasAction(PlayerAction.Forward) ? 1 : 0);
 
-//    public void Serialize(SerializeEvent e)
-//    {
-//        e.Writer.Write(MovementInputs[0]);
-//        e.Writer.Write(MovementInputs[1]);
+    public bool isJumping => HasAction(PlayerAction.Jump);
 
-//        for (int q = 0; q < 4; q++)
-//        {
-//            e.Writer.Write(Keyinputs[q]);
-//        }
-//        e.Writer.Write(LookDirection.x);
-//        e.Writer.Write(LookDirection.y);
-//        e.Writer.Write(LookDirection.z);
-//        e.Writer.Write(Time);
-//    }
-//}
+    public bool isSprinting => HasAction(PlayerAction.Sprint);
+
+    public bool isShooting => HasAction(PlayerAction.Fire);
+
+    public bool isGrounded => HasAction(PlayerAction.Grounded);
+
+    public bool isAiming => HasAction(PlayerAction.Aim);
+
+    public bool isReloading => HasAction(PlayerAction.Reload);
+
+    public bool isSwitchingWeapon => HasAction(PlayerAction.SwitchWeapon);
+
+    public bool isInspecting => HasAction(PlayerAction.Inspect);
+
+    public PlayerInputData(bool[] keyInputs, Quaternion lookdirection, uint time)
+    {
+        Keyinputs = keyInputs;
+        LookDirection = lookdirection;
+        Time = time;
+    }
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        Keyinputs = new bool[(int)PlayerAction.NumActions];
+        for (int q = 0; q < (int)PlayerAction.NumActions; q++)
+        {
+            Keyinputs[q] = e.Reader.ReadBoolean();
+        }
+
+        LookDirection = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
+
+        Time = e.Reader.ReadUInt32();
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        if (Keyinputs == null)
+        {
+            Keyinputs = new bool[(int)PlayerAction.NumActions];
+        }
+
+        for (int q = 0; q < (int)PlayerAction.NumActions; q++)
+        {
+            e.Writer.Write(Keyinputs[q]);
+        }
+        e.Writer.Write(LookDirection.x);
+        e.Writer.Write(LookDirection.y);
+        e.Writer.Write(LookDirection.z);
+        e.Writer.Write(LookDirection.w);
+
+        e.Writer.Write(Time);
+    }
+}

@@ -44,18 +44,18 @@ public class CharacterAnimator : MonoBehaviour, IStreamData
             return;
         }
 
-        animator.SetFloat(inputXID, playerStateData.horizontal);
-        animator.SetFloat(inputYID, playerStateData.vertical);
+        animator.SetFloat(inputXID, playerStateData.Input.horizontal);
+        animator.SetFloat(inputYID, playerStateData.Input.vertical);
 
-        if(playerStateData.isShooting)
+        if(playerStateData.Input.isShooting)
         {
             animator.Play(isShootingID);
         }
         
-        SetBool(isSprintingID, playerStateData.isSprinting);
-        SetBool(isAimingID, playerStateData.isAiming);
+        SetBool(isSprintingID, playerStateData.Input.isSprinting);
+        SetBool(isAimingID, playerStateData.Input.isAiming);
 
-        SetTrigger(isReloadingID, playerStateData.isReloading);
+        SetTrigger(isReloadingID, playerStateData.Input.isReloading);
     }
 
     private void SetBool(int id, bool value)

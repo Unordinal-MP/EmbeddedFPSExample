@@ -51,6 +51,9 @@ public class GameManager : MonoBehaviour
     {
         using (Message message = e.GetMessage())
         {
+            ClientStats.instance.MessagesIn.AddNow();
+            ClientStats.instance.BytesIn.AddNow(message.DataLength);
+
             switch ((Tags)message.Tag)
             {
                 case Tags.GameStartDataResponse:
@@ -147,7 +150,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        foreach (PlayerStateData data in gameUpdateData.PlayerStateData)
+        foreach (PlayerStateData data in gameUpdateData.UpdateData)
         {
             ClientPlayer p;
             if (players.TryGetValue(data.Id, out p))
