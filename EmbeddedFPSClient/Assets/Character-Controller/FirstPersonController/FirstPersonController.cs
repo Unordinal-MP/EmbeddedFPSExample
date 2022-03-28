@@ -97,8 +97,14 @@ public class FirstPersonController : MonoBehaviour
         float _axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
         float _axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
-        transform.localRotation = Quaternion.Euler(new Vector3(0f, transform.localEulerAngles.y + _axisX, 0f));
-        camera.transform.localRotation = Quaternion.Euler(new Vector3(camera.transform.localEulerAngles.x - _axisY, 0f, 0f));
+        float newYaw = camera.transform.localEulerAngles.y + _axisX;
+        float newPitch = camera.transform.localEulerAngles.x - _axisY;
+
+        if (newPitch > 180)
+            newPitch -= 360;
+        newPitch = Mathf.Clamp(newPitch, -clampCamAngle, clampCamAngle);
+
+        camera.transform.localRotation = Quaternion.Euler(new Vector3(newPitch, newYaw, 0f));
     }
 
     private void ComputeInputsAndRotations(out bool[] outInputs, out Quaternion rotation)

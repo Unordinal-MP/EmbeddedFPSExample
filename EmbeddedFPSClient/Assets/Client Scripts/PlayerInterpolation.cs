@@ -7,12 +7,14 @@ public class PlayerInterpolation : MonoBehaviour
     public PlayerStateData CurrentData { get; set; }
     public PlayerStateData PreviousData { get; private set; }
 
+    public bool IsOwn { get; set; }
+
     public void SetFramePosition(PlayerStateData data)
     {
         RefreshToPosition(data, CurrentData);
     }
 
-    public void RefreshToPosition(PlayerStateData data, PlayerStateData prevData)
+    private void RefreshToPosition(PlayerStateData data, PlayerStateData prevData)
     {
         PreviousData = prevData;
         CurrentData = data;
@@ -24,7 +26,8 @@ public class PlayerInterpolation : MonoBehaviour
         float timeSinceLastInput = Time.time - lastInputTime;
         float t = timeSinceLastInput / Time.fixedDeltaTime;
         transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
-        transform.rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
+        if (!IsOwn)
+            transform.rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
     }
 }
 

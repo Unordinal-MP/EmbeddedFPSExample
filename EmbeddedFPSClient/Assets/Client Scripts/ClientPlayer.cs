@@ -39,6 +39,7 @@ public class ClientPlayer : MonoBehaviour
     private PlayerInterpolation interpolation;
 
     private Queue<ReconciliationInfo> reconciliationHistory = new Queue<ReconciliationInfo>();
+    public int ReconciliationHistorySize => reconciliationHistory.Count;
 
     // Store look direction.
     private float yaw;
@@ -46,7 +47,7 @@ public class ClientPlayer : MonoBehaviour
 
     private ushort id;
     private string playerName;
-    private bool isOwn;
+    public bool isOwn { get; private set; }
 
     private int health;
 
@@ -81,7 +82,11 @@ public class ClientPlayer : MonoBehaviour
             Camera.main.transform.localRotation = Quaternion.identity;*/
             interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, Vector3.zero, Quaternion.identity);
             localControllerInitalized.Invoke(); //TODO: convert to code
+
+            ClientStats.instance.SetOwnPlayer(this);
         }
+
+        interpolation.IsOwn = isOwn;
     }
 
     public void SetHealth(int value)
@@ -95,7 +100,7 @@ public class ClientPlayer : MonoBehaviour
         {
             PlayerInputData inputData = GetComponent<FirstPersonController>().GetInputs(GameManager.Instance.LastReceivedServerTick - 1);
 
-            if (inputData.isReloading)
+            if (inputData.isReloading) //TODO: find better place for this
             {
                 GameObject go = Instantiate(shotPrefab);
                 go.transform.position = interpolation.CurrentData.Position;
@@ -128,6 +133,9 @@ public class ClientPlayer : MonoBehaviour
             if (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
+
+                //Debug.Log("Rframe: " + info.Data.Position + " Lframe: " + playerStateData.Position);
+
                 if (Vector3.Distance(info.Data.Position, playerStateData.Position) > 0.05f)
                 {
                     ClientStats.instance.Reconciliations.AddNow();

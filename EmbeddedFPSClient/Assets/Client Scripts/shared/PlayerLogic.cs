@@ -40,12 +40,28 @@ public class PlayerLogic : MonoBehaviour
             return input.Keyinputs[(int)which];
         }
 
+        float dt = Time.fixedDeltaTime;
+
         //bool isGrounded = HasAction(PlayerAction.Grounded);
 
         bool isGrounded = true;
 
         Vector3 euler = input.LookDirection.eulerAngles;
-        transform.rotation = Quaternion.Euler(0, euler.y, 0);
+        Quaternion newRotation = Quaternion.Euler(0, euler.y, 0);
+
+        FirstPersonController fpController = GetComponent<FirstPersonController>();
+
+        if (fpController)
+        {
+            Quaternion oldHeadRotation = fpController.camera.transform.rotation;
+            transform.rotation = newRotation;
+            fpController.camera.transform.rotation = oldHeadRotation;
+        }
+        else
+        {
+            transform.rotation = newRotation;
+        }
+        
         gravity = new Vector3(0, currentStateData.Gravity, 0);
 
         /*Vector3 movement = Vector3.zero;
@@ -71,8 +87,8 @@ public class PlayerLogic : MonoBehaviour
         movement.Normalize();
         movement = movement * walkSpeed;
 
-        movement = movement * Time.fixedDeltaTime;
-        movement = movement + gravity * Time.fixedDeltaTime;
+        movement = movement * dt;
+        movement = movement + gravity * dt;
 
         // The following code fixes character controller issues from unity. It makes sure that the controller stays connected to the ground by adding a little bit of down movement.
         CharacterController.Move(new Vector3(0, -0.001f, 0));
@@ -126,13 +142,13 @@ public class PlayerLogic : MonoBehaviour
         }
         else
         {
-            fallingTimer += Time.deltaTime * gravityMultiplier;
+            fallingTimer += dt * gravityMultiplier;
 
             _movementDir.x = cachedX;
             _movementDir.z = cachedZ;
         }
         
-        _movementDir.y = Physics.gravity.y * Time.deltaTime * fallingTimer;
+        _movementDir.y = Physics.gravity.y * dt * fallingTimer;
 
         if (isJumping && isGrounded)
         {
@@ -152,10 +168,10 @@ public class PlayerLogic : MonoBehaviour
         if (isJumping)
         {
             _movementDir.y += jumpSpeed * Mathf.Clamp(jumpTimer, 0f, cachedJumpTimer);
-            jumpTimer -= Time.deltaTime;
+            jumpTimer -= dt;
         }
 
-        controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * Time.deltaTime);
+        controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * dt);
 
         return new PlayerStateData(currentStateData.Id, input, gravity.y, transform.position, transform.rotation);
     }

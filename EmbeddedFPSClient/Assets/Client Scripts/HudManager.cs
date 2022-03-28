@@ -87,5 +87,6 @@ public class HudManager : MonoBehaviour
         GUILayout.Label("In messages/s: " + _messageInRate);
         GUILayout.Label("In bytes/s: " + _byteInRate);
         GUILayout.Label("Reconciliations/s: " + _reconciliationRate);
+        GUILayout.Label("Reconciliation history: " + ClientStats.instance.ReconciliationHistorySize);
     }
 }
