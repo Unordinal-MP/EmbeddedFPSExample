@@ -26,6 +26,15 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
         //main initialization in Connect()
     }
 
+    protected override void Dispose(bool disposing)
+    {
+        //TODO: make this fully correct
+
+        Disconnect();
+
+        base.Dispose(disposing);
+    }
+
     public override void Connect()
     {
         EventBasedNetListener listener = new EventBasedNetListener();
@@ -34,7 +43,6 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
         listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
         {
             Debug.Log("Disconnected from server: " + peer.EndPoint + " reason " + disconnectInfo.Reason);
-            Console.WriteLine("Disconnected from server: {0} reason {1}", peer.EndPoint, disconnectInfo.Reason);
             HandleDisconnection();
         };
         

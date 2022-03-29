@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LiteNetLib;
 using DarkRift;
 using System.Threading;
+using UnityEngine;
 
 public class LiteNetNetworkListener : NetworkListener
 {
@@ -41,12 +42,12 @@ public class LiteNetNetworkListener : NetworkListener
         listener.ConnectionRequestEvent += request =>
         {
             request.AcceptIfKey("DarkRift2");
-            Console.WriteLine("Accepting new client {0}", request.RemoteEndPoint);
+            Debug.Log("We got a new client " + request.RemoteEndPoint);
         };
 
         listener.PeerConnectedEvent += peer =>
         {
-            Console.WriteLine("We got connection: {0}", peer.EndPoint);
+            Debug.Log("We got a connection: " + peer.EndPoint);
 
             var connection = new LiteNetNetworkServerConnection(peer);
 
@@ -60,10 +61,16 @@ public class LiteNetNetworkListener : NetworkListener
 
         listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
         {
-            if (_connections.TryGetValue(peer, out LiteNetNetworkServerConnection connection))
+            Debug.Log("We got a disconnection: " + peer.EndPoint);
+
+            lock (_lock)
             {
-                connection.OnDisconnection();
-            };
+                if (_connections.TryGetValue(peer, out LiteNetNetworkServerConnection connection))
+                {
+                    connection.OnDisconnection();
+                    _connections.Remove(peer);
+                };
+            }
         };
 
         listener.NetworkReceiveEvent += (fromPeer, dataReader, deliveryMethod) =>
@@ -89,7 +96,7 @@ public class LiteNetNetworkListener : NetworkListener
         _server = new NetManager(listener);
         _server.Start(_port);
 
-        Console.WriteLine("Started listening on UDP port: {0}", _port);
+        Debug.Log("We started listening on UDP port: " + _port);
 
         _updateThread = new Thread(UpdateLoop);
         _updateThread.Start();

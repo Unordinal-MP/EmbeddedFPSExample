@@ -5,6 +5,7 @@ using LiteNetLib.Utils;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using UnityEngine;
 
 public class LiteNetNetworkServerConnection : NetworkServerConnection
 {
@@ -13,6 +14,8 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
     public override IEnumerable<IPEndPoint> RemoteEndPoints => new IPEndPoint[]{GetRemoteEndPoint("udp")};
 
     private readonly NetPeer _peer;
+
+    private bool _handledDisconnection;
 
     internal LiteNetNetworkServerConnection(NetPeer peer)
     {
@@ -55,7 +58,7 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
 
     internal void OnDisconnection()
     {
-        HandleDisconnection();
+        TryHandleDisconnection("whilst updating");
     }
 
     public override IPEndPoint GetRemoteEndPoint(string name)
@@ -89,7 +92,7 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
     {
         using (message)
         {
-            if (GetConnectionState() != DarkRift.ConnectionState.Connected)
+            if (CheckDisconnection())
                 return false;
 
             //TODO: remove alloc/copy
@@ -100,5 +103,25 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
 
             return true;
         }
+    }
+
+    private bool CheckDisconnection()
+    {
+        if (GetConnectionState() != DarkRift.ConnectionState.Connected)
+        {
+            TryHandleDisconnection("whilst sending");
+            return true;
+        }
+
+        return false;
+    }
+
+    private void TryHandleDisconnection(string suffix)
+    {
+        if (_handledDisconnection)
+            return;
+        _handledDisconnection = true;
+        Debug.Log("Detected disconnection " + suffix);
+        HandleDisconnection();
     }
 }
