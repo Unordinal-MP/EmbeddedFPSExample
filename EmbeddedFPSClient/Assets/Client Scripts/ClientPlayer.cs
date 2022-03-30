@@ -98,7 +98,7 @@ public class ClientPlayer : MonoBehaviour
     {
         if (isOwn)
         {
-            PlayerInputData inputData = GetComponent<FirstPersonController>().GetInputs(GameManager.Instance.LastReceivedServerTick - 1);
+            PlayerInputData inputData = GetComponent<FirstPersonController>().GetInputs(GameManager.Instance.LastReceivedServerTick - 1, GameManager.Instance.ClientTick);
 
             if (inputData.isReloading) //TODO: find better place for this
             {
@@ -114,7 +114,7 @@ public class ClientPlayer : MonoBehaviour
 
             using (Message message = Message.Create((ushort) Tags.GamePlayerInput, inputData))
             {
-                ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
+                ConnectionManager.Instance.Client.SendMessage(message, SendMode.Unreliable);
             }
 
             reconciliationHistory.Enqueue(new ReconciliationInfo(GameManager.Instance.ClientTick, nextStateData, inputData));
@@ -133,6 +133,8 @@ public class ClientPlayer : MonoBehaviour
             if (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
+
+                ClientStats.instance.Confirmations.AddNow();
 
                 //Debug.Log("Rframe: " + info.Data.Position + " Lframe: " + playerStateData.Position);
 

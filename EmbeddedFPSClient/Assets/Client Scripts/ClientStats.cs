@@ -12,6 +12,7 @@ public class ClientStats
     public TimeBuffer MessagesIn { get; private set; } = new TimeBuffer() { WindowInSeconds = _longWindow };
     public TimeBuffer BytesIn { get; private set; } = new TimeBuffer() { WindowInSeconds = _longWindow };
     public TimeBuffer Reconciliations { get; private set; } = new TimeBuffer() { WindowInSeconds = _shortWindow };
+    public TimeBuffer Confirmations { get; private set; } = new TimeBuffer() { WindowInSeconds = _shortWindow };
 
     public int ReconciliationHistorySize => _ownPlayer != null? _ownPlayer.ReconciliationHistorySize : 0;
 

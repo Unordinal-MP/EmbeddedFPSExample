@@ -3,23 +3,52 @@ using System.Linq;
 
 public class Buffer<T>
 {
-    private Queue<T> elements;
-    private int bufferSize;
-    private int counter;
-    private int correctionTollerance;
+    private struct Entry
+    {
+        public uint Id;
+        public T Element;
+    }
 
-    public Buffer(int bufferSize, int correctionTollerance)
+    private struct IdComparer : IComparer<Entry>
+    {
+        public int Compare(Entry a, Entry b)
+        {
+            return a.Id.CompareTo(b.Id);
+        }
+    }
+
+    private static readonly IdComparer _comparer = new IdComparer();
+
+    private readonly List<Entry> elements;
+    private readonly int bufferSize;
+    private readonly int correctionTolerance;
+
+    private int counter;
+
+    public Buffer(int bufferSize, int correctionTolerance)
     {
         this.bufferSize = bufferSize;
-        this.correctionTollerance = correctionTollerance;
-        elements = new Queue<T>();
+        this.correctionTolerance = correctionTolerance;
+        elements = new List<Entry>();
     }
 
     public int Count => elements.Count;
 
-    public void Add(T element)
+    public void Add(T element, uint sequenceId)
     {
-        elements.Enqueue(element);
+        var entry = new Entry()
+        {
+            Id = sequenceId,
+            Element = element,
+        };
+
+        int index = elements.BinarySearch(entry, _comparer);
+        if (index < 0)
+        {
+            index = ~index;
+        }
+
+        elements.Insert(index, entry);
     }
 
     public T[] Get()
@@ -38,14 +67,15 @@ public class Buffer<T>
                 counter = 0;
             }
             counter++;
-            if (counter > correctionTollerance)
+            if (counter > correctionTolerance)
             {
                 int amount = elements.Count - bufferSize;
                 T[] temp = new T[amount];
                 for (int i = 0; i < amount; i++)
                 {
-                    temp[i] = elements.Dequeue();
+                    temp[i] = elements[i].Element;
                 }
+                elements.RemoveRange(0, amount);
 
                 return temp;
             }
@@ -58,7 +88,7 @@ public class Buffer<T>
                 counter = 0;
             }
             counter--;
-            if (-counter > correctionTollerance)
+            if (-counter > correctionTolerance)
             {
                 return new T[0];
             }
@@ -66,7 +96,9 @@ public class Buffer<T>
 
         if (elements.Any())
         {
-            return new T[] { elements.Dequeue() };
+            var temp = new T[] { elements[0].Element };
+            elements.RemoveAt(0);
+            return temp;
         }
         return new T[0];
     }

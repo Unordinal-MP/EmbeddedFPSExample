@@ -75,11 +75,11 @@ public class FirstPersonController : MonoBehaviour
         return Cursor.lockState != CursorLockMode.None;
     }
 
-    public PlayerInputData GetInputs(uint time)
+    public PlayerInputData GetInputs(uint time, uint sequenceNumber)
     {
         ComputeInputsAndRotations(out bool[] _inputs, out Quaternion _lookRotation);
 
-        return new PlayerInputData(_inputs, _lookRotation, time);
+        return new PlayerInputData(_inputs, _lookRotation, time, sequenceNumber);
     }
 
     public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)

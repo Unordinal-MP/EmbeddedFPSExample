@@ -91,7 +91,7 @@ public class GameManager : MonoBehaviour
 
     void OnGameUpdate(GameUpdateData gameUpdateData)
     {
-        gameUpdateDataBuffer.Add(gameUpdateData);
+        gameUpdateDataBuffer.Add(gameUpdateData, gameUpdateData.Frame);
     }
 
     void SpawnPlayer(PlayerSpawnData playerSpawnData)

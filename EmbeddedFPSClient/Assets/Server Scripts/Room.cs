@@ -51,7 +51,7 @@ public class Room : MonoBehaviour
         {
             using (Message m = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(p.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray)))
             {
-                p.Client.SendMessage(m, SendMode.Reliable);
+                p.Client.SendMessage(m, SendMode.Unreliable);
             }
         }
         
