@@ -372,6 +372,7 @@ public struct PlayerInputData : IDarkRiftSerializable
     public bool[] Keyinputs; //0 = w, 1 = a, 2 = s, 3 = d, 4 = space, 5 = leftClick
     public Quaternion LookDirection;
     public uint Time;
+    public uint SequenceNumber;
 
     public bool HasAction(PlayerAction action)
     {
@@ -398,11 +399,12 @@ public struct PlayerInputData : IDarkRiftSerializable
 
     public bool isInspecting => HasAction(PlayerAction.Inspect);
 
-    public PlayerInputData(bool[] keyInputs, Quaternion lookdirection, uint time)
+    public PlayerInputData(bool[] keyInputs, Quaternion lookdirection, uint time, uint sequenceNumber)
     {
         Keyinputs = keyInputs;
         LookDirection = lookdirection;
         Time = time;
+        SequenceNumber = sequenceNumber;
     }
 
     public void Deserialize(DeserializeEvent e)
@@ -416,14 +418,21 @@ public struct PlayerInputData : IDarkRiftSerializable
         LookDirection = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
 
         Time = e.Reader.ReadUInt32();
+        SequenceNumber = e.Reader.ReadUInt32();
     }
 
-    public void Serialize(SerializeEvent e)
+    public void CheckKeyInputArray()
     {
+        //TODO: would be useful to get rid of this
         if (Keyinputs == null)
         {
             Keyinputs = new bool[(int)PlayerAction.NumActions];
         }
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        CheckKeyInputArray();
 
         for (int q = 0; q < (int)PlayerAction.NumActions; q++)
         {
@@ -435,5 +444,6 @@ public struct PlayerInputData : IDarkRiftSerializable
         e.Writer.Write(LookDirection.w);
 
         e.Writer.Write(Time);
+        e.Writer.Write(SequenceNumber);
     }
 }
