@@ -16,6 +16,7 @@ public class HudManager : MonoBehaviour
     private string _messageInRate;
     private string _byteInRate;
     private string _reconciliationRate;
+    private string _confirmationRate;
 
     void Start()
     {
@@ -62,6 +63,7 @@ public class HudManager : MonoBehaviour
         _messageInRate = ClientStats.instance.MessagesIn.GetWindowRate().ToString("N3", culture);
         _byteInRate = ClientStats.instance.BytesIn.GetWindowRate().ToString("N3", culture);
         _reconciliationRate = ClientStats.instance.Reconciliations.GetWindowRate().ToString("N3", culture);
+        _confirmationRate = ClientStats.instance.Confirmations.GetWindowRate().ToString("N3", culture);
     }
 
     private void OnGUI()
@@ -87,6 +89,12 @@ public class HudManager : MonoBehaviour
         GUILayout.Label("In messages/s: " + _messageInRate);
         GUILayout.Label("In bytes/s: " + _byteInRate);
         GUILayout.Label("Reconciliations/s: " + _reconciliationRate);
+        GUILayout.Label("Confirmations/s: " + _confirmationRate);
         GUILayout.Label("Reconciliation history: " + ClientStats.instance.ReconciliationHistorySize);
+        if (GameManager.Instance != null)
+        {
+            GUILayout.Label("Server tick: " + GameManager.Instance.LastReceivedServerTick);
+            GUILayout.Label("Client tick: " + GameManager.Instance.ClientTick);
+        } 
     }
 }

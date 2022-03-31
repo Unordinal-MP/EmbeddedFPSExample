@@ -24,6 +24,8 @@ public class ServerPlayer : MonoBehaviour
 
     private PlayerInputData[] inputs;
 
+    private uint _highestSequenceNumber;
+
     void Awake()
     {
         PlayerLogic = GetComponent<PlayerLogic>();
@@ -37,6 +39,7 @@ public class ServerPlayer : MonoBehaviour
         this.clientConnection.Player = this;
         currentPlayerStateData = new PlayerStateData(Client.ID, new PlayerInputData(), 0, position, Quaternion.identity);
         InputTick = room.ServerTick;
+        _highestSequenceNumber = room.ServerTick;
         health = 100;
 
         var playerSpawnData = room.GetSpawnDataForAllPlayers();
@@ -48,7 +51,23 @@ public class ServerPlayer : MonoBehaviour
 
     public void RecieveInput(PlayerInputData input)
     {
-        inputBuffer.Add(input);
+        uint target = input.SequenceNumber;
+
+        if (target > _highestSequenceNumber + 1)
+        {
+            for (uint sequenceNumber = _highestSequenceNumber + 1; sequenceNumber <= target; ++sequenceNumber)
+            {
+                input.SequenceNumber = sequenceNumber;
+                inputBuffer.Add(input, sequenceNumber);
+            }
+        }
+        else
+        {
+            inputBuffer.Add(input, target);
+        }
+
+        if (target > _highestSequenceNumber)
+            _highestSequenceNumber = target;
     }
 
     public void TakeDamage(int value)
