@@ -18,19 +18,6 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField]
     protected float clampCamAngle = 70f;
 
-    [SerializeField]
-    public float jumpSpeed = 4f;
-
-    [SerializeField]
-    public LayerMask groundLayer;
-
-    [SerializeField]
-
-    public float GroundHieght = 0.6f;
-
-    [SerializeField]
-    public float gravityMultiplier = 8f;
-
     public float MouseSensitivity { get; set; } = 1;
 
     private WeaponController weaponController;

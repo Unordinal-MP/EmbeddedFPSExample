@@ -707,12 +707,6 @@ MonoBehaviour:
   controller: {fileID: 1872722314698896242}
   camera: {fileID: 1872722313411549496}
   clampCamAngle: 70
-  jumpSpeed: 3
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 0
-  GroundHieght: 0.6
-  gravityMultiplier: 8
 --- !u!82 &1872722314698896247
 AudioSource:
   m_ObjectHideFlags: 0
@@ -930,6 +924,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f98d78abdab816144975724649ddcb35, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 1
 --- !u!1 &5265684886645932098
 GameObject:
   m_ObjectHideFlags: 0

@@ -100,18 +100,25 @@ public class Room : MonoBehaviour
     void SpawnPlayer(ClientConnection clientConnection)
     {
         Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
-        GameObject go = Instantiate(playerPrefab, transform);
-        ServerPlayer player = go.GetComponent<ServerPlayer>();
-        serverPlayers.Add(player);
-       playerStateData.Add(default);
+
+        Vector3 _position;
+
         if (spawnpoint != null)
         {
-            player.Initialize(spawnpoint.position, clientConnection);
+            _position = spawnpoint.position;
         }
         else
         {
-            player.Initialize(SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, clientConnection);
+            _position = SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position;
         }
+
+        GameObject go = Instantiate(playerPrefab, _position, Quaternion.identity);
+        ServerPlayer player = go.GetComponent<ServerPlayer>();
+        serverPlayers.Add(player);
+        playerStateData.Add(default);
+
+        player.Initialize(_position, clientConnection);
+
         playerSpawnData.Add(player.GetPlayerSpawnData());
     }
     public void Close()

@@ -96,17 +96,17 @@ public class GameManager : MonoBehaviour
 
     void SpawnPlayer(PlayerSpawnData playerSpawnData)
     {
-        Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
-        GameObject go;
-        if (spawnpoint != null)
-        {
-            go = Instantiate(PlayerPrefab, spawnpoint.position, Quaternion.identity);
+        //Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
+        GameObject go = Instantiate(PlayerPrefab, playerSpawnData.Position, Quaternion.identity);
+        //if (spawnpoint != null)
+        //{
+        //    go = Instantiate(PlayerPrefab, spawnpoint.position, Quaternion.identity);
 
-        }
-        else
-        {
-            go = Instantiate(PlayerPrefab, SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, Quaternion.identity);
-        }
+        //}
+        //else
+        //{
+        //    go = Instantiate(PlayerPrefab, SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, Quaternion.identity);
+        //}
 
         if (go != null)
         {

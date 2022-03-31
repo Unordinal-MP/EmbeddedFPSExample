@@ -19,7 +19,7 @@ public class PlayerLogic : MonoBehaviour
     private const float movementSpeed = 5;
     private const float jumpSpeed = 3;
     private const int groundLayerMask = 1;
-    private const float groundHeight = 0.6f;
+    private const float groundHeight = 0.51f;
     private const float gravityMultiplier = 8;
 
     //private bool isGrounded { get; set; }
@@ -171,7 +171,7 @@ public class PlayerLogic : MonoBehaviour
             jumpTimer -= dt;
         }
 
-        controller.Move(transform.TransformDirection(_movementDir) * movementSpeed * dt);
+        controller.Move(dt * movementSpeed * transform.TransformDirection(_movementDir));
 
         return new PlayerStateData(currentStateData.Id, input, gravity.y, transform.position, transform.rotation);
     }
