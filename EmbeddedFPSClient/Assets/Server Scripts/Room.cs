@@ -94,15 +94,26 @@ public class Room : MonoBehaviour
 
     public void JoinPlayerToGame(ClientConnection clientConnection)
     {
+        SpawnPlayer(clientConnection);
+    }
+
+    void SpawnPlayer(ClientConnection clientConnection)
+    {
+        Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
         GameObject go = Instantiate(playerPrefab, transform);
         ServerPlayer player = go.GetComponent<ServerPlayer>();
         serverPlayers.Add(player);
-        playerStateData.Add(default);
-        player.Initialize(Vector3.zero, clientConnection);
-
+       playerStateData.Add(default);
+        if (spawnpoint != null)
+        {
+            player.Initialize(spawnpoint.position, clientConnection);
+        }
+        else
+        {
+            player.Initialize(SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, clientConnection);
+        }
         playerSpawnData.Add(player.GetPlayerSpawnData());
     }
-
     public void Close()
     {
         foreach(ClientConnection p in ClientConnections)
@@ -143,6 +154,7 @@ public class Room : MonoBehaviour
             }
         }
 
+        Debug.DrawRay(startPosition, direction, Color.red, 300f);
         RaycastHit hit;
         if (physicsScene.Raycast(startPosition, direction,out hit, 200f, hitLayers))
         {
