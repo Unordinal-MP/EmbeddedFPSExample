@@ -35,7 +35,6 @@ public class ServerPlayer : MonoBehaviour
         room = clientConnection.Room;
         Client = clientConnection.Client;
         this.clientConnection.Player = this;
-        
         currentPlayerStateData = new PlayerStateData(Client.ID, new PlayerInputData(), 0, position, Quaternion.identity);
         InputTick = room.ServerTick;
         health = 100;
@@ -70,7 +69,7 @@ public class ServerPlayer : MonoBehaviour
         inputs = inputBuffer.Get();
         for (int i = 0; i < inputs.Length; i++)
         {
-            if (inputs[i].Keyinputs[5])
+            if (inputs[i].Keyinputs[(int)PlayerAction.Fire])
             {
                 room.PerformShootRayCast(inputs[i].Time, this);
                 return;
@@ -111,7 +110,7 @@ public class ServerPlayer : MonoBehaviour
 
     public PlayerSpawnData GetPlayerSpawnData()
     {
-        return new PlayerSpawnData(Client.ID, clientConnection.Name, transform.localPosition);
+        return new PlayerSpawnData(Client.ID, clientConnection.Name, transform.position);
     }
 
 }

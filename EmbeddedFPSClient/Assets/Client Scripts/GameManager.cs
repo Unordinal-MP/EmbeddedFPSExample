@@ -104,10 +104,8 @@ public class GameManager : MonoBehaviour
 
         }
         else
-        { 
-
+        {
             go = Instantiate(PlayerPrefab, SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, Quaternion.identity);
-
         }
 
         if (go != null)
@@ -116,8 +114,6 @@ public class GameManager : MonoBehaviour
             player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
             players.Add(playerSpawnData.Id, player);
         }
-       
-
     }
 
     void FixedUpdate()
