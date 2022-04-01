@@ -15,7 +15,6 @@ public class ClientConnection
         Name = data.Name;
 
         ServerManager.Instance.Players.Add(client.ID, this);
-        ServerManager.Instance.PlayersByName.Add(Name, this);
 
         Client.MessageReceived += OnMessage;
         
@@ -53,7 +52,6 @@ public class ClientConnection
         }
 
         ServerManager.Instance.Players.Remove(Client.ID);
-        ServerManager.Instance.PlayersByName.Remove(Name);
         e.Client.MessageReceived -= OnMessage;
     }
 }

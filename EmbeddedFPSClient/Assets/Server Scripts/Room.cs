@@ -15,12 +15,14 @@ public class Room : MonoBehaviour
     private List<PlayerDespawnData> playerDespawnData = new List<PlayerDespawnData>(4);
     private List<PlayerHealthUpdateData> healthUpdateData = new List<PlayerHealthUpdateData>(4);
 
+    public IReadOnlyList<ServerPlayer> Players => serverPlayers;
+
 
     [Header("Public Fields")]
     public string Name;
     public List<ClientConnection> ClientConnections = new List<ClientConnection>();
     public byte MaxSlots;
-    public uint ServerTick;
+    public uint ServerTick { get; private set; }
     public LayerMask hitLayers;
 
     [Header("Prefabs")]
@@ -94,33 +96,17 @@ public class Room : MonoBehaviour
 
     public void JoinPlayerToGame(ClientConnection clientConnection)
     {
-        SpawnPlayer(clientConnection);
-    }
+        GameObject go = Instantiate(playerPrefab);
 
-    void SpawnPlayer(ClientConnection clientConnection)
-    {
-        Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
-
-        Vector3 _position;
-
-        if (spawnpoint != null)
-        {
-            _position = spawnpoint.position;
-        }
-        else
-        {
-            _position = SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position;
-        }
-
-        GameObject go = Instantiate(playerPrefab, _position, Quaternion.identity);
         ServerPlayer player = go.GetComponent<ServerPlayer>();
         serverPlayers.Add(player);
+
+        player.Initialize(clientConnection);
+
         playerStateData.Add(default);
-
-        player.Initialize(_position, clientConnection);
-
         playerSpawnData.Add(player.GetPlayerSpawnData());
     }
+    
     public void Close()
     {
         foreach(ClientConnection p in ClientConnections)
@@ -133,6 +119,10 @@ public class Room : MonoBehaviour
     public void PerformShootRayCast(uint frame, ServerPlayer shooter)
     {
         int dif = (int) (ServerTick - 1 - frame);
+        if (dif < 0)
+        {
+            return; //TODO: how can this occur? better checking there than out of bounds
+        }
 
         // Get the position of the ray
         Vector3 startPosition;
@@ -149,7 +139,9 @@ public class Room : MonoBehaviour
             direction = shooter.CurrentPlayerStateData.Input.LookDirection * Vector3.forward;
         }
 
-        startPosition += direction * 3f;
+        startPosition += direction * 0.6f + Vector3.up * 0.9f;
+
+        const float debugLifetimeSeconds = 300;
 
         //set all players back in time
         foreach (ServerPlayer player in serverPlayers)
@@ -157,24 +149,35 @@ public class Room : MonoBehaviour
             if (player.PlayerStateDataHistory.Count > dif)
             {
                 player.PlayerLogic.CharacterController.enabled = false;
-                player.transform.localPosition = player.PlayerStateDataHistory[dif].Position;
+                player.transform.position = player.PlayerStateDataHistory[dif].Position;
+            }
+
+            if (player != shooter)
+            {
+                Debug.DrawLine(player.transform.position + Vector3.down, player.transform.position + 200 * Vector3.up, Color.blue, debugLifetimeSeconds);
             }
         }
 
-        Debug.DrawRay(startPosition, direction, Color.red, 300f);
+        const float rayDistance = 200;
         RaycastHit hit;
-        if (physicsScene.Raycast(startPosition, direction,out hit, 200f, hitLayers))
+        if (Physics.Raycast(startPosition, direction, out hit, rayDistance, hitLayers, QueryTriggerInteraction.Collide))
         {
             if (hit.transform.CompareTag("Unit"))
             {
                 hit.transform.GetComponent<ServerPlayer>().TakeDamage(5);
             }
         }
+        else
+        {
+            hit.point = direction.normalized * rayDistance;
+        }
+
+        Debug.DrawLine(startPosition, hit.point, Color.red, debugLifetimeSeconds);
 
         // Set all players back.
         foreach (ServerPlayer player in serverPlayers)
         {
-            player.transform.localPosition = player.CurrentPlayerStateData.Position;
+            player.transform.position = player.CurrentPlayerStateData.Position;
             player.PlayerLogic.CharacterController.enabled = true;
         }
     }

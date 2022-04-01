@@ -77,9 +77,6 @@ public class ClientPlayer : MonoBehaviour
         if (ConnectionManager.Instance.PlayerId == id)
         {
             isOwn = true;
-            /*Camera.main.transform.SetParent(transform);
-            Camera.main.transform.localPosition = new Vector3(0,0,0);
-            Camera.main.transform.localRotation = Quaternion.identity;*/
             interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, transform.position, transform.rotation);
             localControllerInitalized.Invoke(); //TODO: convert to code
 

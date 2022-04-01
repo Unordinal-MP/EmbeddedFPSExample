@@ -369,7 +369,7 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
 
 public struct PlayerInputData : IDarkRiftSerializable
 {
-    public bool[] Keyinputs; //0 = w, 1 = a, 2 = s, 3 = d, 4 = space, 5 = leftClick
+    public bool[] Keyinputs; //indexed by PlayerAction
     public Quaternion LookDirection;
     public uint Time;
     public uint SequenceNumber;

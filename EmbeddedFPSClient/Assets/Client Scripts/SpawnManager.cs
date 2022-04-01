@@ -6,8 +6,7 @@ public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance;
 
-
-    public List<Spawners> spawners = new List<Spawners>();
+    public List<Transform> spawners = new List<Transform>();
     void Awake()
     {
         if (Instance != null)
@@ -24,37 +23,45 @@ public class SpawnManager : MonoBehaviour
         Instance = null;
     }
 
-    [System.Serializable]
-    public class Spawners
+    public void GetSpawnpoint(ServerPlayer player, IEnumerable<ServerPlayer> allPlayers, out Vector3 position, out Quaternion rotation)
     {
-        public Spawner spawner;
-        public bool used;
-    }
+        float bestValue = -float.MaxValue;
+        Transform bestSpawn = null;
 
-    public Transform GetUnusedTransform()
-    {
-        for (int i = 0; i < spawners.Count; i++)
+        foreach (Transform spawn in spawners)
         {
-            if (!spawners[i].used)
+            Vector3 point = spawn.position;
+
+            float distanceToEnemy = float.MaxValue;
+            foreach (ServerPlayer otherPlayer in allPlayers)
             {
-                spawners[i].used = true;
-                return spawners[i].spawner.gameObject.transform;
+                if (otherPlayer == player)
+                    continue;
+
+                float distance = (point - otherPlayer.transform.position).sqrMagnitude;
+                if (distance < distanceToEnemy)
+                {
+                    distanceToEnemy = distance;
+                }
+            }
+
+            distanceToEnemy = Mathf.Sqrt(distanceToEnemy);
+
+            float distanceToPrevious = (point - player.SpawnPosition).magnitude;
+
+            float distanceToDeath = (point - player.transform.position).magnitude;
+
+            float spawnValue = 10 * Mathf.Min(20, distanceToPrevious) + 2 * distanceToEnemy + distanceToDeath;
+            spawnValue *= Random.value - 0.5f;
+            if (spawnValue > bestValue)
+            {
+                bestValue = spawnValue;
+                bestSpawn = spawn;
             }
         }
-        return null;
+
+        position = bestSpawn.position;
+        rotation = Quaternion.Euler(0, Random.value * 360, 0);
     }
-    public void ReEnableSpawnPoint(Spawner sSpawner)
-    {
-        for (int i = 0; i < spawners.Count; i++)
-        {
-
-            if (spawners[i].spawner == sSpawner)
-
-                spawners[i].used = false;
-
-            break;
-        }
-    }
-
 }
 

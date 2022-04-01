@@ -13,7 +13,6 @@ public class ServerManager : MonoBehaviour
     private DarkRiftServer server;
 
     public Dictionary<ushort, ClientConnection> Players = new Dictionary<ushort, ClientConnection>();
-    public Dictionary<string, ClientConnection> PlayersByName = new Dictionary<string, ClientConnection>();
 
     void Awake()
     {
@@ -69,15 +68,15 @@ public class ServerManager : MonoBehaviour
             switch ((Tags) e.Tag)
             {
                 case Tags.LoginRequest:
-                    OnclientLogin(client, message.Deserialize<LoginRequestData>());
+                    OnClientLogin(client, message.Deserialize<LoginRequestData>());
                     break;
             }
         }
     }
 
-    private void OnclientLogin(IClient client, LoginRequestData data)
+    private void OnClientLogin(IClient client, LoginRequestData data)
     {
-        if (PlayersByName.ContainsKey(data.Name))
+        if (data.Name.ToLower().Contains("hitler")) //not an example of a high quality word filter implementation
         {
             Debug.Log("Player denied");
 
