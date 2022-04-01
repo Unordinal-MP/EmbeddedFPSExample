@@ -22,7 +22,7 @@ public class ConnectionManager : MonoBehaviour
 
     public UnityClient Client { get; private set; }
 
-    public ushort PlayerId { get; set; }
+    public ushort OwnPlayerId { get; set; }
 
     public LobbyInfoData LobbyInfoData { get; set; }
 

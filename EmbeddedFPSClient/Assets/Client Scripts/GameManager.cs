@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     [Header("Prefabs")]
     public GameObject PlayerPrefab;
 
+    public IEnumerable<ClientPlayer> Players => players.Values;
+    public ClientPlayer OwnPlayer { get; private set; }
 
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
@@ -62,23 +64,23 @@ public class GameManager : MonoBehaviour
                 case Tags.GameUpdate:
                     OnGameUpdate(message.Deserialize<GameUpdateData>());
                     break;
-                case Tags.ShotBullet:
-                    ShotBullet(message.Deserialize<BulletShotMessage>());
+                case Tags.Kill:
+                    OnKill(message.Deserialize<KillData>());
                     break;
             }
         }
     }
 
-    void ShotBullet(BulletShotMessage bulletMessage)
+    void OnKill(KillData kill)
     {
-        //TODO: remove or replace purpose. the server immediately determines if a shot happened
+        //reliable message from server so safe to not check
+        ClientPlayer killer = players[kill.Killer];
+        ClientPlayer victim = players[kill.Victim];
 
-        var _player = players[bulletMessage.clientID];
+        killer.Kills += 1;
+        victim.Deaths += 1;
 
-        if (_player)
-        {
-            //_player.ShootBullet();
-        }
+        //jury is out on whether we should manipulate health here
     }
 
     void OnGameJoinAccept(GameStartData gameStartData)
@@ -98,23 +100,23 @@ public class GameManager : MonoBehaviour
 
     void SpawnPlayer(PlayerSpawnData playerSpawnData)
     {
-        //Transform spawnpoint = SpawnManager.Instance.GetUnusedTransform();
-        GameObject go = Instantiate(PlayerPrefab, playerSpawnData.Position, Quaternion.identity);
-        //if (spawnpoint != null)
-        //{
-        //    go = Instantiate(PlayerPrefab, spawnpoint.position, Quaternion.identity);
-
-        //}
-        //else
-        //{
-        //    go = Instantiate(PlayerPrefab, SpawnManager.Instance.spawners[Random.Range(0, SpawnManager.Instance.spawners.Count)].spawner.gameObject.transform.position, Quaternion.identity);
-        //}
+        GameObject go = Instantiate(PlayerPrefab, playerSpawnData.Position, playerSpawnData.Rotation);
+        var controller = GetComponent<FirstPersonController>();
+        if (controller != null)
+        {
+            controller.camera.transform.rotation = playerSpawnData.Rotation;
+        }
 
         if (go != null)
         {
             ClientPlayer player = go.GetComponent<ClientPlayer>();
             player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
             players.Add(playerSpawnData.Id, player);
+
+            if (player.isOwn)
+            {
+                OwnPlayer = player;
+            }
         }
     }
 
@@ -133,7 +135,7 @@ public class GameManager : MonoBehaviour
         LastReceivedServerTick = gameUpdateData.Frame;
         foreach (PlayerSpawnData data in gameUpdateData.SpawnDataData)
         {
-            if (data.Id != ConnectionManager.Instance.PlayerId)
+            if (data.Id != ConnectionManager.Instance.OwnPlayerId)
             {
                 SpawnPlayer(data);
             }

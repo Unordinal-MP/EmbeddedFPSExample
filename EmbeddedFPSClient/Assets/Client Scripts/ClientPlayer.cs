@@ -46,10 +46,13 @@ public class ClientPlayer : MonoBehaviour
     private float pitch;
 
     private ushort id;
-    private string playerName;
+    public string playerName { get; private set; }
     public bool isOwn { get; private set; }
 
     private int health;
+
+    public int Kills { get; set; }
+    public int Deaths { get; set; }
 
     [Header("Prefabs")]
     [SerializeField]
@@ -74,7 +77,7 @@ public class ClientPlayer : MonoBehaviour
         this.id = id;
         this.playerName = playerName;
         SetHealth(100);
-        if (ConnectionManager.Instance.PlayerId == id)
+        if (ConnectionManager.Instance.OwnPlayerId == id)
         {
             isOwn = true;
             interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, transform.position, transform.rotation);

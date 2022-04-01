@@ -16,7 +16,7 @@ public enum Tags
     GameUpdate = 202,
     GamePlayerInput = 203,
     
-    ShotBullet = 204
+    Kill = 204, //separate reliable message because death has implications and you need notice
 }
 
 public enum PlayerAction
@@ -129,43 +129,6 @@ public struct RoomData : IDarkRiftSerializable
     }
 }
 
-public struct BulletShotMessage : IDarkRiftSerializable
-{
-    public Vector3 startPosition;
-
-    public Vector3 direction;
-
-    public ushort clientID;
-
-    public BulletShotMessage(Vector3 pos, Vector3 dir, ushort id)
-    {
-        startPosition = pos;
-        direction = dir;
-        clientID = id;
-    }
-
-    public void Deserialize(DeserializeEvent e)
-    {
-        startPosition = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-        direction = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-
-        clientID = e.Reader.ReadUInt16();
-    }
-
-    public void Serialize(SerializeEvent e)
-    {
-        e.Writer.Write(startPosition.x);
-        e.Writer.Write(startPosition.y);
-        e.Writer.Write(startPosition.z);
-
-        e.Writer.Write(direction.x);
-        e.Writer.Write(direction.y);
-        e.Writer.Write(direction.z);
-
-        e.Writer.Write(clientID);
-    }
-}
-
 public struct JoinRoomRequest : IDarkRiftSerializable
 {
     public string RoomName;
@@ -215,12 +178,14 @@ public struct PlayerSpawnData : IDarkRiftSerializable
     public ushort Id;
     public string Name;
     public Vector3 Position;
+    public Quaternion Rotation;
 
-    public PlayerSpawnData(ushort id, string name, Vector3 position)
+    public PlayerSpawnData(ushort id, string name, Vector3 position, Quaternion rotation)
     {
         Id = id;
         Name = name;
         Position = position;
+        Rotation = rotation;
     }
 
     public void Deserialize(DeserializeEvent e)
@@ -229,6 +194,7 @@ public struct PlayerSpawnData : IDarkRiftSerializable
         Name = e.Reader.ReadString();
 
         Position = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
+        Rotation = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
     }
 
     public void Serialize(SerializeEvent e)
@@ -239,6 +205,11 @@ public struct PlayerSpawnData : IDarkRiftSerializable
         e.Writer.Write(Position.x);
         e.Writer.Write(Position.y);
         e.Writer.Write(Position.z);
+
+        e.Writer.Write(Rotation.x);
+        e.Writer.Write(Rotation.y);
+        e.Writer.Write(Rotation.z);
+        e.Writer.Write(Rotation.w);
     }
 }
 
@@ -353,7 +324,6 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
         Value = val;
     }
 
-
     public void Deserialize(DeserializeEvent e)
     {
         PlayerId = e.Reader.ReadUInt16();
@@ -364,6 +334,30 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
     {
         e.Writer.Write(PlayerId);
         e.Writer.Write(Value);
+    }
+}
+
+public struct KillData : IDarkRiftSerializable
+{
+    public ushort Killer;
+    public ushort Victim;
+
+    public KillData(ushort killer, ushort victim)
+    {
+        Killer = killer;
+        Victim = victim;
+    }
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        Killer = e.Reader.ReadUInt16();
+        Victim = e.Reader.ReadUInt16();
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        e.Writer.Write(Killer);
+        e.Writer.Write(Victim);
     }
 }
 

@@ -85,7 +85,7 @@ public class LoginManager : MonoBehaviour
 
     private void OnLoginAccept(LoginInfoData data)
     {
-        ConnectionManager.Instance.PlayerId = data.Id;
+        ConnectionManager.Instance.OwnPlayerId = data.Id;
         ConnectionManager.Instance.LobbyInfoData = data.Data;
         SceneManager.LoadScene("Lobby");
     }

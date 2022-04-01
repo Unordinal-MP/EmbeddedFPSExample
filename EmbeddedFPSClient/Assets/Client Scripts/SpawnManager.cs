@@ -52,7 +52,7 @@ public class SpawnManager : MonoBehaviour
             float distanceToDeath = (point - player.transform.position).magnitude;
 
             float spawnValue = 10 * Mathf.Min(20, distanceToPrevious) + 2 * distanceToEnemy + distanceToDeath;
-            spawnValue *= Random.value - 0.5f;
+            spawnValue *= Random.value + 1;
             if (spawnValue > bestValue)
             {
                 bestValue = spawnValue;

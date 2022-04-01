@@ -88,18 +88,20 @@ public class ServerPlayer : MonoBehaviour
             _highestSequenceNumber = target;
     }
 
-    public void TakeDamage(int value)
+    public void TakeDamage(int value, ServerPlayer shooter)
     {
         health -= value;
         if (health <= 0)
         {
-            Die();
+            Die(shooter);
         }
         room.UpdatePlayerHealth(this, (byte)health);
     }
 
-    private void Die()
+    private void Die(ServerPlayer shooter)
     {
+        room.UpdateKill(shooter, this);
+
         Respawn();
     }
 
@@ -149,6 +151,6 @@ public class ServerPlayer : MonoBehaviour
 
     public PlayerSpawnData GetPlayerSpawnData()
     {
-        return new PlayerSpawnData(Client.ID, clientConnection.Name, transform.position);
+        return new PlayerSpawnData(Client.ID, clientConnection.Name, transform.position, transform.rotation);
     }
 }
