@@ -49,12 +49,11 @@ public class Room : MonoBehaviour
         PlayerSpawnData[] playerSpawnDataArray = playerSpawnData.ToArray();
         PlayerDespawnData[] playerDespawnDataArray = playerDespawnData.ToArray();
         PlayerHealthUpdateData[] healthUpdateDataArray = healthUpdateData.ToArray();
-        foreach (ServerPlayer p in serverPlayers)
+        foreach (ServerPlayer player in serverPlayers)
         {
-            using (Message m = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(p.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray)))
-            {
-                p.Client.SendMessage(m, SendMode.Unreliable);
-            }
+            using Message message = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(player.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray));
+            
+            player.Client.SendMessage(message, SendMode.Unreliable);
         }
         
         playerSpawnData.Clear();
@@ -164,7 +163,7 @@ public class Room : MonoBehaviour
         {
             if (hit.transform.CompareTag("Unit"))
             {
-                hit.transform.GetComponent<ServerPlayer>().TakeDamage(5);
+                hit.transform.GetComponent<ServerPlayer>().TakeDamage(5, shooter);
             }
         }
         else
@@ -197,5 +196,21 @@ public class Room : MonoBehaviour
     public void UpdatePlayerHealth(ServerPlayer player, byte health)
     {
         healthUpdateData.Add(new PlayerHealthUpdateData(player.Client.ID, health));
+    }
+
+    public void UpdateKill(ServerPlayer shooter, ServerPlayer victim)
+    {
+        var killData = new KillData()
+        {
+            Killer = shooter.Client.ID,
+            Victim = victim.Client.ID,
+        };
+
+        using Message message = Message.Create((ushort)Tags.Kill, killData);
+
+        foreach (ServerPlayer player in serverPlayers)
+        {
+            player.Client.SendMessage(message, SendMode.Reliable);
+        }
     }
 }

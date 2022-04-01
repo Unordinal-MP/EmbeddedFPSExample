@@ -2,6 +2,7 @@ using DarkRift.Client.Unity;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -68,8 +69,14 @@ public class HudManager : MonoBehaviour
 
     private void OnGUI()
     {
-        if (_client != null && _debugViewEnabled)
+        if (_debugViewEnabled)
             MakeDebugView();
+
+        //temp implementation of scoreboard
+        MakeScoreboard();
+
+        //temp implementation of name signs
+        MakeNameSigns();
     }
 
     private void MakeDebugView()
@@ -96,5 +103,64 @@ public class HudManager : MonoBehaviour
             GUILayout.Label("Server tick: " + GameManager.Instance.LastReceivedServerTick);
             GUILayout.Label("Client tick: " + GameManager.Instance.ClientTick);
         } 
+    }
+
+    private void MakeScoreboard()
+    {
+        const int width = 240;
+
+        GUILayout.BeginArea(new Rect(Screen.width - width, 0, width, Screen.height));
+        
+        List<ClientPlayer> players = GameManager.Instance.Players.ToList();
+        players.Sort((a, b) =>
+        {
+            if (a.Kills == b.Kills)
+                return a.Deaths.CompareTo(b.Deaths);
+
+            return b.Kills.CompareTo(a.Kills);
+        });
+        foreach (var player in players)
+        {
+            GUILayout.Label(player.playerName + "   " + player.Kills + " kills  " + player.Deaths + " deaths");
+        }
+        
+        GUILayout.EndArea();
+    }
+
+    private void MakeNameSigns()
+    {
+        if (GameManager.Instance.OwnPlayer == null)
+            return;
+
+        Camera camera = GameManager.Instance.OwnPlayer.GetComponent<FirstPersonController>().camera;
+
+        foreach (ClientPlayer player in GameManager.Instance.Players)
+        {
+            if (player.isOwn)
+                continue;
+
+            Vector3 signPosition = player.transform.position;
+            signPosition += Vector3.up * 0.9f;
+
+            var direction = signPosition - camera.transform.position;
+            if (Vector3.Dot(direction, camera.transform.forward) < 0)
+                continue;
+
+            if (Physics.Raycast(camera.transform.position, direction, out RaycastHit hitInfo, direction.magnitude, 1, QueryTriggerInteraction.Ignore))
+            {
+                //Debug.DrawLine(camera.transform.position, hitInfo.point, Color.red, 10);
+                continue;
+            }
+
+            signPosition = camera.WorldToScreenPoint(signPosition);
+            signPosition.y = Screen.height - signPosition.y;
+
+            var label = new GUIContent(player.playerName);
+            Vector2 size = GUIStyle.none.CalcSize(label);
+
+            GUILayout.BeginArea(new Rect(signPosition.x - size.x / 2, signPosition.y - 2 - size.y, 200, 30));
+            GUILayout.Label(label);
+            GUILayout.EndArea();
+        }
     }
 }
