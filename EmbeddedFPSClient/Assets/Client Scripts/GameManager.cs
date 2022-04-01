@@ -71,6 +71,8 @@ public class GameManager : MonoBehaviour
 
     void ShotBullet(BulletShotMessage bulletMessage)
     {
+        //TODO: remove or replace purpose. the server immediately determines if a shot happened
+
         var _player = players[bulletMessage.clientID];
 
         if (_player)

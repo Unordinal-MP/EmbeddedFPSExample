@@ -26,27 +26,45 @@ public class ServerPlayer : MonoBehaviour
 
     private uint _highestSequenceNumber;
 
+    public Vector3 SpawnPosition { get; private set; }
+
     void Awake()
     {
         PlayerLogic = GetComponent<PlayerLogic>();
     }
 
-    public void Initialize(Vector3 position, ClientConnection clientConnection)
+    public void Initialize(ClientConnection clientConnection)
     {
         this.clientConnection = clientConnection;
+        this.clientConnection.Player = this;
+
         room = clientConnection.Room;
         Client = clientConnection.Client;
-        this.clientConnection.Player = this;
-        currentPlayerStateData = new PlayerStateData(Client.ID, new PlayerInputData(), 0, position, Quaternion.identity);
+        
         InputTick = room.ServerTick;
         _highestSequenceNumber = room.ServerTick;
-        health = 100;
+
+        Respawn();
 
         var playerSpawnData = room.GetSpawnDataForAllPlayers();
         using (Message m = Message.Create((ushort)Tags.GameStartDataResponse, new GameStartData(playerSpawnData, room.ServerTick)))
         {
             Client.SendMessage(m, SendMode.Reliable);
         }
+    }
+
+    private void Respawn()
+    {
+        health = 100;
+
+        SpawnManager.Instance.GetSpawnpoint(this, room.Players, out Vector3 position, out Quaternion rotation);
+
+        SpawnPosition = position;
+
+        transform.position = position;
+        transform.rotation = rotation;
+
+        currentPlayerStateData = new PlayerStateData(Client.ID, new PlayerInputData(), 0, position, rotation);
     }
 
     public void RecieveInput(PlayerInputData input)
@@ -75,12 +93,14 @@ public class ServerPlayer : MonoBehaviour
         health -= value;
         if (health <= 0)
         {
-            health = 100;
-            currentPlayerStateData.Position = new Vector3(0,1,0) + transform.parent.transform.localPosition;
-            currentPlayerStateData.Gravity = 0;
-            transform.localPosition = currentPlayerStateData.Position;
+            Die();
         }
         room.UpdatePlayerHealth(this, (byte)health);
+    }
+
+    private void Die()
+    {
+        Respawn();
     }
 
     public void PlayerPreUpdate()
@@ -131,5 +151,4 @@ public class ServerPlayer : MonoBehaviour
     {
         return new PlayerSpawnData(Client.ID, clientConnection.Name, transform.position);
     }
-
 }

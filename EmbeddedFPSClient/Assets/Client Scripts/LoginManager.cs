@@ -39,7 +39,7 @@ public class LoginManager : MonoBehaviour
     {
         if (nameInput.text == "")
         {
-            nameInput.text = "Beginner";
+            nameInput.text = "Beginner" + UnityEngine.Random.Range(1, 100);
             return;
         }
 
