@@ -21,7 +21,7 @@
     "com.unity.toolchain.win-x86_64-linux-x86_64": "1.0.0",
     "com.unity.ugui": "1.0.0",
     "com.unity.xr.legacyinputhelpers": "2.1.8",
-    "com.unordinal.hosting": "file:D:/workspace/unordinal/unity-editor-plugins",
+    "com.unordinal.hosting": "https://github.com/Unordinal-MP/unity-editor-plugin.git",
     "com.unity.modules.ai": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
     "com.unity.modules.animation": "1.0.0",
