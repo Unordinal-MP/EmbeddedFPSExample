@@ -7,9 +7,6 @@ using UnityEngine.EventSystems;
 public class FirstPersonController : MonoBehaviour
 {
     [SerializeField]
-    public float movementSpeed = 5f;
-
-    [SerializeField]
     protected CharacterController controller;
 
     [SerializeField]

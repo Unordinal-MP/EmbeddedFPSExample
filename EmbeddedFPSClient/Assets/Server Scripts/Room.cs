@@ -138,7 +138,7 @@ public class Room : MonoBehaviour
             direction = shooter.CurrentPlayerStateData.Input.LookDirection * Vector3.forward;
         }
 
-        startPosition += direction * 0.6f + Vector3.up * 0.9f;
+        startPosition += direction * 0.6f + Vector3.up * 1.8f;
 
         const float debugLifetimeSeconds = 300;
 

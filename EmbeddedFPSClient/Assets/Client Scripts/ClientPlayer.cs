@@ -80,7 +80,7 @@ public class ClientPlayer : MonoBehaviour
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
             isOwn = true;
-            interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, transform.position, transform.rotation);
+            interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, transform.position, transform.rotation, CollisionFlags.None);
             localControllerInitalized.Invoke(); //TODO: convert to code
 
             ClientStats.instance.SetOwnPlayer(this);
@@ -107,7 +107,7 @@ public class ClientPlayer : MonoBehaviour
                 go.transform.rotation = transform.rotation;
                 Destroy(go, 1f);
             }
-
+            
             transform.position = interpolation.CurrentData.Position;
             PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
             interpolation.SetFramePosition(nextStateData);
@@ -136,17 +136,22 @@ public class ClientPlayer : MonoBehaviour
 
                 ClientStats.instance.Confirmations.AddNow();
 
-                //Debug.Log("Rframe: " + info.Data.Position + " Lframe: " + playerStateData.Position);
+                //uncomment logging statements to debug reconciliation differences
+                //Debug.Log("Local: " + info.Data.ToString());
+                //Debug.Log("Remote: " + playerStateData.ToString());
 
                 if (Vector3.Distance(info.Data.Position, playerStateData.Position) > 0.05f)
                 {
+                    //Debug.Log("RECONCILE!!!");
+
                     ClientStats.instance.Reconciliations.AddNow();
 
-                    FirstPersonController controller = GetComponent<FirstPersonController>();
+                    FirstPersonController fpController = GetComponent<FirstPersonController>();
+                    CharacterController controller = GetComponent<CharacterController>();
 
                     List<ReconciliationInfo> infos = reconciliationHistory.ToList();
                     interpolation.CurrentData = playerStateData;
-                    Quaternion oldHeadRotation = controller.camera.transform.rotation;
+                    Quaternion oldHeadRotation = fpController.camera.transform.rotation;
 
                     transform.position = playerStateData.Position;
                     transform.rotation = playerStateData.Rotation;
@@ -156,7 +161,11 @@ public class ClientPlayer : MonoBehaviour
                         interpolation.SetFramePosition(u);
                     }
 
-                    controller.camera.transform.rotation = oldHeadRotation;
+                    fpController.camera.transform.rotation = oldHeadRotation;
+                }
+                else
+                {
+                    //Debug.Log(" ");
                 }
             }
         }

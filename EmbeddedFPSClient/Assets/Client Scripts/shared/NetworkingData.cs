@@ -236,28 +236,35 @@ public struct PlayerDespawnData : IDarkRiftSerializable
 public struct PlayerStateData : IDarkRiftSerializable
 {
 
-    public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation)
+    public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation, CollisionFlags collisionFlags)
     {
-        Id = id;
+        PlayerId = id;
         Input = input;
         Position = position;
         Rotation = rotation;
         Gravity = gravity;
+        LatestCollision = collisionFlags;
     }
 
-    public ushort Id;
+    public ushort PlayerId;
     public PlayerInputData Input;
     public Vector3 Position;
     public Quaternion Rotation;
     public float Gravity;
+
+    //debug
+    public CollisionFlags LatestCollision;
 
     public void Deserialize(DeserializeEvent e)
     {
         Input = e.Reader.ReadSerializable<PlayerInputData>();
         Position = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
         Rotation = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
-        Id = e.Reader.ReadUInt16();
+        PlayerId = e.Reader.ReadUInt16();
         Gravity = e.Reader.ReadSingle();
+
+        byte latestCollision = e.Reader.ReadByte();
+        LatestCollision = (CollisionFlags)latestCollision;
     }
 
     public void Serialize(SerializeEvent e)
@@ -272,8 +279,20 @@ public struct PlayerStateData : IDarkRiftSerializable
         e.Writer.Write(Rotation.y);
         e.Writer.Write(Rotation.z);
         e.Writer.Write(Rotation.w);
-        e.Writer.Write(Id);
+        e.Writer.Write(PlayerId);
         e.Writer.Write(Gravity);
+
+        e.Writer.Write((byte)LatestCollision);
+    }
+
+    public override string ToString()
+    {
+        //for debug purposes
+        string text = LatestCollision.ToString();
+        text += " " + Position.ToString("F3");
+        text += " " + Rotation.ToString("F1");
+
+        return text;
     }
 }
 
