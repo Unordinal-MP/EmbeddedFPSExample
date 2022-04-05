@@ -19,6 +19,14 @@ public class HudManager : MonoBehaviour
     private string _reconciliationRate;
     private string _confirmationRate;
 
+    void Awake()
+    {
+        if (ServerManager.Instance != null )
+        {          
+            DestroyImmediate(gameObject);
+            return;
+        }
+    }
     void Start()
     {
         MouseSensitivitySlider.onValueChanged.AddListener(sliderValue =>
@@ -30,7 +38,6 @@ public class HudManager : MonoBehaviour
             float mouseSensitivity = sliderValue - 0.5f;
             mouseSensitivity *= 3; //arbitrary constant chosen because it feels right
             mouseSensitivity = Mathf.Exp(mouseSensitivity);
-
             controller.MouseSensitivity = mouseSensitivity;
         });
 

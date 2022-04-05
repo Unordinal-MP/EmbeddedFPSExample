@@ -2,6 +2,7 @@
 using DarkRift;
 using DarkRift.Server;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class RoomManager : MonoBehaviour
 {
@@ -15,6 +16,9 @@ public class RoomManager : MonoBehaviour
 
     void Awake()
     {
+        // loading map
+        SceneManager.LoadScene("Map1", LoadSceneMode.Additive);
+
         if (Instance != null)
         {
             Destroy(gameObject);

@@ -24,19 +24,29 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance != null)
+        if (ServerManager.Instance == null)
         {
-            Destroy(gameObject);
+            if (Instance != null)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+            DontDestroyOnLoad(this);
             return;
         }
-        Instance = this;
-        DontDestroyOnLoad(this);
+        
+   Destroy(gameObject);
     }
 
     void OnDestroy()
     {
-        Instance = null;
-        ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
+        if (ServerManager.Instance == null)
+        {
+            Instance = null;
+            ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
+        }
+        
     }
 
     void Start()
