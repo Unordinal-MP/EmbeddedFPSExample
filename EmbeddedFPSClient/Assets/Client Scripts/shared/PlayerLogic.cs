@@ -16,8 +16,8 @@ public class PlayerLogic : MonoBehaviour
     private const float walkSpeed = 8;
     private const float gravityConstant = 2;
     private const float jumpStrength = 11;
-    private const float movementSpeed = 5;
-    private const float jumpSpeed = 3;
+    private const float movementSpeed = 10;
+    private const float jumpSpeed = 6;
     private const int groundLayerMask = 1;
     private const float groundHeight = 0.51f;
     private const float gravityMultiplier = 8;
@@ -61,7 +61,7 @@ public class PlayerLogic : MonoBehaviour
         {
             transform.rotation = newRotation;
         }
-        
+
         gravity = new Vector3(0, currentStateData.Gravity, 0);
 
         /*Vector3 movement = Vector3.zero;
@@ -170,10 +170,10 @@ public class PlayerLogic : MonoBehaviour
             _movementDir.y += jumpSpeed * Mathf.Clamp(jumpTimer, 0f, cachedJumpTimer);
             jumpTimer -= dt;
         }
+        
+        CollisionFlags flags = controller.Move(dt * movementSpeed * transform.TransformDirection(_movementDir));
 
-        controller.Move(dt * movementSpeed * transform.TransformDirection(_movementDir));
-
-        return new PlayerStateData(currentStateData.Id, input, gravity.y, transform.position, transform.rotation);
+        return new PlayerStateData(currentStateData.PlayerId, input, gravity.y, transform.position, transform.rotation, flags);
     }
 
     public bool IsGroundedCheck()

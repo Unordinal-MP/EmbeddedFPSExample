@@ -153,7 +153,7 @@ public class GameManager : MonoBehaviour
         foreach (PlayerStateData data in gameUpdateData.UpdateData)
         {
             ClientPlayer p;
-            if (players.TryGetValue(data.Id, out p))
+            if (players.TryGetValue(data.PlayerId, out p))
             {
                 p.OnServerDataUpdate(data);
             }
