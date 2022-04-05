@@ -66,11 +66,6 @@ public class FirstPersonController : MonoBehaviour
         return new PlayerInputData(_inputs, _lookRotation, time, sequenceNumber);
     }
 
-    public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
-    {
-        if (isOwn) return;
-    }
-
     public void Update()
     {
         CameraMovement();
@@ -143,13 +138,13 @@ public class FirstPersonController : MonoBehaviour
 
             if (HasAction(PlayerAction.Aim))
             {
-
+                //TODO: implement
             }
         }
 
         if (HasAction(PlayerAction.Sprint))
         {
-
+            //TODO: implement
         }
 
         if (HasAction(PlayerAction.Reload))

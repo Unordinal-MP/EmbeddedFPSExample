@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    public static SpawnManager Instance;
+    public static SpawnManager Instance { get; private set; }
 
     public List<Transform> spawners = new List<Transform>();
     void Awake()
@@ -26,7 +26,7 @@ public class SpawnManager : MonoBehaviour
     public void GetSpawnpoint(ServerPlayer player, IEnumerable<ServerPlayer> allPlayers, out Vector3 position, out Quaternion rotation)
     {
         float bestValue = -float.MaxValue;
-        Transform bestSpawn = null;
+        Transform bestSpawn = spawners[0];
 
         foreach (Transform spawn in spawners)
         {

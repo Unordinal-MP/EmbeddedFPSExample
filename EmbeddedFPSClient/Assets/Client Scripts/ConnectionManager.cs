@@ -7,14 +7,14 @@ using UnityEngine;
 [RequireComponent(typeof(UnityClient))]
 public class ConnectionManager : MonoBehaviour
 {
-    public static ConnectionManager Instance;
+    public static ConnectionManager Instance { get; private set; }
 
     [Header("Settings")]
     [SerializeField]
     public string Hostname;
     [SerializeField]
     private int port;
-    private int udport = 4297;
+    private readonly int udport = 4297;
 
     [Header("References")]
     [SerializeField]
@@ -47,11 +47,6 @@ public class ConnectionManager : MonoBehaviour
         if (hostname == "localhost")
             hostname = "127.0.0.1";
 
-        if (!IPAddress.TryParse(hostname, out var ip))
-        {
-            ip = Dns.GetHostEntry(hostname).AddressList[0];
-        }
-
         _clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
         
         Client.Client.ConnectInBackground(_clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
@@ -65,9 +60,13 @@ public class ConnectionManager : MonoBehaviour
 
     private void ConnectCallback(Exception exception)
     {
-        if (Client.Connected)
+        if (Client.ConnectionState == ConnectionState.Connected)
         {
             OnConnected?.Invoke();
+        }
+        else if (exception != null)
+        {
+            Debug.LogError("Unable to connect to server: " + exception.Message);
         }
         else
         {

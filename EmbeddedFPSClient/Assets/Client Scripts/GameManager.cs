@@ -7,11 +7,11 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
-    private Dictionary<ushort, ClientPlayer> players = new Dictionary<ushort, ClientPlayer>();
+    private readonly Dictionary<ushort, ClientPlayer> players = new Dictionary<ushort, ClientPlayer>();
 
-    private Buffer<GameUpdateData> gameUpdateDataBuffer = new Buffer<GameUpdateData>(1, 1);
+    private readonly Buffer<GameUpdateData> gameUpdateDataBuffer = new Buffer<GameUpdateData>(1, 1);
 
     [Header("Prefabs")]
     public GameObject PlayerPrefab;
@@ -120,8 +120,8 @@ public class GameManager : MonoBehaviour
         if (go != null)
         {
             ClientPlayer player = go.GetComponent<ClientPlayer>();
-            player.Initialize(playerSpawnData.Id, playerSpawnData.Name);
-            players.Add(playerSpawnData.Id, player);
+            player.Initialize(playerSpawnData.PlayerId, playerSpawnData.Name);
+            players.Add(playerSpawnData.PlayerId, player);
 
             if (player.isOwn)
             {
@@ -145,7 +145,7 @@ public class GameManager : MonoBehaviour
         LastReceivedServerTick = gameUpdateData.Frame;
         foreach (PlayerSpawnData data in gameUpdateData.SpawnDataData)
         {
-            if (data.Id != ConnectionManager.Instance.OwnPlayerId)
+            if (data.PlayerId != ConnectionManager.Instance.OwnPlayerId)
             {
                 SpawnPlayer(data);
             }
@@ -153,10 +153,10 @@ public class GameManager : MonoBehaviour
 
         foreach (PlayerDespawnData data in gameUpdateData.DespawnDataData)
         {
-            if (players.ContainsKey(data.Id))
+            if (players.ContainsKey(data.PlayerId))
             {
-                Destroy(players[data.Id].gameObject);
-                players.Remove(data.Id);
+                Destroy(players[data.PlayerId].gameObject);
+                players.Remove(data.PlayerId);
             }
         }
 

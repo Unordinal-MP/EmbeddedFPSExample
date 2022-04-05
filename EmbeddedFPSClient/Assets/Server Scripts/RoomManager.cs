@@ -6,9 +6,9 @@ using UnityEngine.SceneManagement;
 
 public class RoomManager : MonoBehaviour
 {
-    Dictionary<string, Room> rooms = new Dictionary<string, Room>();
+    private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
 
-    public static RoomManager Instance;
+    public static RoomManager Instance { get; private set; }
 
     [Header("Prefabs")]
     [SerializeField]

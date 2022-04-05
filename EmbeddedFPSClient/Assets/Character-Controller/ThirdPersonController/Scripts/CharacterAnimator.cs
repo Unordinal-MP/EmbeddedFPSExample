@@ -1,4 +1,3 @@
-using StarterAssets;
 using UnityEngine;
 
 public class CharacterAnimator : MonoBehaviour, IStreamData
@@ -44,18 +43,24 @@ public class CharacterAnimator : MonoBehaviour, IStreamData
             return;
         }
 
-        animator.SetFloat(inputXID, playerStateData.Input.horizontal);
-        animator.SetFloat(inputYID, playerStateData.Input.vertical);
+        float checkRight = playerStateData.Input.HasAction(PlayerAction.Right) ? 1 : 0;
+        float horizontal = playerStateData.Input.HasAction(PlayerAction.Left) ? -1 : checkRight;
 
-        if(playerStateData.Input.isShooting)
+        float checkForward = playerStateData.Input.HasAction(PlayerAction.Forward) ? 1 : 0;
+        float vertical = playerStateData.Input.HasAction(PlayerAction.Back) ? -1 : checkForward;
+
+        animator.SetFloat(inputXID, horizontal);
+        animator.SetFloat(inputYID, vertical);
+
+        if (playerStateData.Input.HasAction(PlayerAction.Fire))
         {
             animator.Play(isShootingID);
         }
         
-        SetBool(isSprintingID, playerStateData.Input.isSprinting);
-        SetBool(isAimingID, playerStateData.Input.isAiming);
+        SetBool(isSprintingID, playerStateData.Input.HasAction(PlayerAction.Sprint));
+        SetBool(isAimingID, playerStateData.Input.HasAction(PlayerAction.Aim));
 
-        SetTrigger(isReloadingID, playerStateData.Input.isReloading);
+        SetTrigger(isReloadingID, playerStateData.Input.HasAction(PlayerAction.Reload));
     }
 
     private void SetBool(int id, bool value)

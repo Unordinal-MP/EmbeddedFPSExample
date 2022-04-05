@@ -36,7 +36,7 @@ public class Weapon : MonoBehaviour
 
     public bool isShooting { get; private set; }
 
-    public bool isReady { get => !isPuttingAway && !isPuttingAway; }
+    public bool isReady { get => true; } //TODO: !isPuttingAway
 
     [Header("Whacky")]
     public float reloadTime = 1f;

@@ -13,7 +13,7 @@ public class LiteNetNetworkListener : NetworkListener
     private NetManager _server;
     private readonly Dictionary<NetPeer, LiteNetNetworkServerConnection> _connections = new Dictionary<NetPeer, LiteNetNetworkServerConnection>();
     private readonly object _lock = new object();
-    private ushort _port;
+    private readonly ushort _port;
     private Thread _updateThread;
     private volatile bool _stopping;
 
@@ -69,7 +69,7 @@ public class LiteNetNetworkListener : NetworkListener
                 {
                     connection.OnDisconnection();
                     _connections.Remove(peer);
-                };
+                }
             }
         };
 

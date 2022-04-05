@@ -4,7 +4,7 @@ using UnityEngine;
 //a better implementation would probably have a fixed number N of time slices, because it puts a bound on memory use
 public sealed class TimeBuffer
 {
-    private Queue<KeyValuePair<double, double>> _samples = new Queue<KeyValuePair<double, double>>();
+    private readonly Queue<KeyValuePair<double, double>> _samples = new Queue<KeyValuePair<double, double>>();
 
     public double WindowInSeconds { get; set; } = 1;
 

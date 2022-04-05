@@ -37,7 +37,7 @@ public class PlayerLogic : MonoBehaviour
     {
         bool HasAction(PlayerAction which)
         {
-            return input.Keyinputs[(int)which];
+            return input.KeyInputs[(int)which];
         }
 
         float dt = Time.fixedDeltaTime;

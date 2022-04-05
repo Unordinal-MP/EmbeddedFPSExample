@@ -38,14 +38,9 @@ public class ClientPlayer : MonoBehaviour
 
     private PlayerInterpolation interpolation;
 
-    private Queue<ReconciliationInfo> reconciliationHistory = new Queue<ReconciliationInfo>();
+    private readonly Queue<ReconciliationInfo> reconciliationHistory = new Queue<ReconciliationInfo>();
     public int ReconciliationHistorySize => reconciliationHistory.Count;
 
-    // Store look direction.
-    private float yaw;
-    private float pitch;
-
-    private ushort id;
     public string playerName { get; private set; }
     public bool isOwn { get; private set; }
 
@@ -57,7 +52,7 @@ public class ClientPlayer : MonoBehaviour
     [Header("Prefabs")]
     [SerializeField]
     private GameObject shotPrefab;
-    private List<IStreamData> streamDatas = new List<IStreamData>();
+    private readonly List<IStreamData> streamDatas = new List<IStreamData>();
 
     void Awake()
     {
@@ -74,13 +69,12 @@ public class ClientPlayer : MonoBehaviour
 
     public void Initialize(ushort id, string playerName)
     {
-        this.id = id;
         this.playerName = playerName;
         SetHealth(100);
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
             isOwn = true;
-            interpolation.CurrentData = new PlayerStateData(this.id, new PlayerInputData(), 0, transform.position, transform.rotation, CollisionFlags.None);
+            interpolation.CurrentData = new PlayerStateData(id, new PlayerInputData(), 0, transform.position, transform.rotation, CollisionFlags.None);
             localControllerInitalized.Invoke(); //TODO: convert to code
 
             ClientStats.instance.SetOwnPlayer(this);
@@ -100,7 +94,7 @@ public class ClientPlayer : MonoBehaviour
         {
             PlayerInputData inputData = GetComponent<FirstPersonController>().GetInputs(GameManager.Instance.LastReceivedServerTick - 1, GameManager.Instance.ClientTick);
 
-            if (inputData.isReloading) //TODO: find better place for this
+            if (inputData.HasAction(PlayerAction.Reload)) //TODO: find better place for this
             {
                 GameObject go = Instantiate(shotPrefab);
                 go.transform.position = interpolation.CurrentData.Position;
@@ -147,7 +141,6 @@ public class ClientPlayer : MonoBehaviour
                     ClientStats.instance.Reconciliations.AddNow();
 
                     FirstPersonController fpController = GetComponent<FirstPersonController>();
-                    CharacterController controller = GetComponent<CharacterController>();
 
                     List<ReconciliationInfo> infos = reconciliationHistory.ToList();
                     interpolation.CurrentData = playerStateData;

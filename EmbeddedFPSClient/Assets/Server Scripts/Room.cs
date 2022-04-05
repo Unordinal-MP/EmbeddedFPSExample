@@ -5,15 +5,12 @@ using UnityEngine.SceneManagement;
 
 public class Room : MonoBehaviour
 {
-    private Scene scene;
-    private PhysicsScene physicsScene;
+    private readonly List<ServerPlayer> serverPlayers = new List<ServerPlayer>();
 
-    private List<ServerPlayer> serverPlayers = new List<ServerPlayer>();
-
-    private List<PlayerStateData> playerStateData = new List<PlayerStateData>(4);
-    private List<PlayerSpawnData> playerSpawnData = new List<PlayerSpawnData>(4);
-    private List<PlayerDespawnData> playerDespawnData = new List<PlayerDespawnData>(4);
-    private List<PlayerHealthUpdateData> healthUpdateData = new List<PlayerHealthUpdateData>(4);
+    private readonly List<PlayerStateData> playerStateData = new List<PlayerStateData>(4);
+    private readonly List<PlayerSpawnData> playerSpawnData = new List<PlayerSpawnData>(4);
+    private readonly List<PlayerDespawnData> playerDespawnData = new List<PlayerDespawnData>(4);
+    private readonly List<PlayerHealthUpdateData> healthUpdateData = new List<PlayerHealthUpdateData>(4);
 
     public IReadOnlyList<ServerPlayer> Players => serverPlayers;
 
@@ -68,8 +65,7 @@ public class Room : MonoBehaviour
         MaxSlots = maxslots;
 
         CreateSceneParameters csp = new CreateSceneParameters(LocalPhysicsMode.Physics3D);
-        scene = SceneManager.CreateScene("Room_" + name, csp);
-        physicsScene = scene.GetPhysicsScene();
+        Scene scene = SceneManager.CreateScene("Room_" + name, csp);
 
         SceneManager.MoveGameObjectToScene(gameObject, scene);
     }
@@ -183,14 +179,14 @@ public class Room : MonoBehaviour
 
     public PlayerSpawnData[] GetSpawnDataForAllPlayers()
     {
-        PlayerSpawnData[] playerSpawnData = new PlayerSpawnData[serverPlayers.Count];
+        PlayerSpawnData[] fullPlayerSpawnData = new PlayerSpawnData[serverPlayers.Count];
         for (int i = 0; i < serverPlayers.Count; i++)
         {
             ServerPlayer p = serverPlayers[i];
-            playerSpawnData[i] = p.GetPlayerSpawnData();
+            fullPlayerSpawnData[i] = p.GetPlayerSpawnData();
         }
 
-        return playerSpawnData;
+        return fullPlayerSpawnData;
     }
 
     public void UpdatePlayerHealth(ServerPlayer player, byte health)

@@ -17,7 +17,9 @@ public class Buffer<T>
         }
     }
 
+#pragma warning disable S2743 // Static fields should not be used in generic types
     private static readonly IdComparer _comparer = new IdComparer();
+#pragma warning restore S2743 // Static fields should not be used in generic types
 
     private readonly List<Entry> elements;
     private readonly int bufferSize;

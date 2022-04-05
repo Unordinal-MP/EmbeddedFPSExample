@@ -14,8 +14,6 @@ public class ClientConnection
         Client = client;
         Name = data.Name;
 
-        ServerManager.Instance.Players.Add(client.ID, this);
-
         Client.MessageReceived += OnMessage;
         
         using (Message m = Message.Create((ushort)Tags.LoginRequestAccepted, new LoginInfoData(client.ID, new LobbyInfoData(RoomManager.Instance.GetRoomDataList()))))

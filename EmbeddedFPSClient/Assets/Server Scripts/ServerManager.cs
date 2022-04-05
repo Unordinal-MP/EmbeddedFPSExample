@@ -7,9 +7,8 @@ using UnityEngine;
 [RequireComponent(typeof(XmlUnityServer))]
 public class ServerManager : MonoBehaviour
 {
-    public static ServerManager Instance;
-
-    private XmlUnityServer xmlServer;
+    public static ServerManager Instance { get; private set; }
+    
     private DarkRiftServer server;
 
     public Dictionary<ushort, ClientConnection> Players = new Dictionary<ushort, ClientConnection>();
@@ -27,7 +26,7 @@ public class ServerManager : MonoBehaviour
 
     void Start()
     {
-        xmlServer = GetComponent<XmlUnityServer>();
+        XmlUnityServer xmlServer = GetComponent<XmlUnityServer>();
         server = xmlServer.Server;
         server.ClientManager.ClientConnected += OnClientConnected;
         server.ClientManager.ClientDisconnected += OnClientDisconnected;
@@ -90,6 +89,7 @@ public class ServerManager : MonoBehaviour
         // In the future the ClientConnection will handle its messages
         client.MessageReceived -= OnMessage;
 
-        new ClientConnection(client, data);
+        var connection = new ClientConnection(client, data);
+        Players.Add(client.ID, connection);
     }
 }

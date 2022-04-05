@@ -12,7 +12,7 @@ public class ServerPlayer : MonoBehaviour
 
     private PlayerStateData currentPlayerStateData;
 
-    private Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
+    private readonly Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
 
     private int health;
 
@@ -110,7 +110,7 @@ public class ServerPlayer : MonoBehaviour
         inputs = inputBuffer.Get();
         for (int i = 0; i < inputs.Length; i++)
         {
-            if (inputs[i].Keyinputs[(int)PlayerAction.Fire])
+            if (inputs[i].KeyInputs[(int)PlayerAction.Fire])
             {
                 room.PerformShootRayCast(inputs[i].Time, this);
                 return;
@@ -128,9 +128,9 @@ public class ServerPlayer : MonoBehaviour
             for (int i = 1; i < inputs.Length; i++)
             {
                 InputTick++;
-                for (int j = 0; j < input.Keyinputs.Length; j++)
+                for (int j = 0; j < input.KeyInputs.Length; j++)
                 {
-                    input.Keyinputs[j] = input.Keyinputs[j] || inputs[i].Keyinputs[j];
+                    input.KeyInputs[j] = input.KeyInputs[j] || inputs[i].KeyInputs[j];
                 }
                 input.LookDirection = inputs[i].LookDirection;
             }
