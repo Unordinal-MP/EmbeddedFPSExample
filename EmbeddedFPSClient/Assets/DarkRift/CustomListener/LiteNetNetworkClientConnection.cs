@@ -1,10 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Net;
 using DarkRift;
 using DarkRift.Client;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using System;
-using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 
 public class LiteNetNetworkClientConnection : NetworkClientConnection
@@ -13,15 +13,15 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
 
     public override IEnumerable<IPEndPoint> RemoteEndPoints => new IPEndPoint[] { GetRemoteEndPoint("udp") };
 
-    private NetManager _net;
-    private NetPeer _peer;
-    private readonly string _host;
-    private readonly ushort _port;
+    private NetManager net;
+    private NetPeer peer;
+    private readonly string host;
+    private readonly ushort port;
 
     public LiteNetNetworkClientConnection(string host, ushort port)
     {
-        _host = host;
-        _port = port;
+        this.host = host;
+        this.port = port;
 
         //main initialization in Connect()
     }
@@ -38,7 +38,7 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
     public override void Connect()
     {
         EventBasedNetListener listener = new EventBasedNetListener();
-        _net = new NetManager(listener);
+        net = new NetManager(listener);
 
         listener.PeerDisconnectedEvent += (peer, disconnectInfo) =>
         {
@@ -53,29 +53,33 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
             {
                 Buffer.BlockCopy(dataReader.RawData, dataReader.Position, messageBuffer.Buffer, 0, length);
                 messageBuffer.Count = length;
-                HandleMessageReceived(messageBuffer, deliveryMethod == DeliveryMethod.ReliableOrdered? SendMode.Reliable : SendMode.Unreliable);
+                HandleMessageReceived(messageBuffer, deliveryMethod == DeliveryMethod.ReliableOrdered ? SendMode.Reliable : SendMode.Unreliable);
             }
 
             dataReader.Recycle();
         };
 
-        _net.Start();
-        _peer = _net.Connect(_host, _port, "DarkRift2");
+        net.Start();
+        peer = net.Connect(host, port, "DarkRift2");
     }
 
     public void Update()
     {
-        if (_net != null)
-            _net.PollEvents();
+        if (net != null)
+        {
+            net.PollEvents();
+        }
     }
 
     private DarkRift.ConnectionState GetConnectionState()
     {
-        if (_peer == null)
+        if (peer == null)
+        {
             return DarkRift.ConnectionState.Disconnected;
+        }
 
         //TODO: verify, because this is a guess
-        switch (_peer.ConnectionState)
+        switch (peer.ConnectionState)
         {
             case LiteNetLib.ConnectionState.Connected:
                 return DarkRift.ConnectionState.Connected;
@@ -92,12 +96,14 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
 
     public override bool Disconnect()
     {
-        if (_peer == null)
+        if (peer == null)
+        {
             return true;
+        }
 
-        _peer.Disconnect();
-        _net.Stop();
-        _peer = null;
+        peer.Disconnect();
+        net.Stop();
+        peer = null;
 
         return true;
     }
@@ -106,7 +112,7 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
     {
         if (name == "udp")
         {
-            return _peer.EndPoint;
+            return peer.EndPoint;
         }
         else
         {
@@ -126,8 +132,10 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
 
     private bool SendMessage(MessageBuffer message, DeliveryMethod deliveryMethod)
     {
-        if (_peer == null)
+        if (peer == null)
+        {
             return false;
+        }
 
         using (message)
         {
@@ -135,7 +143,7 @@ public class LiteNetNetworkClientConnection : NetworkClientConnection
             var writer = new NetDataWriter();
             writer.Put(message.Buffer, message.Offset, message.Count);
 
-            _peer.Send(writer, deliveryMethod);
+            peer.Send(writer, deliveryMethod);
 
             return true;
         }

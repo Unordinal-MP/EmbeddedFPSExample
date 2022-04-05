@@ -24,8 +24,10 @@ public class CharacterAnimator : MonoBehaviour, IStreamData
 
     private void Awake()
     {
-        if(!animator)
+        if (!animator)
+        {
             animator = GetComponent<Animator>();
+        }
 
         inputYID = Animator.StringToHash("inputY");
         inputXID = Animator.StringToHash("inputX");

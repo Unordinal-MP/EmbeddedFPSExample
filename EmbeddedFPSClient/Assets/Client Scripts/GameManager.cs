@@ -1,6 +1,5 @@
-﻿using System.Linq;
-using System.Collections.Generic;
-
+﻿using System.Collections.Generic;
+using System.Linq;
 using DarkRift;
 using DarkRift.Client;
 using UnityEngine;
@@ -22,66 +21,68 @@ public class GameManager : MonoBehaviour
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
 
-    void Awake()
+    private void Awake()
     {
         if (ServerManager.Instance == null)
         {
+            //is is client
             if (Instance != null)
             {
                 Destroy(gameObject);
-                return;
             }
-            Instance = this;
-            DontDestroyOnLoad(this);
-            return;
+            else
+            {
+                Instance = this;
+                DontDestroyOnLoad(this);
+            }
         }
-        
-   Destroy(gameObject);
+        else
+        {
+            //if is server
+            Destroy(gameObject);
+        }
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         if (ServerManager.Instance == null)
         {
             Instance = null;
             ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
         }
-        
     }
 
-    void Start()
+    private void Start()
     {
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
-        using (Message message = Message.CreateEmpty((ushort)Tags.GameJoinRequest))
-        {
-            ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
-        }
 
+        using Message message = Message.CreateEmpty((ushort)Tags.GameJoinRequest);
+        
+        ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
     }
 
-    void OnMessage(object sender, MessageReceivedEventArgs e)
+    private void OnMessage(object sender, MessageReceivedEventArgs e)
     {
-        using (Message message = e.GetMessage())
-        {
-            ClientStats.instance.MessagesIn.AddNow();
-            ClientStats.instance.BytesIn.AddNow(message.DataLength);
+        using Message message = e.GetMessage();
 
-            switch ((Tags)message.Tag)
-            {
-                case Tags.GameStartDataResponse:
-                    OnGameJoinAccept(message.Deserialize<GameStartData>());
-                    break;
-                case Tags.GameUpdate:
-                    OnGameUpdate(message.Deserialize<GameUpdateData>());
-                    break;
-                case Tags.Kill:
-                    OnKill(message.Deserialize<KillData>());
-                    break;
-            }
+        ClientStats.Instance.MessagesIn.AddNow();
+        ClientStats.Instance.BytesIn.AddNow(message.DataLength);
+
+        switch ((Tags)message.Tag)
+        {
+            case Tags.GameStartDataResponse:
+                OnGameJoinAccept(message.Deserialize<GameStartData>());
+                break;
+            case Tags.GameUpdate:
+                OnGameUpdate(message.Deserialize<GameUpdateData>());
+                break;
+            case Tags.Kill:
+                OnKill(message.Deserialize<KillData>());
+                break;
         }
     }
 
-    void OnKill(KillData kill)
+    private void OnKill(KillData kill)
     {
         //reliable message from server so safe to not check
         ClientPlayer killer = players[kill.Killer];
@@ -93,7 +94,7 @@ public class GameManager : MonoBehaviour
         //jury is out on whether we should manipulate health here
     }
 
-    void OnGameJoinAccept(GameStartData gameStartData)
+    private void OnGameJoinAccept(GameStartData gameStartData)
     {
         LastReceivedServerTick = gameStartData.OnJoinServerTick;
         ClientTick = gameStartData.OnJoinServerTick;
@@ -103,12 +104,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void OnGameUpdate(GameUpdateData gameUpdateData)
+    private void OnGameUpdate(GameUpdateData gameUpdateData)
     {
         gameUpdateDataBuffer.Add(gameUpdateData, gameUpdateData.Frame);
     }
 
-    void SpawnPlayer(PlayerSpawnData playerSpawnData)
+    private void SpawnPlayer(PlayerSpawnData playerSpawnData)
     {
         GameObject go = Instantiate(PlayerPrefab, playerSpawnData.Position, playerSpawnData.Rotation);
         var controller = GetComponent<FirstPersonController>();
@@ -123,14 +124,14 @@ public class GameManager : MonoBehaviour
             player.Initialize(playerSpawnData.PlayerId, playerSpawnData.Name);
             players.Add(playerSpawnData.PlayerId, player);
 
-            if (player.isOwn)
+            if (player.IsOwn)
             {
                 OwnPlayer = player;
             }
         }
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         ClientTick++;
         GameUpdateData[] receivedGameUpdateData = gameUpdateDataBuffer.Get();
@@ -140,7 +141,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void UpdateClientGameState(GameUpdateData gameUpdateData)
+    private void UpdateClientGameState(GameUpdateData gameUpdateData)
     {
         LastReceivedServerTick = gameUpdateData.Frame;
         foreach (PlayerSpawnData data in gameUpdateData.SpawnDataData)
@@ -162,8 +163,7 @@ public class GameManager : MonoBehaviour
 
         foreach (PlayerStateData data in gameUpdateData.UpdateData)
         {
-            ClientPlayer p;
-            if (players.TryGetValue(data.PlayerId, out p))
+            if (players.TryGetValue(data.PlayerId, out ClientPlayer p))
             {
                 p.OnServerDataUpdate(data);
             }

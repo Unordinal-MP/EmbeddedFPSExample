@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#pragma warning disable //TODO: uncomment when file is done
+
+using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerLogic : MonoBehaviour
@@ -11,6 +13,7 @@ public class PlayerLogic : MonoBehaviour
     private bool isJumping;
     private float jumpTimer;
     private float cachedJumpTimer;
+
 
     //TODO: enter better way of input settings (ScriptableObject?)
     private const float walkSpeed = 8;

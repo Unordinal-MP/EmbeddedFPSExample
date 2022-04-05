@@ -1,25 +1,25 @@
-﻿using DarkRift;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using DarkRift;
 using DarkRift.Server;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using System;
-using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
 
 public class LiteNetNetworkServerConnection : NetworkServerConnection
 {
     public override DarkRift.ConnectionState ConnectionState => GetConnectionState();
 
-    public override IEnumerable<IPEndPoint> RemoteEndPoints => new IPEndPoint[]{GetRemoteEndPoint("udp")};
+    public override IEnumerable<IPEndPoint> RemoteEndPoints => new IPEndPoint[] { GetRemoteEndPoint("udp") };
 
-    private readonly NetPeer _peer;
+    private readonly NetPeer peer;
 
-    private bool _handledDisconnection;
+    private bool handledDisconnection;
 
     internal LiteNetNetworkServerConnection(NetPeer peer)
     {
-        _peer = peer;
+        this.peer = peer;
 
         //any meaty initialization should go into StartListening()
     }
@@ -31,7 +31,7 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
     private DarkRift.ConnectionState GetConnectionState()
     {
         //TODO: verify, because this is a guess
-        switch (_peer.ConnectionState)
+        switch (peer.ConnectionState)
         {
             case LiteNetLib.ConnectionState.Connected:
                 return DarkRift.ConnectionState.Connected;
@@ -48,7 +48,7 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
 
     public override bool Disconnect()
     {
-        _peer.Disconnect();
+        peer.Disconnect();
 
         //TODO: verify, because this is a guess
         var newState = GetConnectionState();
@@ -65,7 +65,7 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
     {
         if (name == "udp")
         {
-            return _peer.EndPoint;
+            return peer.EndPoint;
         }
         else
         {
@@ -93,13 +93,15 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
         using (message)
         {
             if (CheckDisconnection())
+            {
                 return false;
+            }
 
             //TODO: remove alloc/copy
             var writer = new NetDataWriter();
             writer.Put(message.Buffer, message.Offset, message.Count);
 
-            _peer.Send(writer, deliveryMethod);
+            peer.Send(writer, deliveryMethod);
 
             return true;
         }
@@ -118,9 +120,12 @@ public class LiteNetNetworkServerConnection : NetworkServerConnection
 
     private void TryHandleDisconnection(string suffix)
     {
-        if (_handledDisconnection)
+        if (handledDisconnection)
+        {
             return;
-        _handledDisconnection = true;
+        }
+
+        handledDisconnection = true;
         Debug.Log("Detected disconnection " + suffix);
         HandleDisconnection();
     }

@@ -235,7 +235,6 @@ public struct PlayerDespawnData : IDarkRiftSerializable
 
 public struct PlayerStateData : IDarkRiftSerializable
 {
-
     public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation, CollisionFlags collisionFlags)
     {
         PlayerId = id;
@@ -296,7 +295,6 @@ public struct PlayerStateData : IDarkRiftSerializable
     }
 }
 
-
 public struct GameUpdateData : IDarkRiftSerializable
 {
     public uint Frame;
@@ -313,6 +311,7 @@ public struct GameUpdateData : IDarkRiftSerializable
         SpawnDataData = spawnData;
         HealthData = healthData;
     }
+
     public void Deserialize(DeserializeEvent e)
     {
         Frame = e.Reader.ReadUInt32();
@@ -431,6 +430,7 @@ public struct PlayerInputData : IDarkRiftSerializable
         {
             e.Writer.Write(KeyInputs[q]);
         }
+
         e.Writer.Write(LookDirection.x);
         e.Writer.Write(LookDirection.y);
         e.Writer.Write(LookDirection.z);

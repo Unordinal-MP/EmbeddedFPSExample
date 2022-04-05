@@ -1,8 +1,8 @@
-using DarkRift.Client.Unity;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using DarkRift.Client.Unity;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -10,30 +10,32 @@ public class HudManager : MonoBehaviour
 {
     public Slider MouseSensitivitySlider;
 
-    private bool _debugViewEnabled = true;
+    private bool debugViewEnabled = true;
 
-    private UnityClient _client;
+    private UnityClient client;
 
-    private string _messageInRate;
-    private string _byteInRate;
-    private string _reconciliationRate;
-    private string _confirmationRate;
+    private string messageInRate;
+    private string byteInRate;
+    private string reconciliationRate;
+    private string confirmationRate;
 
-    void Awake()
+    private void Awake()
     {
-        if (ServerManager.Instance != null )
+        if (ServerManager.Instance != null)
         {          
             DestroyImmediate(gameObject);
-            return;
         }
     }
-    void Start()
+
+    private void Start()
     {
         MouseSensitivitySlider.onValueChanged.AddListener(sliderValue =>
         {
             var controller = GetFirstPersonController();
             if (controller == null)
+            {
                 return;
+            }
 
             float mouseSensitivity = sliderValue - 0.5f;
             mouseSensitivity *= 3; //arbitrary constant chosen because it feels right
@@ -53,14 +55,14 @@ public class HudManager : MonoBehaviour
 
     private void Update()
     {
-        if (_client == null)
+        if (client == null)
         {
-            _client = Object.FindObjectOfType<UnityClient>();
+            client = Object.FindObjectOfType<UnityClient>();
         }
 
         if (Input.GetKeyDown(KeyCode.F1))
         {
-            _debugViewEnabled = !_debugViewEnabled;
+            debugViewEnabled = !debugViewEnabled;
         }
     }
 
@@ -68,16 +70,18 @@ public class HudManager : MonoBehaviour
     {
         //this primarily serves a purpose of being more visually appealing and readable than values changing every frame
         var culture = CultureInfo.InvariantCulture;
-        _messageInRate = ClientStats.instance.MessagesIn.GetWindowRate().ToString("N3", culture);
-        _byteInRate = ClientStats.instance.BytesIn.GetWindowRate().ToString("N3", culture);
-        _reconciliationRate = ClientStats.instance.Reconciliations.GetWindowRate().ToString("N3", culture);
-        _confirmationRate = ClientStats.instance.Confirmations.GetWindowRate().ToString("N3", culture);
+        messageInRate = ClientStats.Instance.MessagesIn.GetWindowRate().ToString("N3", culture);
+        byteInRate = ClientStats.Instance.BytesIn.GetWindowRate().ToString("N3", culture);
+        reconciliationRate = ClientStats.Instance.Reconciliations.GetWindowRate().ToString("N3", culture);
+        confirmationRate = ClientStats.Instance.Confirmations.GetWindowRate().ToString("N3", culture);
     }
 
     private void OnGUI()
     {
-        if (_debugViewEnabled)
+        if (debugViewEnabled)
+        {
             MakeDebugView();
+        }
 
         //temp implementation of scoreboard
         MakeScoreboard();
@@ -88,23 +92,25 @@ public class HudManager : MonoBehaviour
 
     private void MakeDebugView()
     {
-        if (_client == null)
+        if (client == null)
+        {
             return;
-        
-        GUILayout.Label("Network Debug View (F1 to toggle)");
-        GUILayout.Label("Connection status: " + _client.ConnectionState);
+        }
 
-        foreach (var endpoint in _client.Client.RemoteEndPoints)
+        GUILayout.Label("Network Debug View (F1 to toggle)");
+        GUILayout.Label("Connection status: " + client.ConnectionState);
+
+        foreach (var endpoint in client.Client.RemoteEndPoints)
         {
             GUILayout.Label("Remote: " + endpoint);
         }
 
-        GUILayout.Label("RTT: " + _client.Client.RoundTripTime.LatestRtt);
-        GUILayout.Label("In messages/s: " + _messageInRate);
-        GUILayout.Label("In bytes/s: " + _byteInRate);
-        GUILayout.Label("Reconciliations/s: " + _reconciliationRate);
-        GUILayout.Label("Confirmations/s: " + _confirmationRate);
-        GUILayout.Label("Reconciliation history: " + ClientStats.instance.ReconciliationHistorySize);
+        GUILayout.Label("RTT: " + client.Client.RoundTripTime.LatestRtt);
+        GUILayout.Label("In messages/s: " + messageInRate);
+        GUILayout.Label("In bytes/s: " + byteInRate);
+        GUILayout.Label("Reconciliations/s: " + reconciliationRate);
+        GUILayout.Label("Confirmations/s: " + confirmationRate);
+        GUILayout.Label("Reconciliation history: " + ClientStats.Instance.ReconciliationHistorySize);
         if (GameManager.Instance != null)
         {
             GUILayout.Label("Server tick: " + GameManager.Instance.LastReceivedServerTick);
@@ -122,13 +128,15 @@ public class HudManager : MonoBehaviour
         players.Sort((a, b) =>
         {
             if (a.Kills == b.Kills)
+            {
                 return a.Deaths.CompareTo(b.Deaths);
+            }
 
             return b.Kills.CompareTo(a.Kills);
         });
         foreach (var player in players)
         {
-            GUILayout.Label(player.playerName + "   " + player.Kills + " kills  " + player.Deaths + " deaths");
+            GUILayout.Label(player.PlayerName + "   " + player.Kills + " kills  " + player.Deaths + " deaths");
         }
         
         GUILayout.EndArea();
@@ -137,21 +145,27 @@ public class HudManager : MonoBehaviour
     private void MakeNameSigns()
     {
         if (GameManager.Instance.OwnPlayer == null)
+        {
             return;
+        }
 
         Camera camera = GameManager.Instance.OwnPlayer.GetComponent<FirstPersonController>().camera;
 
         foreach (ClientPlayer player in GameManager.Instance.Players)
         {
-            if (player.isOwn)
+            if (player.IsOwn)
+            {
                 continue;
+            }
 
             Vector3 signPosition = player.transform.position;
             signPosition += Vector3.up * 0.9f;
 
             var direction = signPosition - camera.transform.position;
             if (Vector3.Dot(direction, camera.transform.forward) < 0)
+            {
                 continue;
+            }
 
             if (Physics.Raycast(camera.transform.position, direction, out RaycastHit hitInfo, direction.magnitude, 1, QueryTriggerInteraction.Ignore))
             {
@@ -162,7 +176,7 @@ public class HudManager : MonoBehaviour
             signPosition = camera.WorldToScreenPoint(signPosition);
             signPosition.y = Screen.height - signPosition.y;
 
-            var label = new GUIContent(player.playerName);
+            var label = new GUIContent(player.PlayerName);
             Vector2 size = GUIStyle.none.CalcSize(label);
 
             GUILayout.BeginArea(new Rect(signPosition.x - size.x / 2, signPosition.y - 2 - size.y, 200, 30));

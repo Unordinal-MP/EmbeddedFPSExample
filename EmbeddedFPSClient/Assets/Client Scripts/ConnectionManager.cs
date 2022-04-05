@@ -10,7 +10,6 @@ public class ConnectionManager : MonoBehaviour
     public static ConnectionManager Instance { get; private set; }
 
     [Header("Settings")]
-    [SerializeField]
     public string Hostname;
     [SerializeField]
     private int port;
@@ -26,17 +25,18 @@ public class ConnectionManager : MonoBehaviour
 
     public LobbyInfoData LobbyInfoData { get; set; }
 
-    private LiteNetNetworkClientConnection _clientConnection;
+    private LiteNetNetworkClientConnection clientConnection;
 
     public delegate void OnConnectedDelegate();
     public event OnConnectedDelegate OnConnected;
-    void Awake()
+    private void Awake()
     {
         if (Instance != null)
         {
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(this);
         Client = GetComponent<UnityClient>();
@@ -45,17 +45,21 @@ public class ConnectionManager : MonoBehaviour
     public void Connect(string hostname)
     {
         if (hostname == "localhost")
+        {
             hostname = "127.0.0.1";
+        }
 
-        _clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
+        clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
         
-        Client.Client.ConnectInBackground(_clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
+        Client.Client.ConnectInBackground(clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
     }
 
     private void Update()
     {
-        if (_clientConnection != null)
-            _clientConnection.Update();
+        if (clientConnection != null)
+        {
+            clientConnection.Update();
+        }
     }
 
     private void ConnectCallback(Exception exception)

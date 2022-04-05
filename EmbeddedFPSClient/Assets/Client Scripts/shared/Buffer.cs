@@ -18,7 +18,7 @@ public class Buffer<T>
     }
 
 #pragma warning disable S2743 // Static fields should not be used in generic types
-    private static readonly IdComparer _comparer = new IdComparer();
+    private static readonly IdComparer Comparer = default;
 #pragma warning restore S2743 // Static fields should not be used in generic types
 
     private readonly List<Entry> elements;
@@ -44,7 +44,7 @@ public class Buffer<T>
             Element = element,
         };
 
-        int index = elements.BinarySearch(entry, _comparer);
+        int index = elements.BinarySearch(entry, Comparer);
         if (index < 0)
         {
             index = ~index;
@@ -68,6 +68,7 @@ public class Buffer<T>
             {
                 counter = 0;
             }
+
             counter++;
             if (counter > correctionTolerance)
             {
@@ -77,6 +78,7 @@ public class Buffer<T>
                 {
                     temp[i] = elements[i].Element;
                 }
+
                 elements.RemoveRange(0, amount);
 
                 return temp;
@@ -89,6 +91,7 @@ public class Buffer<T>
             {
                 counter = 0;
             }
+
             counter--;
             if (-counter > correctionTolerance)
             {
@@ -102,7 +105,7 @@ public class Buffer<T>
             elements.RemoveAt(0);
             return temp;
         }
+
         return new T[0];
     }
 }
-

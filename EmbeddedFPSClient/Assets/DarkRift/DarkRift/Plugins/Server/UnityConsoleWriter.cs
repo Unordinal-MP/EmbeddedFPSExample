@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿#pragma warning disable //not project file
+
+using UnityEngine;
 using System.Collections.Generic;
 using System;
 

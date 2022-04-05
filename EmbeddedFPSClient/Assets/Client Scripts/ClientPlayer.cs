@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-struct ReconciliationInfo
+public struct ReconciliationInfo
 {
     public ReconciliationInfo(uint frame, PlayerStateData data, PlayerInputData input)
     {
@@ -41,8 +41,8 @@ public class ClientPlayer : MonoBehaviour
     private readonly Queue<ReconciliationInfo> reconciliationHistory = new Queue<ReconciliationInfo>();
     public int ReconciliationHistorySize => reconciliationHistory.Count;
 
-    public string playerName { get; private set; }
-    public bool isOwn { get; private set; }
+    public string PlayerName { get; private set; }
+    public bool IsOwn { get; private set; }
 
     private int health;
 
@@ -54,33 +54,31 @@ public class ClientPlayer : MonoBehaviour
     private GameObject shotPrefab;
     private readonly List<IStreamData> streamDatas = new List<IStreamData>();
 
-    void Awake()
+    private void Awake()
     {
         playerLogic = GetComponent<PlayerLogic>();
         interpolation = GetComponent<PlayerInterpolation>();
 
-        var _streamDatas = GetComponents<IStreamData>();
-
-        foreach (var _streamData in _streamDatas)
+        foreach (var streamData in GetComponents<IStreamData>())
         {
-            streamDatas.Add(_streamData);
+            streamDatas.Add(streamData);
         }
     }
 
     public void Initialize(ushort id, string playerName)
     {
-        this.playerName = playerName;
+        this.PlayerName = playerName;
         SetHealth(100);
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
-            isOwn = true;
-            interpolation.CurrentData = new PlayerStateData(id, new PlayerInputData(), 0, transform.position, transform.rotation, CollisionFlags.None);
+            IsOwn = true;
+            interpolation.CurrentData = new PlayerStateData(id, default, 0, transform.position, transform.rotation, CollisionFlags.None);
             localControllerInitalized.Invoke(); //TODO: convert to code
 
-            ClientStats.instance.SetOwnPlayer(this);
+            ClientStats.Instance.SetOwnPlayer(this);
         }
 
-        interpolation.IsOwn = isOwn;
+        interpolation.IsOwn = IsOwn;
     }
 
     public void SetHealth(int value)
@@ -88,17 +86,17 @@ public class ClientPlayer : MonoBehaviour
         health = value;
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
-        if (isOwn)
+        if (IsOwn)
         {
             PlayerInputData inputData = GetComponent<FirstPersonController>().GetInputs(GameManager.Instance.LastReceivedServerTick - 1, GameManager.Instance.ClientTick);
 
-            if (inputData.HasAction(PlayerAction.Reload)) //TODO: find better place for this
+            if (inputData.HasAction(PlayerAction.Reload))
             {
+                //TODO: find better place for this
                 GameObject go = Instantiate(shotPrefab);
-                go.transform.position = interpolation.CurrentData.Position;
-                go.transform.rotation = transform.rotation;
+                go.transform.SetPositionAndRotation(interpolation.CurrentData.Position, transform.rotation);
                 Destroy(go, 1f);
             }
             
@@ -106,7 +104,7 @@ public class ClientPlayer : MonoBehaviour
             PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
             interpolation.SetFramePosition(nextStateData);
 
-            using (Message message = Message.Create((ushort) Tags.GamePlayerInput, inputData))
+            using (Message message = Message.Create((ushort)Tags.GamePlayerInput, inputData))
             {
                 ConnectionManager.Instance.Client.SendMessage(message, SendMode.Unreliable);
             }
@@ -117,7 +115,7 @@ public class ClientPlayer : MonoBehaviour
 
     public void OnServerDataUpdate(PlayerStateData playerStateData)
     {
-        if (isOwn)
+        if (IsOwn)
         {
             while (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame < GameManager.Instance.LastReceivedServerTick)
             {
@@ -128,7 +126,7 @@ public class ClientPlayer : MonoBehaviour
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
 
-                ClientStats.instance.Confirmations.AddNow();
+                ClientStats.Instance.Confirmations.AddNow();
 
                 //uncomment logging statements to debug reconciliation differences
                 //Debug.Log("Local: " + info.Data.ToString());
@@ -138,7 +136,7 @@ public class ClientPlayer : MonoBehaviour
                 {
                     //Debug.Log("RECONCILE!!!");
 
-                    ClientStats.instance.Reconciliations.AddNow();
+                    ClientStats.Instance.Reconciliations.AddNow();
 
                     FirstPersonController fpController = GetComponent<FirstPersonController>();
 
@@ -146,8 +144,8 @@ public class ClientPlayer : MonoBehaviour
                     interpolation.CurrentData = playerStateData;
                     Quaternion oldHeadRotation = fpController.camera.transform.rotation;
 
-                    transform.position = playerStateData.Position;
-                    transform.rotation = playerStateData.Rotation;
+                    transform.SetPositionAndRotation(playerStateData.Position, playerStateData.Rotation);
+                    
                     for (int i = 0; i < infos.Count; i++)
                     {
                         PlayerStateData u = playerLogic.GetNextFrameData(infos[i].Input, interpolation.CurrentData);
@@ -167,8 +165,9 @@ public class ClientPlayer : MonoBehaviour
             interpolation.SetFramePosition(playerStateData);
         }
 
-        foreach (var _streamData in streamDatas)
-            _streamData.OnServerDataUpdate(playerStateData, isOwn);
+        foreach (var streamData in streamDatas)
+        {
+            streamData.OnServerDataUpdate(playerStateData, IsOwn);
+        }
     }
 }
-

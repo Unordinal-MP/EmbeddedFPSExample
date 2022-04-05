@@ -13,18 +13,19 @@ public class ServerManager : MonoBehaviour
 
     public Dictionary<ushort, ClientConnection> Players = new Dictionary<ushort, ClientConnection>();
 
-    void Awake()
+    private void Awake()
     {
         if (Instance != null)
         {
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(this);
     }
 
-    void Start()
+    private void Start()
     {
         XmlUnityServer xmlServer = GetComponent<XmlUnityServer>();
         server = xmlServer.Server;
@@ -32,7 +33,7 @@ public class ServerManager : MonoBehaviour
         server.ClientManager.ClientDisconnected += OnClientDisconnected;
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         server.ClientManager.ClientConnected -= OnClientConnected;
         server.ClientManager.ClientDisconnected -= OnClientDisconnected;
@@ -41,8 +42,7 @@ public class ServerManager : MonoBehaviour
     private void OnClientDisconnected(object sender, ClientDisconnectedEventArgs e)
     {
         IClient client = e.Client;
-        ClientConnection p;
-        if (Players.TryGetValue(client.ID, out p))
+        if (Players.TryGetValue(client.ID, out ClientConnection p))
         {
             p.OnClientDisconnect(sender, e);
         }
@@ -61,28 +61,29 @@ public class ServerManager : MonoBehaviour
     {
         Debug.Log($"Received message {(Tags)e.Tag}");
 
-        IClient client = (IClient) sender;
-        using (Message message = e.GetMessage())
+        IClient client = (IClient)sender;
+
+        using Message message = e.GetMessage();
+
+        switch ((Tags)e.Tag)
         {
-            switch ((Tags) e.Tag)
-            {
-                case Tags.LoginRequest:
-                    OnClientLogin(client, message.Deserialize<LoginRequestData>());
-                    break;
-            }
+            case Tags.LoginRequest:
+                OnClientLogin(client, message.Deserialize<LoginRequestData>());
+                break;
         }
     }
 
     private void OnClientLogin(IClient client, LoginRequestData data)
     {
-        if (data.Name.ToLower().Contains("hitler")) //not an example of a high quality word filter implementation
+        //not an example of a high quality word filter implementation
+        if (data.Name.ToLower().Contains("hitler"))
         {
             Debug.Log("Player denied");
 
-            using (Message message = Message.CreateEmpty((ushort)Tags.LoginRequestDenied))
-            {
-                client.SendMessage(message, SendMode.Reliable);
-            }
+            using Message message = Message.CreateEmpty((ushort)Tags.LoginRequestDenied);
+            
+            client.SendMessage(message, SendMode.Reliable);
+
             return;
         }
 

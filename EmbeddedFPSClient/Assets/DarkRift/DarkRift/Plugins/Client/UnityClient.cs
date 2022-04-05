@@ -1,4 +1,6 @@
-﻿using DarkRift.Dispatching;
+﻿#pragma warning disable //not project file
+
+using DarkRift.Dispatching;
 using System;
 using System.Net;
 using System.Net.Sockets;
