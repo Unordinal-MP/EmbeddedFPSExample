@@ -9,10 +9,10 @@ public class PlayerLogic : MonoBehaviour
     
     private float cachedX;
     private float cachedZ;
-    private float fallingTimer;
+    //private float fallingTimer;
     private bool isJumping;
-    private float jumpTimer;
-    private float cachedJumpTimer;
+    //private float jumpTimer;
+    //private float cachedJumpTimer;
 
 
     //TODO: enter better way of input settings (ScriptableObject?)
@@ -25,7 +25,12 @@ public class PlayerLogic : MonoBehaviour
     private const float groundHeight = 0.51f;
     private const float gravityMultiplier = 8;
 
-    //private bool isGrounded { get; set; }
+    private bool isGrounded = true;
+
+    [SerializeField]
+    private float jumpHeight = 5f;
+
+    private Vector3 lastVelocity;
 
     public CharacterController CharacterController => controller;
 
@@ -136,45 +141,50 @@ public class PlayerLogic : MonoBehaviour
             _movementDir.x += 1f;
         }
 
+        bool _isJumping = HasAction(PlayerAction.Jump);
+        float _yChange = _movementDir.y;
+
         if (isGrounded)
         {
-            fallingTimer = 0f;
+            if (_isJumping)
+            {
+                // Ensure player doesn't jump to high.
 
-            cachedX = _movementDir.x;
-            cachedZ = _movementDir.z;
+                var jumpSpeed = Mathf.Sqrt(2f * jumpHeight * -Physics.gravity.y);
+                jumpSpeed = Mathf.Clamp(jumpSpeed, float.MinValue, 14.0f);
+                _yChange = jumpSpeed;
+            }
+            else
+            {
+                // Walking parallel along the ground doesn't update CharacterController.IsGrounded correctly.
+                // So add downward velocity.
+
+                _yChange = -1.0f;
+            }
         }
         else
         {
-            fallingTimer += dt * gravityMultiplier;
+            // Apply gravity when in air.
 
-            _movementDir.x = cachedX;
-            _movementDir.z = cachedZ;
+            var gravityToApply = Physics.gravity.y * dt;
+            _yChange += gravityToApply;
         }
-        
-        _movementDir.y = Physics.gravity.y * dt * fallingTimer;
 
-        if (isJumping && isGrounded)
+        if (!isGrounded)
         {
-            isJumping = false;
-            jumpTimer = cachedJumpTimer;
+            // Partial control when in ari.
+
+            var horizontalLastVelocity = Vector3.ProjectOnPlane(lastVelocity, Vector3.up);
+            var horizontalInputWorldVelocity = Vector3.ProjectOnPlane(_movementDir, Vector3.up);
+            _movementDir = horizontalLastVelocity + horizontalInputWorldVelocity * dt;
         }
 
-        if (HasAction(PlayerAction.Jump))
-        {
-            if (isGrounded && !isJumping)
-            {
-                cachedJumpTimer = jumpTimer;
-                isJumping = true;
-            }
-        }
+        _movementDir.y = _yChange;
 
-        if (isJumping)
-        {
-            _movementDir.y += jumpSpeed * Mathf.Clamp(jumpTimer, 0f, cachedJumpTimer);
-            jumpTimer -= dt;
-        }
-        
         CollisionFlags flags = controller.Move(dt * movementSpeed * transform.TransformDirection(_movementDir));
+
+        lastVelocity = _movementDir;
+        isGrounded = controller.isGrounded;
 
         return new PlayerStateData(currentStateData.PlayerId, input, gravity.y, transform.position, transform.rotation, flags);
     }
