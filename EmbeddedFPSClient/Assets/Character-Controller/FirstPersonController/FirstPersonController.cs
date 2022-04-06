@@ -6,23 +6,19 @@ using UnityEngine.EventSystems;
 [RequireComponent(typeof(CharacterController))]
 public class FirstPersonController : MonoBehaviour
 {
-    [SerializeField]
-    protected CharacterController controller;
-
-    [SerializeField]
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public new Camera camera;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
     [SerializeField]
-    protected float clampCamAngle = 70f;
-
-    public float MouseSensitivity { get; set; } = 1;
-
+    private float clampCamAngle = 70f;
+    
     private WeaponController weaponController;
 
-    // Start is called before the first frame updateok
+    public float MouseSensitivity { get; set; } = 1;
+    
     private void Start()
     {
-        controller = GetComponent<CharacterController>();
         weaponController = GetComponent<WeaponController>();
     }
 
@@ -39,7 +35,9 @@ public class FirstPersonController : MonoBehaviour
     private void LockCursor()
     {
         if (IsCursorLocked())
+        {
             return;
+        }
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -48,7 +46,9 @@ public class FirstPersonController : MonoBehaviour
     private void UnlockCursor()
     {
         if (!IsCursorLocked())
+        {
             return;
+        }
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -61,31 +61,29 @@ public class FirstPersonController : MonoBehaviour
 
     public PlayerInputData GetInputs(uint time, uint sequenceNumber)
     {
-        ComputeInputsAndRotations(out bool[] _inputs, out Quaternion _lookRotation);
+        ComputeInputsAndRotations(out bool[] inputs, out Quaternion lookRotation);
 
-        return new PlayerInputData(_inputs, _lookRotation, time, sequenceNumber);
+        return new PlayerInputData(inputs, lookRotation, time, sequenceNumber);
     }
 
-    public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
-    {
-        if (isOwn) return;
-    }
-
-    public void Update()
+    private void Update()
     {
         CameraMovement();
     }
 
-    void CameraMovement()
+    private void CameraMovement()
     {
-        float _axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
-        float _axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
+        float axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
+        float axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
-        float newYaw = camera.transform.localEulerAngles.y + _axisX;
-        float newPitch = camera.transform.localEulerAngles.x - _axisY;
+        float newYaw = camera.transform.localEulerAngles.y + axisX;
+        float newPitch = camera.transform.localEulerAngles.x - axisY;
 
         if (newPitch > 180)
+        {
             newPitch -= 360;
+        }
+
         newPitch = Mathf.Clamp(newPitch, -clampCamAngle, clampCamAngle);
 
         camera.transform.localRotation = Quaternion.Euler(new Vector3(newPitch, newYaw, 0f));
@@ -143,13 +141,13 @@ public class FirstPersonController : MonoBehaviour
 
             if (HasAction(PlayerAction.Aim))
             {
-
+                //TODO: implement
             }
         }
 
         if (HasAction(PlayerAction.Sprint))
         {
-
+            //TODO: implement
         }
 
         if (HasAction(PlayerAction.Reload))
@@ -169,7 +167,7 @@ public class FirstPersonController : MonoBehaviour
 
         if (camera)
         {
-            rotation = camera.transform.rotation;//new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
+            rotation = camera.transform.rotation; //new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
         }
         else
         {

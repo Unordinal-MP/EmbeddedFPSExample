@@ -175,14 +175,14 @@ public struct GameStartData : IDarkRiftSerializable
 
 public struct PlayerSpawnData : IDarkRiftSerializable
 {
-    public ushort Id;
+    public ushort PlayerId;
     public string Name;
     public Vector3 Position;
     public Quaternion Rotation;
 
     public PlayerSpawnData(ushort id, string name, Vector3 position, Quaternion rotation)
     {
-        Id = id;
+        PlayerId = id;
         Name = name;
         Position = position;
         Rotation = rotation;
@@ -190,7 +190,7 @@ public struct PlayerSpawnData : IDarkRiftSerializable
 
     public void Deserialize(DeserializeEvent e)
     {
-        Id = e.Reader.ReadUInt16();
+        PlayerId = e.Reader.ReadUInt16();
         Name = e.Reader.ReadString();
 
         Position = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
@@ -199,7 +199,7 @@ public struct PlayerSpawnData : IDarkRiftSerializable
 
     public void Serialize(SerializeEvent e)
     {
-        e.Writer.Write(Id);
+        e.Writer.Write(PlayerId);
         e.Writer.Write(Name);
 
         e.Writer.Write(Position.x);
@@ -215,27 +215,26 @@ public struct PlayerSpawnData : IDarkRiftSerializable
 
 public struct PlayerDespawnData : IDarkRiftSerializable
 {
-    public ushort Id;
+    public ushort PlayerId;
 
     public PlayerDespawnData(ushort id)
     {
-        Id = id;
+        PlayerId = id;
     }
 
     public void Deserialize(DeserializeEvent e)
     {
-        Id = e.Reader.ReadUInt16();
+        PlayerId = e.Reader.ReadUInt16();
     }
 
     public void Serialize(SerializeEvent e)
     {
-        e.Writer.Write(Id);
+        e.Writer.Write(PlayerId);
     }
 }
 
 public struct PlayerStateData : IDarkRiftSerializable
 {
-
     public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation, CollisionFlags collisionFlags)
     {
         PlayerId = id;
@@ -296,7 +295,6 @@ public struct PlayerStateData : IDarkRiftSerializable
     }
 }
 
-
 public struct GameUpdateData : IDarkRiftSerializable
 {
     public uint Frame;
@@ -313,6 +311,7 @@ public struct GameUpdateData : IDarkRiftSerializable
         SpawnDataData = spawnData;
         HealthData = healthData;
     }
+
     public void Deserialize(DeserializeEvent e)
     {
         Frame = e.Reader.ReadUInt32();
@@ -382,39 +381,19 @@ public struct KillData : IDarkRiftSerializable
 
 public struct PlayerInputData : IDarkRiftSerializable
 {
-    public bool[] Keyinputs; //indexed by PlayerAction
+    public bool[] KeyInputs; //indexed by PlayerAction
     public Quaternion LookDirection;
     public uint Time;
     public uint SequenceNumber;
 
     public bool HasAction(PlayerAction action)
     {
-        return Keyinputs[(int)action];
+        return KeyInputs[(int)action];
     }
-
-    public float horizontal => HasAction(PlayerAction.Left) ? -1 : (HasAction(PlayerAction.Right) ? 1 : 0);
-
-    public float vertical => HasAction(PlayerAction.Back) ? -1 : (HasAction(PlayerAction.Forward) ? 1 : 0);
-
-    public bool isJumping => HasAction(PlayerAction.Jump);
-
-    public bool isSprinting => HasAction(PlayerAction.Sprint);
-
-    public bool isShooting => HasAction(PlayerAction.Fire);
-
-    public bool isGrounded => HasAction(PlayerAction.Grounded);
-
-    public bool isAiming => HasAction(PlayerAction.Aim);
-
-    public bool isReloading => HasAction(PlayerAction.Reload);
-
-    public bool isSwitchingWeapon => HasAction(PlayerAction.SwitchWeapon);
-
-    public bool isInspecting => HasAction(PlayerAction.Inspect);
 
     public PlayerInputData(bool[] keyInputs, Quaternion lookdirection, uint time, uint sequenceNumber)
     {
-        Keyinputs = keyInputs;
+        KeyInputs = keyInputs;
         LookDirection = lookdirection;
         Time = time;
         SequenceNumber = sequenceNumber;
@@ -422,10 +401,10 @@ public struct PlayerInputData : IDarkRiftSerializable
 
     public void Deserialize(DeserializeEvent e)
     {
-        Keyinputs = new bool[(int)PlayerAction.NumActions];
+        KeyInputs = new bool[(int)PlayerAction.NumActions];
         for (int q = 0; q < (int)PlayerAction.NumActions; q++)
         {
-            Keyinputs[q] = e.Reader.ReadBoolean();
+            KeyInputs[q] = e.Reader.ReadBoolean();
         }
 
         LookDirection = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
@@ -437,9 +416,9 @@ public struct PlayerInputData : IDarkRiftSerializable
     public void CheckKeyInputArray()
     {
         //TODO: would be useful to get rid of this
-        if (Keyinputs == null)
+        if (KeyInputs == null)
         {
-            Keyinputs = new bool[(int)PlayerAction.NumActions];
+            KeyInputs = new bool[(int)PlayerAction.NumActions];
         }
     }
 
@@ -449,8 +428,9 @@ public struct PlayerInputData : IDarkRiftSerializable
 
         for (int q = 0; q < (int)PlayerAction.NumActions; q++)
         {
-            e.Writer.Write(Keyinputs[q]);
+            e.Writer.Write(KeyInputs[q]);
         }
+
         e.Writer.Write(LookDirection.x);
         e.Writer.Write(LookDirection.y);
         e.Writer.Write(LookDirection.z);

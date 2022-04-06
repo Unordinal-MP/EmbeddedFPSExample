@@ -16,50 +16,63 @@ public class Weapon : MonoBehaviour
     [SerializeField]
     protected Transform bulletTransform;
 
-    [SerializeField]
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public GameObject tpWeapon;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
-    [SerializeField]
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public AnimatorOverrideController characterAnimatorOverrider;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
     [SerializeField]
     private ParticleSystem muzzleFlash;
 
     [Header("Stats")]
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public float shootCooldown = 0.1f;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
     protected bool isPuttingAway;
 
     protected bool isGettingWeapon;
 
-    public bool isReloading { get; private set; }
+    public bool IsReloading { get; private set; }
 
-    public bool isShooting { get; private set; }
+    public bool IsShooting { get; private set; }
 
-    public bool isReady { get => !isPuttingAway && !isPuttingAway; }
+    public bool IsReady { get => true; } //TODO: !isPuttingAway
 
     [Header("Whacky")]
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public float reloadTime = 1f;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public float switchInTime = 1f;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public float switchOutTime = 1f;
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
 
     private Coroutine reloadRoutine;
     private Coroutine switchInRoutine;
     private Coroutine switchOutRoutine;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
         animator = GetComponent<Animator>();
     }
 
     public void Fire()
     {
-        if (!isReady || isReloading || isShooting) return;
+        if (!IsReady || IsReloading || IsShooting)
+        {
+            return;
+        }
 
-        isShooting = true;
+        IsShooting = true;
 
         animator.Play("Fire");
         muzzleFlash.Play();
@@ -74,25 +87,34 @@ public class Weapon : MonoBehaviour
 
     public void Reload()
     {
-        if (!isReady || isReloading) return;
+        if (!IsReady || IsReloading)
+        {
+            return;
+        }
 
         animator.Play("Reload Full");
 
-        isReloading = true;
+        IsReloading = true;
 
         reloadRoutine = StartCoroutine(ReloadFinished());
     }
 
     public void Inspect()
     {
-        if (!isReady || isReloading) return;
+        if (!IsReady || IsReloading)
+        {
+            return;
+        }
 
         animator.Play("Inspect");
     }
 
     public void SwitchIn()
     {
-        if (isGettingWeapon || isPuttingAway || isReloading) return;
+        if (isGettingWeapon || isPuttingAway || IsReloading)
+        {
+            return;
+        }
 
         isGettingWeapon = true;
 
@@ -108,7 +130,10 @@ public class Weapon : MonoBehaviour
 
     public void SwitchOut()
     {
-        if (isGettingWeapon || isPuttingAway || isReloading) return;
+        if (isGettingWeapon || isPuttingAway || IsReloading)
+        {
+            return;
+        }
 
         isPuttingAway = true;
 
@@ -121,12 +146,15 @@ public class Weapon : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(shootCooldown);
 
-        isShooting = false;
+        IsShooting = false;
     }
 
     public IEnumerator SwitchInFinished()
     {
-        if (!isGettingWeapon) yield break;
+        if (!isGettingWeapon)
+        {
+            yield break;
+        }
 
         yield return new WaitForSecondsRealtime(switchInTime);
 
@@ -135,7 +163,10 @@ public class Weapon : MonoBehaviour
 
     public IEnumerator SwitchOutFinished()
     {
-        if (!isPuttingAway) yield break;
+        if (!isPuttingAway)
+        {
+            yield break;
+        }
 
         yield return new WaitForSecondsRealtime(switchOutTime);
 
@@ -148,6 +179,6 @@ public class Weapon : MonoBehaviour
     {
         yield return new WaitForSecondsRealtime(reloadTime);
 
-        isReloading = false;
+        IsReloading = false;
     }
 }

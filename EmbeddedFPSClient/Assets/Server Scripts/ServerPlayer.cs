@@ -12,7 +12,7 @@ public class ServerPlayer : MonoBehaviour
 
     private PlayerStateData currentPlayerStateData;
 
-    private Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
+    private readonly Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
 
     private int health;
 
@@ -24,11 +24,11 @@ public class ServerPlayer : MonoBehaviour
 
     private PlayerInputData[] inputs;
 
-    private uint _highestSequenceNumber;
+    private uint highestSequenceNumber;
 
     public Vector3 SpawnPosition { get; private set; }
 
-    void Awake()
+    private void Awake()
     {
         PlayerLogic = GetComponent<PlayerLogic>();
     }
@@ -42,15 +42,15 @@ public class ServerPlayer : MonoBehaviour
         Client = clientConnection.Client;
         
         InputTick = room.ServerTick;
-        _highestSequenceNumber = room.ServerTick;
+        highestSequenceNumber = room.ServerTick;
 
         Respawn();
 
         var playerSpawnData = room.GetSpawnDataForAllPlayers();
-        using (Message m = Message.Create((ushort)Tags.GameStartDataResponse, new GameStartData(playerSpawnData, room.ServerTick)))
-        {
-            Client.SendMessage(m, SendMode.Reliable);
-        }
+        
+        using Message m = Message.Create((ushort)Tags.GameStartDataResponse, new GameStartData(playerSpawnData, room.ServerTick));
+        
+        Client.SendMessage(m, SendMode.Reliable);
     }
 
     private void Respawn()
@@ -61,19 +61,18 @@ public class ServerPlayer : MonoBehaviour
 
         SpawnPosition = position;
 
-        transform.position = position;
-        transform.rotation = rotation;
+        transform.SetPositionAndRotation(position, rotation);
 
-        currentPlayerStateData = new PlayerStateData(Client.ID, new PlayerInputData(), 0, position, rotation, CollisionFlags.None);
+        currentPlayerStateData = new PlayerStateData(Client.ID, default, 0, position, rotation, CollisionFlags.None);
     }
 
     public void RecieveInput(PlayerInputData input)
     {
         uint target = input.SequenceNumber;
 
-        if (target > _highestSequenceNumber + 1)
+        if (target > highestSequenceNumber + 1)
         {
-            for (uint sequenceNumber = _highestSequenceNumber + 1; sequenceNumber <= target; ++sequenceNumber)
+            for (uint sequenceNumber = highestSequenceNumber + 1; sequenceNumber <= target; ++sequenceNumber)
             {
                 input.SequenceNumber = sequenceNumber;
                 inputBuffer.Add(input, sequenceNumber);
@@ -84,8 +83,10 @@ public class ServerPlayer : MonoBehaviour
             inputBuffer.Add(input, target);
         }
 
-        if (target > _highestSequenceNumber)
-            _highestSequenceNumber = target;
+        if (target > highestSequenceNumber)
+        {
+            highestSequenceNumber = target;
+        }
     }
 
     public void TakeDamage(int value, ServerPlayer shooter)
@@ -95,6 +96,7 @@ public class ServerPlayer : MonoBehaviour
         {
             Die(shooter);
         }
+
         room.UpdatePlayerHealth(this, (byte)health);
     }
 
@@ -110,7 +112,7 @@ public class ServerPlayer : MonoBehaviour
         inputs = inputBuffer.Get();
         for (int i = 0; i < inputs.Length; i++)
         {
-            if (inputs[i].Keyinputs[(int)PlayerAction.Fire])
+            if (inputs[i].KeyInputs[(int)PlayerAction.Fire])
             {
                 room.PerformShootRayCast(inputs[i].Time, this);
                 return;
@@ -128,10 +130,11 @@ public class ServerPlayer : MonoBehaviour
             for (int i = 1; i < inputs.Length; i++)
             {
                 InputTick++;
-                for (int j = 0; j < input.Keyinputs.Length; j++)
+                for (int j = 0; j < input.KeyInputs.Length; j++)
                 {
-                    input.Keyinputs[j] = input.Keyinputs[j] || inputs[i].Keyinputs[j];
+                    input.KeyInputs[j] = input.KeyInputs[j] || inputs[i].KeyInputs[j];
                 }
+
                 input.LookDirection = inputs[i].LookDirection;
             }
 
@@ -144,8 +147,8 @@ public class ServerPlayer : MonoBehaviour
             PlayerStateDataHistory.RemoveAt(0);
         }
 
-        transform.position = currentPlayerStateData.Position;
-        transform.rotation = currentPlayerStateData.Rotation;
+        transform.SetPositionAndRotation(currentPlayerStateData.Position, currentPlayerStateData.Rotation);
+        
         return currentPlayerStateData;
     }
 

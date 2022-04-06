@@ -1,36 +1,36 @@
-﻿using DarkRift.Server;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using LiteNetLib;
-using DarkRift;
 using System.Threading;
+using DarkRift;
+using DarkRift.Server;
+using LiteNetLib;
 using UnityEngine;
 
 public class LiteNetNetworkListener : NetworkListener
 {
     public override Version Version => new Version(0, 0, 0);
 
-    private NetManager _server;
-    private readonly Dictionary<NetPeer, LiteNetNetworkServerConnection> _connections = new Dictionary<NetPeer, LiteNetNetworkServerConnection>();
-    private readonly object _lock = new object();
-    private ushort _port;
-    private Thread _updateThread;
-    private volatile bool _stopping;
+    private NetManager server;
+    private readonly Dictionary<NetPeer, LiteNetNetworkServerConnection> connections = new Dictionary<NetPeer, LiteNetNetworkServerConnection>();
+    private readonly object @lock = new object();
+    private readonly ushort port;
+    private Thread updateThread;
+    private volatile bool stopping;
 
     public LiteNetNetworkListener(NetworkListenerLoadData pluginLoadData)
         : base(pluginLoadData)
     {
-        _port = pluginLoadData.Port;
+        port = pluginLoadData.Port;
     }
 
     protected override void Dispose(bool disposing)
     {
         //TODO: make this fully correct
 
-        if (_updateThread != null)
+        if (updateThread != null)
         {
-            _stopping = true;
-            _updateThread.Join();
+            stopping = true;
+            updateThread.Join();
         }
 
         base.Dispose(disposing);
@@ -51,9 +51,9 @@ public class LiteNetNetworkListener : NetworkListener
 
             var connection = new LiteNetNetworkServerConnection(peer);
 
-            lock (_lock)
+            lock (@lock)
             {
-                _connections.Add(peer, connection);
+                connections.Add(peer, connection);
             }
 
             RegisterConnection(connection);
@@ -63,13 +63,13 @@ public class LiteNetNetworkListener : NetworkListener
         {
             Debug.Log("We got a disconnection: " + peer.EndPoint);
 
-            lock (_lock)
+            lock (@lock)
             {
-                if (_connections.TryGetValue(peer, out LiteNetNetworkServerConnection connection))
+                if (connections.TryGetValue(peer, out LiteNetNetworkServerConnection connection))
                 {
                     connection.OnDisconnection();
-                    _connections.Remove(peer);
-                };
+                    connections.Remove(peer);
+                }
             }
         };
 
@@ -81,9 +81,9 @@ public class LiteNetNetworkListener : NetworkListener
                 Buffer.BlockCopy(dataReader.RawData, dataReader.Position, messageBuffer.Buffer, 0, length);
                 messageBuffer.Count = length;
 
-                lock (_lock)
+                lock (@lock)
                 {
-                    if (_connections.TryGetValue(fromPeer, out LiteNetNetworkServerConnection connection))
+                    if (connections.TryGetValue(fromPeer, out LiteNetNetworkServerConnection connection))
                     {
                         connection.OnMessageReceived(messageBuffer, deliveryMethod == DeliveryMethod.ReliableOrdered ? SendMode.Reliable : SendMode.Unreliable);
                     }
@@ -93,20 +93,20 @@ public class LiteNetNetworkListener : NetworkListener
             dataReader.Recycle();
         };
 
-        _server = new NetManager(listener);
-        _server.Start(_port);
+        server = new NetManager(listener);
+        server.Start(port);
 
-        Debug.Log("We started listening on UDP port: " + _port);
+        Debug.Log("We started listening on UDP port: " + port);
 
-        _updateThread = new Thread(UpdateLoop);
-        _updateThread.Start();
+        updateThread = new Thread(UpdateLoop);
+        updateThread.Start();
     }
 
     private void UpdateLoop()
     {
-        while (!_stopping)
+        while (!stopping)
         {
-            _server.PollEvents();
+            server.PollEvents();
             Thread.Sleep(1);
         }
     }

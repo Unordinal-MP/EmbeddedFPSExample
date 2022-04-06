@@ -13,39 +13,37 @@ public class LobbyManager : MonoBehaviour
     [SerializeField]
     private GameObject roomListPrefab;
 
-    void Start()
+    private void Start()
     {
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
         RefreshRooms(ConnectionManager.Instance.LobbyInfoData);
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
     {
-        using (Message message = e.GetMessage())
+        using Message message = e.GetMessage();
+
+        switch ((Tags)message.Tag)
         {
-            switch ((Tags)message.Tag)
-            {
-                case Tags.LobbyJoinRoomDenied:
-                    OnRoomJoinDenied(message.Deserialize<LobbyInfoData>());
-                    break;
-                case Tags.LobbyJoinRoomAccepted:
-                    OnRoomJoinAcepted();
-                    break;
-            }
+            case Tags.LobbyJoinRoomDenied:
+                OnRoomJoinDenied(message.Deserialize<LobbyInfoData>());
+                break;
+            case Tags.LobbyJoinRoomAccepted:
+                OnRoomJoinAcepted();
+                break;
         }
     }
 
     public void SendJoinRoomRequest(string roomName)
     {
-        using (Message message = Message.Create((ushort)Tags.LobbyJoinRoomRequest, new JoinRoomRequest(roomName)))
-        {
-            ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
-        }
+        using Message message = Message.Create((ushort)Tags.LobbyJoinRoomRequest, new JoinRoomRequest(roomName));
+        
+        ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
     }
 
     public void OnRoomJoinDenied(LobbyInfoData data)

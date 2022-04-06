@@ -4,21 +4,24 @@ using UnityEngine;
 
 public class SpawnManager : MonoBehaviour
 {
-    public static SpawnManager Instance;
+    public static SpawnManager Instance { get; private set; }
 
+#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public List<Transform> spawners = new List<Transform>();
-    void Awake()
+#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
+    private void Awake()
     {
         if (Instance != null)
         {
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(this);
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         Instance = null;
     }
@@ -26,7 +29,7 @@ public class SpawnManager : MonoBehaviour
     public void GetSpawnpoint(ServerPlayer player, IEnumerable<ServerPlayer> allPlayers, out Vector3 position, out Quaternion rotation)
     {
         float bestValue = -float.MaxValue;
-        Transform bestSpawn = null;
+        Transform bestSpawn = spawners[0];
 
         foreach (Transform spawn in spawners)
         {
@@ -36,7 +39,9 @@ public class SpawnManager : MonoBehaviour
             foreach (ServerPlayer otherPlayer in allPlayers)
             {
                 if (otherPlayer == player)
+                {
                     continue;
+                }
 
                 float distance = (point - otherPlayer.transform.position).sqrMagnitude;
                 if (distance < distanceToEnemy)
@@ -64,4 +69,3 @@ public class SpawnManager : MonoBehaviour
         rotation = Quaternion.Euler(0, Random.value * 360, 0);
     }
 }
-

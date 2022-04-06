@@ -1,4 +1,6 @@
-﻿// This should be editor only
+﻿#pragma warning disable //not project file
+
+// This should be editor only
 #if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;

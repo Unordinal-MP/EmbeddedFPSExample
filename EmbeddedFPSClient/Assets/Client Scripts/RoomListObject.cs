@@ -16,7 +16,6 @@ public class RoomListObject : MonoBehaviour
         nameText.text = data.Name;
         slotsText.text = data.Slots + "/" + data.MaxSlots;
         joinButton.onClick.RemoveAllListeners();
-        joinButton.onClick.AddListener(delegate { lobbyManager.SendJoinRoomRequest(data.Name); });
+        joinButton.onClick.AddListener(() => { lobbyManager.SendJoinRoomRequest(data.Name); });
     }
 }
-

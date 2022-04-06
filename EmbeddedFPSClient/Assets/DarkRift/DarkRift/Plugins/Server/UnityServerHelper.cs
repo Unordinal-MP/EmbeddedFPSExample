@@ -1,4 +1,6 @@
-﻿using DarkRift.Server;
+﻿#pragma warning disable //not project file
+
+using DarkRift.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;

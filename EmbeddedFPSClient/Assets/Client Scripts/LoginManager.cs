@@ -17,14 +17,14 @@ public class LoginManager : MonoBehaviour
     [SerializeField] 
     private Button submitLoginButton;
 
-    void Start()
+    private void Start()
     {
         ConnectionManager.Instance.OnConnected += OnConnected;
         submitLoginButton.onClick.AddListener(StartConnectingIfPossible);
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         ConnectionManager.Instance.OnConnected -= OnConnected;
         ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
@@ -35,7 +35,7 @@ public class LoginManager : MonoBehaviour
         SubmitLogin();
     }
 
-    void StartConnectingIfPossible()
+    private void StartConnectingIfPossible()
     {
         if (nameInput.text == "")
         {
@@ -45,37 +45,40 @@ public class LoginManager : MonoBehaviour
 
         string hostname = hostInput.text;
         if (hostname == "")
+        {
             hostname = ConnectionManager.Instance.Hostname;
+        }
+
         ConnectionManager.Instance.Connect(hostname);
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
     {
-        using (Message message = e.GetMessage())
+        using Message message = e.GetMessage();
+
+        switch ((Tags)message.Tag)
         {
-            switch ((Tags) message.Tag)
-            {
-                case Tags.LoginRequestDenied:
-                    OnLoginDecline();
-                    break;
-                case Tags.LoginRequestAccepted:
-                    OnLoginAccept(message.Deserialize<LoginInfoData>());
-                    break;
-            }
+            case Tags.LoginRequestDenied:
+                OnLoginDecline();
+                break;
+            case Tags.LoginRequestAccepted:
+                OnLoginAccept(message.Deserialize<LoginInfoData>());
+                break;
         }
     }
 
     public void SubmitLogin()
     {
-        if (String.IsNullOrEmpty(nameInput.text))
+        if (string.IsNullOrEmpty(nameInput.text))
+        {
             nameInput.text = "Unnamed Player";
+        }
 
         loginWindow.SetActive(false);
 
-        using (Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(nameInput.text)))
-        {
-            ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
-        }
+        using Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(nameInput.text));
+        
+        ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
     }
 
     private void OnLoginDecline()
@@ -90,4 +93,3 @@ public class LoginManager : MonoBehaviour
         SceneManager.LoadScene("Lobby");
     }
 }
-

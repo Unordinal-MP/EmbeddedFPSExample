@@ -6,15 +6,15 @@ using UnityEngine.SceneManagement;
 
 public class RoomManager : MonoBehaviour
 {
-    Dictionary<string, Room> rooms = new Dictionary<string, Room>();
+    private readonly Dictionary<string, Room> rooms = new Dictionary<string, Room>();
 
-    public static RoomManager Instance;
+    public static RoomManager Instance { get; private set; }
 
     [Header("Prefabs")]
     [SerializeField]
     private GameObject roomPrefab;
 
-    void Awake()
+    private void Awake()
     {
         // loading map
         SceneManager.LoadScene("Map1", LoadSceneMode.Additive);
@@ -24,9 +24,10 @@ public class RoomManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
         DontDestroyOnLoad(this);
-        CreateRoom("Main",16);
+        CreateRoom("Main", 16);
     }
 
     public RoomData[] GetRoomDataList()
@@ -36,9 +37,10 @@ public class RoomManager : MonoBehaviour
         foreach (KeyValuePair<string, Room> kvp in rooms)
         {
             Room r = kvp.Value;
-            data[i] = new RoomData(r.Name, (byte) r.ClientConnections.Count, r.MaxSlots);
+            data[i] = new RoomData(r.Name, (byte)r.ClientConnections.Count, r.MaxSlots);
             i++;
         }
+
         return data;
     }
 
@@ -61,10 +63,9 @@ public class RoomManager : MonoBehaviour
         }
         else
         {
-            using (Message m = Message.Create((ushort)Tags.LobbyJoinRoomDenied, new LobbyInfoData(GetRoomDataList())))
-            {
-                client.SendMessage(m, SendMode.Reliable);
-            }
+            using Message m = Message.Create((ushort)Tags.LobbyJoinRoomDenied, new LobbyInfoData(GetRoomDataList()));
+            
+            client.SendMessage(m, SendMode.Reliable);
         }
     }
 
@@ -82,5 +83,4 @@ public class RoomManager : MonoBehaviour
         r.Close();
         rooms.Remove(roomName);
     }
-
 }

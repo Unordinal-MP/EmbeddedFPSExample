@@ -9,38 +9,35 @@ public class ClientConnection
     public Room Room { get; set; }
     public ServerPlayer Player { get; set; }
 
-    public ClientConnection(IClient client , LoginRequestData data)
+    public ClientConnection(IClient client, LoginRequestData data)
     {
         Client = client;
         Name = data.Name;
 
-        ServerManager.Instance.Players.Add(client.ID, this);
-
         Client.MessageReceived += OnMessage;
+
+        using Message m = Message.Create((ushort)Tags.LoginRequestAccepted, new LoginInfoData(client.ID, new LobbyInfoData(RoomManager.Instance.GetRoomDataList())));
         
-        using (Message m = Message.Create((ushort)Tags.LoginRequestAccepted, new LoginInfoData(client.ID, new LobbyInfoData(RoomManager.Instance.GetRoomDataList()))))
-        {
-            client.SendMessage(m, SendMode.Reliable);
-        }
+        client.SendMessage(m, SendMode.Reliable);
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
     {
         IClient client = (IClient)sender;
-        using (Message message = e.GetMessage())
+
+        using Message message = e.GetMessage();
+
+        switch ((Tags)message.Tag)
         {
-            switch ((Tags)message.Tag)
-            {
-                case Tags.LobbyJoinRoomRequest:
-                    RoomManager.Instance.TryJoinRoom(client, message.Deserialize<JoinRoomRequest>());
-                    break;
-                case Tags.GameJoinRequest:
-                    Room.JoinPlayerToGame(this);
-                    break;
-                case Tags.GamePlayerInput:
-                    Player.RecieveInput(message.Deserialize<PlayerInputData>());
-                    break;
-            }
+            case Tags.LobbyJoinRoomRequest:
+                RoomManager.Instance.TryJoinRoom(client, message.Deserialize<JoinRoomRequest>());
+                break;
+            case Tags.GameJoinRequest:
+                Room.JoinPlayerToGame(this);
+                break;
+            case Tags.GamePlayerInput:
+                Player.RecieveInput(message.Deserialize<PlayerInputData>());
+                break;
         }
     }
 
