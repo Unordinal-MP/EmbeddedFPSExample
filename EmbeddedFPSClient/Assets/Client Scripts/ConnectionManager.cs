@@ -14,7 +14,7 @@ public class ConnectionManager : MonoBehaviour
     public string Hostname;
     [SerializeField]
     private int port;
-    private int udport = 4297;
+    public int udpPort = 4296;
 
     [Header("References")]
     [SerializeField]
@@ -55,7 +55,7 @@ public class ConnectionManager : MonoBehaviour
         // _clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
 
         // Client.Client.ConnectInBackground(_clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
-        Client.ConnectInBackground(hostname, port, true, ConnectCallback);
+        Client.ConnectInBackground(hostname, port, udpPort, true, ConnectCallback);
 
     }
 
