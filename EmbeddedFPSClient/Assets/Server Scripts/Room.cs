@@ -13,12 +13,14 @@ public class Room : MonoBehaviour
     private readonly List<PlayerHealthUpdateData> healthUpdateData = new List<PlayerHealthUpdateData>(4);
 
     public IReadOnlyList<ServerPlayer> Players => serverPlayers;
-    
+
+    private const uint initialServerTick = 2;  //this is subtracted from by one on client to get input which must not be the default value 0 for simplified CircularBuffer usage, remember we don't have wraparound sequence numbers for simplicity
+
     [Header("Public Fields")]
     public string Name;
     public List<ClientConnection> ClientConnections = new List<ClientConnection>();
     public byte MaxSlots;
-    public uint ServerTick { get; private set; }
+    public uint ServerTick { get; private set; } = initialServerTick;
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public LayerMask hitLayers;
 #pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
@@ -61,6 +63,8 @@ public class Room : MonoBehaviour
 
     public void Initialize(string name, byte maxslots)
     {
+        ServerTick = initialServerTick;
+
         Name = name;
         MaxSlots = maxslots;
 

@@ -1,4 +1,5 @@
 ﻿using DarkRift;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum Tags
@@ -376,6 +377,32 @@ public struct KillData : IDarkRiftSerializable
     {
         e.Writer.Write(Killer);
         e.Writer.Write(Victim);
+    }
+}
+
+public struct PlayerInputMessage : IDarkRiftSerializable
+{
+    public const int MaxStackedInputs = 4;
+
+    public PlayerInputData[] StackedInputs;
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        int length = e.Reader.ReadByte();
+        length = System.Math.Min(MaxStackedInputs, length);
+        if (StackedInputs == null || StackedInputs.Length != length)
+            StackedInputs = new PlayerInputData[length];
+
+        e.Reader.ReadSerializablesInto(StackedInputs, 0);
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        if (StackedInputs.Length > MaxStackedInputs)
+            throw new System.ArgumentOutOfRangeException(nameof(StackedInputs));
+
+        e.Writer.Write((byte)StackedInputs.Length);
+        e.Writer.Write(StackedInputs);
     }
 }
 

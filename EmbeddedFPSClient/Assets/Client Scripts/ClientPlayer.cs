@@ -19,7 +19,7 @@ public struct ReconciliationInfo
     public PlayerInputData Input;
 }
 
-public interface IStreamData
+public interface IServerUpdateListener
 {
     void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn);
 }
@@ -52,22 +52,29 @@ public class ClientPlayer : MonoBehaviour
     [Header("Prefabs")]
     [SerializeField]
     private GameObject shotPrefab;
-    private readonly List<IStreamData> streamDatas = new List<IStreamData>();
+
+    private List<IServerUpdateListener> serverUpdateListeners;
+    private Queue<PlayerInputData> outgoingInputData;
+
 
     private void Awake()
     {
+        serverUpdateListeners = new List<IServerUpdateListener>();
+        outgoingInputData = new Queue<PlayerInputData>(PlayerInputMessage.MaxStackedInputs);
+
         playerLogic = GetComponent<PlayerLogic>();
         interpolation = GetComponent<PlayerInterpolation>();
 
-        foreach (var streamData in GetComponents<IStreamData>())
+        foreach (var listener in GetComponents<IServerUpdateListener>())
         {
-            streamDatas.Add(streamData);
+            serverUpdateListeners.Add(listener);
         }
     }
 
     public void Initialize(ushort id, string playerName)
     {
         this.PlayerName = playerName;
+        outgoingInputData.Clear();
         SetHealth(100);
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
@@ -104,7 +111,16 @@ public class ClientPlayer : MonoBehaviour
             PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
             interpolation.SetFramePosition(nextStateData);
 
-            using (Message message = Message.Create((ushort)Tags.GamePlayerInput, inputData))
+            if (outgoingInputData.Count >= PlayerInputMessage.MaxStackedInputs)
+                outgoingInputData.Dequeue();
+            outgoingInputData.Enqueue(inputData);
+
+            var inputMessage = new PlayerInputMessage()
+            {
+                StackedInputs = outgoingInputData.ToArray(),
+            };
+
+            using (Message message = Message.Create((ushort)Tags.GamePlayerInput, inputMessage))
             {
                 ConnectionManager.Instance.Client.SendMessage(message, SendMode.Unreliable);
             }
@@ -165,9 +181,9 @@ public class ClientPlayer : MonoBehaviour
             interpolation.SetFramePosition(playerStateData);
         }
 
-        foreach (var streamData in streamDatas)
+        foreach (var listener in serverUpdateListeners)
         {
-            streamData.OnServerDataUpdate(playerStateData, IsOwn);
+            listener.OnServerDataUpdate(playerStateData, IsOwn);
         }
     }
 }

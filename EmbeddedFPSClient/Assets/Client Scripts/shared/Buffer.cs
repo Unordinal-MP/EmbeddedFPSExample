@@ -47,10 +47,12 @@ public class Buffer<T>
         int index = elements.BinarySearch(entry, Comparer);
         if (index < 0)
         {
-            index = ~index;
+            elements.Insert(~index, entry);
         }
-
-        elements.Insert(index, entry);
+        else
+        {
+            elements[index] = entry;
+        }
     }
 
     public T[] Get()

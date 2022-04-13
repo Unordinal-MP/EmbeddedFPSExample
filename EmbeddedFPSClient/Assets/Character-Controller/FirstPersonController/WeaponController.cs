@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class WeaponController : MonoBehaviour, IStreamData
+public class WeaponController : MonoBehaviour, IServerUpdateListener
 {
     [SerializeField]
     private List<Weapon> weapons = new List<Weapon>();
