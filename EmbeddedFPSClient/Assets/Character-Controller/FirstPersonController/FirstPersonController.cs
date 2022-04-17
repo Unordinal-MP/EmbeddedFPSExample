@@ -15,6 +15,8 @@ public class FirstPersonController : MonoBehaviour
     
     private WeaponController weaponController;
 
+    private bool cameraLocked;
+
     public float MouseSensitivity { get; set; } = 1;
     
     private void Start()
@@ -79,6 +81,9 @@ public class FirstPersonController : MonoBehaviour
 
     private void CameraMovement()
     {
+        if (cameraLocked)
+            return;
+
         float axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
         float axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
@@ -133,6 +138,14 @@ public class FirstPersonController : MonoBehaviour
                 Application.Quit();
             }
         }
+
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            //much easier to debug multiple editors
+            cameraLocked = !cameraLocked;
+        }
+#endif
 
         //TODO: move synchronizing actions to PlayerLogic
         if (IsCursorLocked())

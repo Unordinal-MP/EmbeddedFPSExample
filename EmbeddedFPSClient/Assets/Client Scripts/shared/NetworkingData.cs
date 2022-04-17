@@ -1,4 +1,5 @@
 ﻿using DarkRift;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -323,17 +324,27 @@ public struct ReliableGameUpdateData : IDarkRiftSerializable
     }
 }
 
-public struct UnreliableGameUpdateData : IDarkRiftSerializable
+public struct UnreliableGameUpdateData : IDarkRiftSerializable, ICloneable
 {
     public uint Frame;
+    public bool Interpolated;
     public PlayerStateData[] UpdateData;
     public PlayerHealthUpdateData[] HealthData;
 
     public UnreliableGameUpdateData(uint frame, PlayerStateData[] updateData, PlayerHealthUpdateData[] healthData)
     {
         Frame = frame;
+        Interpolated = false;
         UpdateData = updateData;
         HealthData = healthData;
+    }
+
+    public object Clone()
+    {
+        var clone = new UnreliableGameUpdateData();
+        clone.UpdateData = (PlayerStateData[])UpdateData.Clone();
+        clone.HealthData = (PlayerHealthUpdateData[])HealthData.Clone();
+        return clone;
     }
 
     public void Deserialize(DeserializeEvent e)

@@ -2,7 +2,7 @@
 
 public class PlayerInterpolation : MonoBehaviour
 {
-    private float lastInputTime;
+    private double lastInputTime;
 
     public PlayerStateData CurrentData { get; set; }
     public PlayerStateData PreviousData { get; private set; }
@@ -11,25 +11,35 @@ public class PlayerInterpolation : MonoBehaviour
 
     public void SetFramePosition(PlayerStateData data)
     {
-        RefreshToPosition(data, CurrentData);
+        PreviousData = CurrentData;
+
+        if (!IsOwn)
+        {
+            var previous = PreviousData;
+            previous.Position = transform.position;
+            previous.Rotation = transform.rotation;
+            PreviousData = previous;
+        }
+
+        CurrentData = data;
+        lastInputTime = Time.timeAsDouble;
     }
 
-    private void RefreshToPosition(PlayerStateData data, PlayerStateData prevData)
-    {
-        PreviousData = prevData;
-        CurrentData = data;
-        lastInputTime = Time.fixedTime;
-    }
+    private Vector3 interpolatedVelocity;
 
     public void Update()
     {
-        float timeSinceLastInput = Time.time - lastInputTime;
-#pragma warning disable UNT0004 // Time.fixedDeltaTime used with Update
-        float t = timeSinceLastInput / Time.fixedDeltaTime; //between frames timestep
-#pragma warning restore UNT0004 // Time.fixedDeltaTime used with Update
-        transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
-        if (!IsOwn)
+        float timeSinceLastInput = (float)(Time.timeAsDouble - lastInputTime);
+        float timeBetweenFrames = Constants.TickInterval;
+        float t = timeSinceLastInput / timeBetweenFrames;
+        
+        if (IsOwn)
         {
+            transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
+        }
+        else
+        {
+            transform.position = Vector3.SmoothDamp(transform.position, CurrentData.Position, ref interpolatedVelocity, 0.002f / Time.deltaTime, 1.05f * (CurrentData.Position - PreviousData.Position).magnitude / Time.deltaTime);
             transform.rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
         }
     }

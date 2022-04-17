@@ -27,6 +27,8 @@ public class ServerManager : MonoBehaviour
 
     private void Start()
     {
+        Time.fixedDeltaTime = Constants.TickInterval;
+
         XmlUnityServer xmlServer = GetComponent<XmlUnityServer>();
         server = xmlServer.Server;
         server.ClientManager.ClientConnected += OnClientConnected;

@@ -19,8 +19,6 @@ public class HudManager : MonoBehaviour
     private string reconciliationRate;
     private string confirmationRate;
 
-    private float originalTickInterval;
-
     public bool AnyOnGuiClicked { get; set; }
 
     private void Awake()
@@ -33,8 +31,6 @@ public class HudManager : MonoBehaviour
 
     private void Start()
     {
-        originalTickInterval = Time.fixedDeltaTime;
-
         MouseSensitivitySlider.onValueChanged.AddListener(sliderValue =>
         {
             var controller = GetFirstPersonController();
@@ -121,6 +117,7 @@ public class HudManager : MonoBehaviour
         {
             GUILayout.Label("Server tick: " + GameManager.Instance.LastReceivedServerTick);
             GUILayout.Label("Client tick: " + GameManager.Instance.ClientTick);
+            GUILayout.Label("Update queue length: " + GameManager.Instance.UpdateQueueLength);
         }
     }
 

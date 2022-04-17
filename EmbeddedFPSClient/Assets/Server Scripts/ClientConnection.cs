@@ -12,7 +12,7 @@ public class ClientConnection
 
     //the following circular buffer is used like a hash set with limited spaces
     //the way we use it requires that the sequence number 0 is never used, so it can represent empty slots
-    private readonly CircularBuffer<uint> receivedInputs = new CircularBuffer<uint>(10 * PlayerInputMessage.MaxStackedInputs);
+    private readonly CircularBuffer<uint> receivedInputs = new CircularBuffer<uint>(40);
 
     public ClientConnection(IClient client, LoginRequestData data)
     {

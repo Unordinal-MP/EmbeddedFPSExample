@@ -48,7 +48,7 @@ public class PlayerLogic : MonoBehaviour
             return input.KeyInputs[(int)which];
         }
 
-        float dt = Time.fixedDeltaTime;
+        float dt = Constants.TickInterval;
 
         //bool isGrounded = HasAction(PlayerAction.Grounded);
 
