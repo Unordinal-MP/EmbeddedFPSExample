@@ -14,10 +14,9 @@ public enum Tags
 
     GameJoinRequest = 200,
     GameStartDataResponse = 201,
-    GameUpdate = 202,
+    UnreliableGameUpdate = 202,
     GamePlayerInput = 203,
-    
-    Kill = 204, //separate reliable message because death has implications and you need notice
+    ReliableGameUpdate = 204,
 }
 
 public enum PlayerAction
@@ -296,28 +295,50 @@ public struct PlayerStateData : IDarkRiftSerializable
     }
 }
 
-public struct GameUpdateData : IDarkRiftSerializable
+public struct ReliableGameUpdateData : IDarkRiftSerializable
 {
-    public uint Frame;
     public PlayerSpawnData[] SpawnDataData;
     public PlayerDespawnData[] DespawnDataData;
+    public PlayerKillData[] KillDataData;
+
+    public ReliableGameUpdateData(PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerKillData[] killData)
+    {
+        DespawnDataData = despawnData;
+        SpawnDataData = spawnData;
+        KillDataData = killData;
+    }
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        SpawnDataData = e.Reader.ReadSerializables<PlayerSpawnData>();
+        DespawnDataData = e.Reader.ReadSerializables<PlayerDespawnData>();
+        KillDataData = e.Reader.ReadSerializables<PlayerKillData>();
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        e.Writer.Write(SpawnDataData);
+        e.Writer.Write(DespawnDataData);
+        e.Writer.Write(KillDataData);
+    }
+}
+
+public struct UnreliableGameUpdateData : IDarkRiftSerializable
+{
+    public uint Frame;
     public PlayerStateData[] UpdateData;
     public PlayerHealthUpdateData[] HealthData;
 
-    public GameUpdateData(uint frame, PlayerStateData[] updateData, PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerHealthUpdateData[] healthData)
+    public UnreliableGameUpdateData(uint frame, PlayerStateData[] updateData, PlayerHealthUpdateData[] healthData)
     {
         Frame = frame;
         UpdateData = updateData;
-        DespawnDataData = despawnData;
-        SpawnDataData = spawnData;
         HealthData = healthData;
     }
 
     public void Deserialize(DeserializeEvent e)
     {
         Frame = e.Reader.ReadUInt32();
-        SpawnDataData = e.Reader.ReadSerializables<PlayerSpawnData>();
-        DespawnDataData = e.Reader.ReadSerializables<PlayerDespawnData>();
         UpdateData = e.Reader.ReadSerializables<PlayerStateData>();
         HealthData = e.Reader.ReadSerializables<PlayerHealthUpdateData>();
     }
@@ -325,8 +346,6 @@ public struct GameUpdateData : IDarkRiftSerializable
     public void Serialize(SerializeEvent e)
     {
         e.Writer.Write(Frame);
-        e.Writer.Write(SpawnDataData);
-        e.Writer.Write(DespawnDataData);
         e.Writer.Write(UpdateData);
         e.Writer.Write(HealthData);
     }
@@ -356,12 +375,12 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
     }
 }
 
-public struct KillData : IDarkRiftSerializable
+public struct PlayerKillData : IDarkRiftSerializable
 {
     public ushort Killer;
     public ushort Victim;
 
-    public KillData(ushort killer, ushort victim)
+    public PlayerKillData(ushort killer, ushort victim)
     {
         Killer = killer;
         Victim = victim;
