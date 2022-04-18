@@ -19,6 +19,8 @@ public class HudManager : MonoBehaviour
     private string reconciliationRate;
     private string confirmationRate;
 
+    public bool AnyOnGuiClicked { get; set; }
+
     private void Awake()
     {
         if (ServerManager.Instance != null)
@@ -115,7 +117,8 @@ public class HudManager : MonoBehaviour
         {
             GUILayout.Label("Server tick: " + GameManager.Instance.LastReceivedServerTick);
             GUILayout.Label("Client tick: " + GameManager.Instance.ClientTick);
-        } 
+            GUILayout.Label("Update queue length: " + GameManager.Instance.UpdateQueueLength);
+        }
     }
 
     private void MakeScoreboard()

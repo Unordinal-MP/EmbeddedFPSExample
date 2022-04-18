@@ -11,14 +11,17 @@ public class Room : MonoBehaviour
     private readonly List<PlayerSpawnData> playerSpawnData = new List<PlayerSpawnData>(4);
     private readonly List<PlayerDespawnData> playerDespawnData = new List<PlayerDespawnData>(4);
     private readonly List<PlayerHealthUpdateData> healthUpdateData = new List<PlayerHealthUpdateData>(4);
+    private readonly List<PlayerKillData> killUpdateData = new List<PlayerKillData>();
 
     public IReadOnlyList<ServerPlayer> Players => serverPlayers;
-    
+
+    private const uint initialServerTick = 2;  //this is subtracted from by one on client to get input which must not be the default value 0 for simplified CircularBuffer usage, remember we don't have wraparound sequence numbers for simplicity
+
     [Header("Public Fields")]
     public string Name;
     public List<ClientConnection> ClientConnections = new List<ClientConnection>();
     public byte MaxSlots;
-    public uint ServerTick { get; private set; }
+    public uint ServerTick { get; private set; } = initialServerTick;
 #pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
     public LayerMask hitLayers;
 #pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
@@ -39,7 +42,7 @@ public class Room : MonoBehaviour
         for (var i = 0; i < serverPlayers.Count; i++)
         {
             ServerPlayer player = serverPlayers[i];
-            playerStateData[i] = player.PlayerUpdate();
+            playerStateData.Add(player.PlayerUpdate());
         }
 
         // Send update message to all players.
@@ -47,20 +50,34 @@ public class Room : MonoBehaviour
         PlayerSpawnData[] playerSpawnDataArray = playerSpawnData.ToArray();
         PlayerDespawnData[] playerDespawnDataArray = playerDespawnData.ToArray();
         PlayerHealthUpdateData[] healthUpdateDataArray = healthUpdateData.ToArray();
+        PlayerKillData[] killUpdateDataArray = killUpdateData.ToArray();
         foreach (ServerPlayer player in serverPlayers)
         {
-            using Message message = Message.Create((ushort)Tags.GameUpdate, new GameUpdateData(player.InputTick, playerStateDataArray, playerSpawnDataArray, playerDespawnDataArray, healthUpdateDataArray));
+            using Message unreliableMessage = Message.Create((ushort)Tags.UnreliableGameUpdate, new UnreliableGameUpdateData(player.InputTick, playerStateDataArray, healthUpdateDataArray));
             
-            player.Client.SendMessage(message, SendMode.Unreliable);
+            player.Client.SendMessage(unreliableMessage, SendMode.Unreliable);
         }
-        
+        if (playerSpawnDataArray.Length > 0 || playerDespawnDataArray.Length > 0 || killUpdateDataArray.Length > 0)
+        {
+            using Message reliableMessage = Message.Create((ushort)Tags.ReliableGameUpdate, new ReliableGameUpdateData(playerSpawnDataArray, playerDespawnDataArray, killUpdateDataArray));
+
+            foreach (ServerPlayer player in serverPlayers)
+            {
+                player.Client.SendMessage(reliableMessage, SendMode.Reliable);
+            }
+        }
+
+        playerStateData.Clear();
         playerSpawnData.Clear();
         playerDespawnData.Clear();
         healthUpdateData.Clear();
+        killUpdateData.Clear();
     }
 
     public void Initialize(string name, byte maxslots)
     {
+        ServerTick = initialServerTick;
+
         Name = name;
         MaxSlots = maxslots;
 
@@ -97,8 +114,7 @@ public class Room : MonoBehaviour
         serverPlayers.Add(player);
 
         player.Initialize(clientConnection);
-
-        playerStateData.Add(default);
+        
         playerSpawnData.Add(player.GetPlayerSpawnData());
     }
     
@@ -196,17 +212,12 @@ public class Room : MonoBehaviour
 
     public void UpdateKill(ServerPlayer shooter, ServerPlayer victim)
     {
-        var killData = new KillData()
+        var killData = new PlayerKillData()
         {
             Killer = shooter.Client.ID,
             Victim = victim.Client.ID,
         };
 
-        using Message message = Message.Create((ushort)Tags.Kill, killData);
-
-        foreach (ServerPlayer player in serverPlayers)
-        {
-            player.Client.SendMessage(message, SendMode.Reliable);
-        }
+        killUpdateData.Add(killData);
     }
 }

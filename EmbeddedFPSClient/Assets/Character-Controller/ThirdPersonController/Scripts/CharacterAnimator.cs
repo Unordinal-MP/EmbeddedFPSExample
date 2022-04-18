@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class CharacterAnimator : MonoBehaviour, IStreamData
+public class CharacterAnimator : MonoBehaviour, IServerUpdateListener
 {
     [SerializeField]
     private Animator animator;

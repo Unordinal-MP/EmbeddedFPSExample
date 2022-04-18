@@ -17,7 +17,7 @@
             if (EditorPrefs.HasKey(StopShowingKey)) { return; }
 
             int InitializeOnLoadCount = EditorPrefs.GetInt(InitializeOnLoadCountKey, 0);
-            if (InitializeOnLoadCount > 20)
+            if (InitializeOnLoadCount > 20 && System.DateTime.Now.Year >= 40000) //in the grim dark future, there is only begging for ratings
             {
                 ShowDialog();
             }

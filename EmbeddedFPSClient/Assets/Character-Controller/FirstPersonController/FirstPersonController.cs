@@ -15,6 +15,8 @@ public class FirstPersonController : MonoBehaviour
     
     private WeaponController weaponController;
 
+    private bool cameraLocked;
+
     public float MouseSensitivity { get; set; } = 1;
     
     private void Start()
@@ -61,7 +63,13 @@ public class FirstPersonController : MonoBehaviour
 
     public PlayerInputData GetInputs(uint time, uint sequenceNumber)
     {
-        ComputeInputsAndRotations(out bool[] inputs, out Quaternion lookRotation);
+        HandleInputs(out bool[] inputs); //TODO: factor out side effects and rename
+
+        Quaternion lookRotation = Quaternion.identity;
+        if (camera)
+        {
+            lookRotation = camera.transform.rotation; //new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
+        }
 
         return new PlayerInputData(inputs, lookRotation, time, sequenceNumber);
     }
@@ -73,6 +81,9 @@ public class FirstPersonController : MonoBehaviour
 
     private void CameraMovement()
     {
+        if (cameraLocked)
+            return;
+
         float axisX = Input.GetAxisRaw("Mouse X") * MouseSensitivity;
         float axisY = Input.GetAxisRaw("Mouse Y") * MouseSensitivity;
 
@@ -89,7 +100,7 @@ public class FirstPersonController : MonoBehaviour
         camera.transform.localRotation = Quaternion.Euler(new Vector3(newPitch, newYaw, 0f));
     }
 
-    private void ComputeInputsAndRotations(out bool[] outInputs, out Quaternion rotation)
+    private void HandleInputs(out bool[] outInputs)
     {
         var inputs = new bool[(int)PlayerAction.NumActions];
         outInputs = inputs;
@@ -112,12 +123,9 @@ public class FirstPersonController : MonoBehaviour
             return inputs[(int)which];
         }
 
-        if (Input.GetMouseButton(0) || Input.GetMouseButton(1) || Input.GetMouseButton(2))
+        if (Input.GetMouseButtonUp(0) || Input.GetMouseButtonUp(1) || Input.GetMouseButtonUp(2))
         {
-            if (!EventSystem.current.IsPointerOverGameObject())
-            {
-                LockCursor();
-            }
+            LockCursor();
         }
         else if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -130,6 +138,14 @@ public class FirstPersonController : MonoBehaviour
                 Application.Quit();
             }
         }
+
+#if UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            //much easier to debug multiple editors
+            cameraLocked = !cameraLocked;
+        }
+#endif
 
         //TODO: move synchronizing actions to PlayerLogic
         if (IsCursorLocked())
@@ -163,15 +179,6 @@ public class FirstPersonController : MonoBehaviour
         if (HasAction(PlayerAction.SwitchWeapon))
         {
             weaponController.SwitchWeapon();
-        }
-
-        if (camera)
-        {
-            rotation = camera.transform.rotation; //new Vector3(camera.transform.localEulerAngles.x, transform.localEulerAngles.y, 0f);
-        }
-        else
-        {
-            rotation = Quaternion.identity;
         }
     }
 }

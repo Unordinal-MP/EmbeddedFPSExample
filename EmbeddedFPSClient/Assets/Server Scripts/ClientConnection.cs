@@ -1,5 +1,6 @@
 ﻿using DarkRift;
 using DarkRift.Server;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class ClientConnection
@@ -8,6 +9,10 @@ public class ClientConnection
     public IClient Client { get; }
     public Room Room { get; set; }
     public ServerPlayer Player { get; set; }
+
+    //the following circular buffer is used like a hash set with limited spaces
+    //the way we use it requires that the sequence number 0 is never used, so it can represent empty slots
+    private readonly CircularBuffer<uint> receivedInputs = new CircularBuffer<uint>(40);
 
     public ClientConnection(IClient client, LoginRequestData data)
     {
@@ -36,8 +41,21 @@ public class ClientConnection
                 Room.JoinPlayerToGame(this);
                 break;
             case Tags.GamePlayerInput:
-                Player.RecieveInput(message.Deserialize<PlayerInputData>());
-                break;
+                {
+                    PlayerInputMessage inputs = message.Deserialize<PlayerInputMessage>();
+                    foreach (PlayerInputData input in inputs.StackedInputs)
+                    {
+                        if (receivedInputs.Contains(input.SequenceNumber))
+                        {
+                            continue;
+                        }
+
+                        receivedInputs.Add(input.SequenceNumber);
+                        Player.RecieveInput(input);
+                    }
+
+                    break;
+                }
         }
     }
 

@@ -1,4 +1,6 @@
 ﻿using DarkRift;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum Tags
@@ -13,10 +15,9 @@ public enum Tags
 
     GameJoinRequest = 200,
     GameStartDataResponse = 201,
-    GameUpdate = 202,
+    UnreliableGameUpdate = 202,
     GamePlayerInput = 203,
-    
-    Kill = 204, //separate reliable message because death has implications and you need notice
+    ReliableGameUpdate = 204,
 }
 
 public enum PlayerAction
@@ -295,28 +296,60 @@ public struct PlayerStateData : IDarkRiftSerializable
     }
 }
 
-public struct GameUpdateData : IDarkRiftSerializable
+public struct ReliableGameUpdateData : IDarkRiftSerializable
 {
-    public uint Frame;
     public PlayerSpawnData[] SpawnDataData;
     public PlayerDespawnData[] DespawnDataData;
+    public PlayerKillData[] KillDataData;
+
+    public ReliableGameUpdateData(PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerKillData[] killData)
+    {
+        DespawnDataData = despawnData;
+        SpawnDataData = spawnData;
+        KillDataData = killData;
+    }
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        SpawnDataData = e.Reader.ReadSerializables<PlayerSpawnData>();
+        DespawnDataData = e.Reader.ReadSerializables<PlayerDespawnData>();
+        KillDataData = e.Reader.ReadSerializables<PlayerKillData>();
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        e.Writer.Write(SpawnDataData);
+        e.Writer.Write(DespawnDataData);
+        e.Writer.Write(KillDataData);
+    }
+}
+
+public struct UnreliableGameUpdateData : IDarkRiftSerializable, ICloneable
+{
+    public uint Frame;
+    public bool Interpolated;
     public PlayerStateData[] UpdateData;
     public PlayerHealthUpdateData[] HealthData;
 
-    public GameUpdateData(uint frame, PlayerStateData[] updateData, PlayerSpawnData[] spawnData, PlayerDespawnData[] despawnData, PlayerHealthUpdateData[] healthData)
+    public UnreliableGameUpdateData(uint frame, PlayerStateData[] updateData, PlayerHealthUpdateData[] healthData)
     {
         Frame = frame;
+        Interpolated = false;
         UpdateData = updateData;
-        DespawnDataData = despawnData;
-        SpawnDataData = spawnData;
         HealthData = healthData;
+    }
+
+    public object Clone()
+    {
+        var clone = new UnreliableGameUpdateData();
+        clone.UpdateData = (PlayerStateData[])UpdateData.Clone();
+        clone.HealthData = (PlayerHealthUpdateData[])HealthData.Clone();
+        return clone;
     }
 
     public void Deserialize(DeserializeEvent e)
     {
         Frame = e.Reader.ReadUInt32();
-        SpawnDataData = e.Reader.ReadSerializables<PlayerSpawnData>();
-        DespawnDataData = e.Reader.ReadSerializables<PlayerDespawnData>();
         UpdateData = e.Reader.ReadSerializables<PlayerStateData>();
         HealthData = e.Reader.ReadSerializables<PlayerHealthUpdateData>();
     }
@@ -324,8 +357,6 @@ public struct GameUpdateData : IDarkRiftSerializable
     public void Serialize(SerializeEvent e)
     {
         e.Writer.Write(Frame);
-        e.Writer.Write(SpawnDataData);
-        e.Writer.Write(DespawnDataData);
         e.Writer.Write(UpdateData);
         e.Writer.Write(HealthData);
     }
@@ -355,12 +386,12 @@ public struct PlayerHealthUpdateData : IDarkRiftSerializable
     }
 }
 
-public struct KillData : IDarkRiftSerializable
+public struct PlayerKillData : IDarkRiftSerializable
 {
     public ushort Killer;
     public ushort Victim;
 
-    public KillData(ushort killer, ushort victim)
+    public PlayerKillData(ushort killer, ushort victim)
     {
         Killer = killer;
         Victim = victim;
@@ -376,6 +407,32 @@ public struct KillData : IDarkRiftSerializable
     {
         e.Writer.Write(Killer);
         e.Writer.Write(Victim);
+    }
+}
+
+public struct PlayerInputMessage : IDarkRiftSerializable
+{
+    public const int MaxStackedInputs = 4;
+
+    public PlayerInputData[] StackedInputs;
+
+    public void Deserialize(DeserializeEvent e)
+    {
+        int length = e.Reader.ReadByte();
+        length = System.Math.Min(MaxStackedInputs, length);
+        if (StackedInputs == null || StackedInputs.Length != length)
+            StackedInputs = new PlayerInputData[length];
+
+        e.Reader.ReadSerializablesInto(StackedInputs, 0);
+    }
+
+    public void Serialize(SerializeEvent e)
+    {
+        if (StackedInputs.Length > MaxStackedInputs)
+            throw new System.ArgumentOutOfRangeException(nameof(StackedInputs));
+
+        e.Writer.Write((byte)StackedInputs.Length);
+        e.Writer.Write(StackedInputs);
     }
 }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DarkRift;
 using DarkRift.Server;
@@ -12,7 +13,7 @@ public class ServerPlayer : MonoBehaviour
 
     private PlayerStateData currentPlayerStateData;
 
-    private readonly Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(1, 2);
+    private readonly Buffer<PlayerInputData> inputBuffer = new Buffer<PlayerInputData>(PlayerInputMessage.MaxStackedInputs, PlayerInputMessage.MaxStackedInputs);
 
     private int health;
 
@@ -72,6 +73,7 @@ public class ServerPlayer : MonoBehaviour
 
         if (target > highestSequenceNumber + 1)
         {
+            //insert potential duplicates on purpose, these will be replaced by real data arriving before playback
             for (uint sequenceNumber = highestSequenceNumber + 1; sequenceNumber <= target; ++sequenceNumber)
             {
                 input.SequenceNumber = sequenceNumber;
@@ -83,10 +85,7 @@ public class ServerPlayer : MonoBehaviour
             inputBuffer.Add(input, target);
         }
 
-        if (target > highestSequenceNumber)
-        {
-            highestSequenceNumber = target;
-        }
+        highestSequenceNumber = Math.Max(highestSequenceNumber, target);
     }
 
     public void TakeDamage(int value, ServerPlayer shooter)
@@ -107,14 +106,24 @@ public class ServerPlayer : MonoBehaviour
         Respawn();
     }
 
+    //private uint nextseq;
+
     public void PlayerPreUpdate()
     {
         inputs = inputBuffer.Get();
         for (int i = 0; i < inputs.Length; i++)
         {
-            if (inputs[i].KeyInputs[(int)PlayerAction.Fire])
+            ref PlayerInputData input = ref inputs[i];
+
+            /*if (input.SequenceNumber != nextseq)
             {
-                room.PerformShootRayCast(inputs[i].Time, this);
+                Debug.Log("expected input " + nextseq + " but got " + input.SequenceNumber);
+            }
+            nextseq = input.SequenceNumber + 1;*/
+
+            if (input.KeyInputs[(int)PlayerAction.Fire])
+            {
+                room.PerformShootRayCast(input.Time, this);
                 return;
             }
         }

@@ -8,9 +8,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    private readonly Dictionary<ushort, ClientPlayer> players = new Dictionary<ushort, ClientPlayer>();
-
-    private readonly Buffer<GameUpdateData> gameUpdateDataBuffer = new Buffer<GameUpdateData>(1, 1);
+    private Dictionary<ushort, ClientPlayer> players;
+    private Buffer<UnreliableGameUpdateData> gameUpdateDataBuffer;
 
     [Header("Prefabs")]
     public GameObject PlayerPrefab;
@@ -20,6 +19,15 @@ public class GameManager : MonoBehaviour
 
     public uint ClientTick { get; private set; }
     public uint LastReceivedServerTick { get; private set; }
+
+    //the following circular buffer responsible for duplicate detection is used like a hash set with limited spaces
+    //the way we use it requires that the sequence number 0 is never used, so it can represent empty slots
+    private CircularBuffer<uint> receivedGameUpdates;
+
+    private UnreliableGameUpdateData? previousUpdate;
+    private Queue<UnreliableGameUpdateData> updateQueue;
+
+    public int UpdateQueueLength => updateQueue.Count;
 
     private void Awake()
     {
@@ -54,11 +62,20 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        players = new Dictionary<ushort, ClientPlayer>();
+        gameUpdateDataBuffer = new Buffer<UnreliableGameUpdateData>(1, 1);
+        receivedGameUpdates = new CircularBuffer<uint>(40);
+        updateQueue = new Queue<UnreliableGameUpdateData>();
+
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
+
+        Debug.Log("Starting GameManager");
 
         using Message message = Message.CreateEmpty((ushort)Tags.GameJoinRequest);
         
         ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
+
+        Invoke(nameof(InterpolationFrame), Constants.TickInterval);
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
@@ -73,18 +90,17 @@ public class GameManager : MonoBehaviour
             case Tags.GameStartDataResponse:
                 OnGameJoinAccept(message.Deserialize<GameStartData>());
                 break;
-            case Tags.GameUpdate:
-                OnGameUpdate(message.Deserialize<GameUpdateData>());
+            case Tags.UnreliableGameUpdate:
+                OnUnreliableGameUpdate(message.Deserialize<UnreliableGameUpdateData>());
                 break;
-            case Tags.Kill:
-                OnKill(message.Deserialize<KillData>());
+            case Tags.ReliableGameUpdate:
+                OnReliableGameUpdate(message.Deserialize<ReliableGameUpdateData>());
                 break;
         }
     }
 
-    private void OnKill(KillData kill)
+    private void OnKill(PlayerKillData kill)
     {
-        //reliable message from server so safe to not check
         ClientPlayer killer = players[kill.Killer];
         ClientPlayer victim = players[kill.Victim];
 
@@ -100,17 +116,23 @@ public class GameManager : MonoBehaviour
         ClientTick = gameStartData.OnJoinServerTick;
         foreach (PlayerSpawnData playerSpawnData in gameStartData.Players)
         {
-            SpawnPlayer(playerSpawnData);
+            SpawnPlayer(playerSpawnData, "OnGameJoinAccept");
         }
     }
 
-    private void OnGameUpdate(GameUpdateData gameUpdateData)
+    private void OnUnreliableGameUpdate(UnreliableGameUpdateData gameUpdateData)
     {
+        if (receivedGameUpdates.Contains(gameUpdateData.Frame))
+            return;
+
+        receivedGameUpdates.Add(gameUpdateData.Frame);
         gameUpdateDataBuffer.Add(gameUpdateData, gameUpdateData.Frame);
     }
 
-    private void SpawnPlayer(PlayerSpawnData playerSpawnData)
+    private void SpawnPlayer(PlayerSpawnData playerSpawnData, string src)
     {
+        Debug.Log("Will spawn player " + playerSpawnData.PlayerId + " from " + src);
+
         GameObject go = Instantiate(PlayerPrefab, playerSpawnData.Position, playerSpawnData.Rotation);
         var controller = GetComponent<FirstPersonController>();
         if (controller != null)
@@ -118,62 +140,124 @@ public class GameManager : MonoBehaviour
             controller.camera.transform.rotation = playerSpawnData.Rotation;
         }
 
-        if (go != null)
-        {
-            ClientPlayer player = go.GetComponent<ClientPlayer>();
-            player.Initialize(playerSpawnData.PlayerId, playerSpawnData.Name);
-            players.Add(playerSpawnData.PlayerId, player);
+        ClientPlayer player = go.GetComponent<ClientPlayer>();
+        player.Initialize(playerSpawnData.PlayerId, playerSpawnData.Name);
+        players.Add(playerSpawnData.PlayerId, player);
 
-            if (player.IsOwn)
-            {
-                OwnPlayer = player;
-            }
+        if (player.IsOwn)
+        {
+            OwnPlayer = player;
         }
     }
 
     private void FixedUpdate()
     {
-        ClientTick++;
-        GameUpdateData[] receivedGameUpdateData = gameUpdateDataBuffer.Get();
-        foreach (GameUpdateData data in receivedGameUpdateData)
+        ClientTick += 1;
+
+        UnreliableGameUpdateData[] receivedGameUpdateData = gameUpdateDataBuffer.Get();
+        foreach (UnreliableGameUpdateData data in receivedGameUpdateData)
         {
-            UpdateClientGameState(data);
+            if (previousUpdate == null)
+                previousUpdate = data;
+            if (data.Frame < previousUpdate.Value.Frame)
+                continue; //drop, buffer should have sorted it nominally speaking
+
+            int gap = (int)(data.Frame - previousUpdate.Value.Frame);
+            if (gap > 1)
+            {
+                //create interpolated fake frames for other players
+                for (int i = 1; i < gap; ++i)
+                {
+                    float interpolationFactor = (float)i / gap;
+                    var fake = (UnreliableGameUpdateData)data.Clone();
+                    fake.Interpolated = true;
+                    fake.Frame = previousUpdate.Value.Frame + (uint)i;
+
+                    PlayerStateData[] fakePlayerState = fake.UpdateData;
+                    for (int k = 0; k < fakePlayerState.Length; ++k)
+                    {
+                        ref PlayerStateData state = ref fakePlayerState[k];
+                        int player = state.PlayerId;
+
+                        PlayerStateData source = previousUpdate.Value.UpdateData.SingleOrDefault(x => x.PlayerId == player);
+                        if (source.Input.SequenceNumber == 0)
+                            continue;
+
+                        ref PlayerStateData destination = ref data.UpdateData[k];
+
+                        state.Position = Vector3.Lerp(source.Position, destination.Position, interpolationFactor);
+                        state.Rotation = Quaternion.Slerp(source.Rotation, destination.Rotation, interpolationFactor);
+                    }
+
+                    updateQueue.Enqueue(fake);
+                }
+            }
+
+            updateQueue.Enqueue(data);
+
+            previousUpdate = data;
+
+            //always update on player because reconciliation handles differently
+            LastReceivedServerTick = data.Frame;
+            PlayerStateData ownPlayerData = data.UpdateData.SingleOrDefault(x => x.PlayerId == ConnectionManager.Instance.OwnPlayerId);
+            if (ownPlayerData.Input.SequenceNumber != 0) //avoid default initialized result as per above line
+                OwnPlayer.OnServerDataUpdate(ownPlayerData);
         }
     }
 
-    private void UpdateClientGameState(GameUpdateData gameUpdateData)
+    void InterpolationFrame()
     {
-        LastReceivedServerTick = gameUpdateData.Frame;
+        if (updateQueue.Count > 0)
+        {
+            UpdateClientGameState(updateQueue.Dequeue());
+        }
+
+        Invoke(nameof(InterpolationFrame), updateQueue.Count > 2 ? 0.97f * Constants.TickInterval : Constants.TickInterval);
+    }
+
+    private void OnReliableGameUpdate(ReliableGameUpdateData gameUpdateData)
+    {
         foreach (PlayerSpawnData data in gameUpdateData.SpawnDataData)
         {
             if (data.PlayerId != ConnectionManager.Instance.OwnPlayerId)
             {
-                SpawnPlayer(data);
+                SpawnPlayer(data, "OnReliableGameUpdate");
             }
         }
 
         foreach (PlayerDespawnData data in gameUpdateData.DespawnDataData)
         {
-            if (players.ContainsKey(data.PlayerId))
-            {
-                Destroy(players[data.PlayerId].gameObject);
-                players.Remove(data.PlayerId);
-            }
+            Destroy(players[data.PlayerId].gameObject);
+            players.Remove(data.PlayerId);
         }
 
+        foreach (PlayerKillData data in gameUpdateData.KillDataData)
+        {
+            OnKill(data);
+        }
+    }
+
+    private void UpdateClientGameState(UnreliableGameUpdateData gameUpdateData)
+    {
         foreach (PlayerStateData data in gameUpdateData.UpdateData)
         {
-            if (players.TryGetValue(data.PlayerId, out ClientPlayer p))
+            if (players.TryGetValue(data.PlayerId, out ClientPlayer player))
             {
-                p.OnServerDataUpdate(data);
+                if (player.IsOwn)
+                    continue;
+
+                player.OnServerDataUpdate(data);
             }
         }
 
-        foreach (PlayerHealthUpdateData data in gameUpdateData.HealthData)
+        if (!gameUpdateData.Interpolated)
         {
-            if (players.TryGetValue(data.PlayerId, out ClientPlayer p))
+            foreach (PlayerHealthUpdateData data in gameUpdateData.HealthData)
             {
-                p.SetHealth(data.Value);
+                if (players.TryGetValue(data.PlayerId, out ClientPlayer player))
+                {
+                    player.SetHealth(data.Value);
+                }
             }
         }
     }
