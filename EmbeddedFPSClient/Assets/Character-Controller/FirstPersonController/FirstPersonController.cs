@@ -18,9 +18,15 @@ public class FirstPersonController : MonoBehaviour
     private bool cameraLocked;
 
     public float MouseSensitivity { get; set; } = 1;
-    
+
+    private bool[] instantaneousInputs;
+    private bool[] cumulativeInputs;
+
     private void Start()
     {
+        instantaneousInputs = new bool[(int)PlayerAction.NumActions];
+        cumulativeInputs = new bool[(int)PlayerAction.NumActions];
+
         weaponController = GetComponent<WeaponController>();
     }
 
@@ -76,6 +82,13 @@ public class FirstPersonController : MonoBehaviour
 
     private void Update()
     {
+        GetInputVector(instantaneousInputs);
+
+        for (int i = 0; i < instantaneousInputs.Length; ++i)
+        {
+            cumulativeInputs[i] |= instantaneousInputs[i];
+        }
+
         CameraMovement();
     }
 
@@ -100,11 +113,8 @@ public class FirstPersonController : MonoBehaviour
         camera.transform.localRotation = Quaternion.Euler(new Vector3(newPitch, newYaw, 0f));
     }
 
-    private void HandleInputs(out bool[] outInputs)
+    private static void GetInputVector(bool[] inputs)
     {
-        var inputs = new bool[(int)PlayerAction.NumActions];
-        outInputs = inputs;
-
         inputs[(int)PlayerAction.Jump] = Input.GetKeyDown(KeyCode.Space);
         inputs[(int)PlayerAction.Sprint] = Input.GetKeyDown(KeyCode.LeftShift);
         inputs[(int)PlayerAction.Fire] = Input.GetMouseButton(0);
@@ -117,7 +127,14 @@ public class FirstPersonController : MonoBehaviour
         inputs[(int)PlayerAction.Left] = Input.GetKey(KeyCode.A);
         inputs[(int)PlayerAction.Right] = Input.GetKey(KeyCode.S);
         inputs[(int)PlayerAction.Back] = Input.GetKey(KeyCode.D);
+    }
 
+    private void HandleInputs(out bool[] outInputs)
+    {
+        outInputs = cumulativeInputs;
+        cumulativeInputs = new bool[(int)PlayerAction.NumActions];
+
+        var inputs = outInputs;
         bool HasAction(PlayerAction which)
         {
             return inputs[(int)which];
