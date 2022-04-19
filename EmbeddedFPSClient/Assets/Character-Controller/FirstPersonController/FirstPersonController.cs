@@ -19,13 +19,13 @@ public class FirstPersonController : MonoBehaviour
 
     public float MouseSensitivity { get; set; } = 1;
 
-    private bool[] instantaneousInputs;
-    private bool[] cumulativeInputs;
+    private bool[] instantaneousKeyInputs;
+    private bool[] cumulativeKeyInputs;
 
     private void Start()
     {
-        instantaneousInputs = new bool[(int)PlayerAction.NumActions];
-        cumulativeInputs = new bool[(int)PlayerAction.NumActions];
+        instantaneousKeyInputs = new bool[(int)PlayerAction.NumActions];
+        cumulativeKeyInputs = new bool[(int)PlayerAction.NumActions];
 
         weaponController = GetComponent<WeaponController>();
     }
@@ -82,11 +82,11 @@ public class FirstPersonController : MonoBehaviour
 
     private void Update()
     {
-        GetInputVector(instantaneousInputs);
+        GetInputVector(instantaneousKeyInputs);
 
-        for (int i = 0; i < instantaneousInputs.Length; ++i)
+        for (int i = 0; i < instantaneousKeyInputs.Length; ++i)
         {
-            cumulativeInputs[i] |= instantaneousInputs[i];
+            cumulativeKeyInputs[i] |= instantaneousKeyInputs[i];
         }
 
         CameraMovement();
@@ -118,21 +118,24 @@ public class FirstPersonController : MonoBehaviour
         inputs[(int)PlayerAction.Jump] = Input.GetKeyDown(KeyCode.Space);
         inputs[(int)PlayerAction.Sprint] = Input.GetKeyDown(KeyCode.LeftShift);
         inputs[(int)PlayerAction.Fire] = Input.GetMouseButton(0);
-        inputs[(int)PlayerAction.Grounded] = true; //TODO: must compute locally until we have server auth map loading
         inputs[(int)PlayerAction.Aim] = Input.GetMouseButton(1);
         inputs[(int)PlayerAction.Reload] = Input.GetKeyDown(KeyCode.R);
         inputs[(int)PlayerAction.Inspect] = Input.GetKeyDown(KeyCode.I);
         inputs[(int)PlayerAction.SwitchWeapon] = Input.GetKeyDown(KeyCode.V);
         inputs[(int)PlayerAction.Forward] = Input.GetKey(KeyCode.W);
         inputs[(int)PlayerAction.Left] = Input.GetKey(KeyCode.A);
-        inputs[(int)PlayerAction.Right] = Input.GetKey(KeyCode.S);
-        inputs[(int)PlayerAction.Back] = Input.GetKey(KeyCode.D);
+
+        //at time of writing Unity has swapped the letters D and S for whatever reason
+        //if your character is mixing backing and going right, swap D and S below
+        //(or migrate to the input system of your choice)
+        inputs[(int)PlayerAction.Right] = Input.GetKey(KeyCode.D);
+        inputs[(int)PlayerAction.Back] = Input.GetKey(KeyCode.S);
     }
 
     private void HandleInputs(out bool[] outInputs)
     {
-        outInputs = cumulativeInputs;
-        cumulativeInputs = new bool[(int)PlayerAction.NumActions];
+        outInputs = cumulativeKeyInputs;
+        cumulativeKeyInputs = new bool[(int)PlayerAction.NumActions];
 
         var inputs = outInputs;
         bool HasAction(PlayerAction which)

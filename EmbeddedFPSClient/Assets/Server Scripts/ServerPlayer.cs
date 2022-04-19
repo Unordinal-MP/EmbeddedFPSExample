@@ -64,7 +64,7 @@ public class ServerPlayer : MonoBehaviour
 
         transform.SetPositionAndRotation(position, rotation);
 
-        currentPlayerStateData = new PlayerStateData(Client.ID, default, 0, position, rotation, CollisionFlags.None);
+        currentPlayerStateData = new PlayerStateData(Client.ID, default, position, rotation, CollisionFlags.None);
     }
 
     public void RecieveInput(PlayerInputData input)

@@ -3,6 +3,7 @@
 public class PlayerInterpolation : MonoBehaviour
 {
     private double lastInputTime;
+    private Vector3 interpolatedVelocity;
 
     public PlayerStateData CurrentData { get; set; }
     public PlayerStateData PreviousData { get; private set; }
@@ -24,8 +25,6 @@ public class PlayerInterpolation : MonoBehaviour
         CurrentData = data;
         lastInputTime = Time.timeAsDouble;
     }
-
-    private Vector3 interpolatedVelocity;
 
     public void Update()
     {

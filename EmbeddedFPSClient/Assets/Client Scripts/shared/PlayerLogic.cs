@@ -5,25 +5,24 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerLogic : MonoBehaviour
 {
-    private Vector3 gravity;
-    
     private float cachedX;
     private float cachedZ;
-    //private float fallingTimer;
     private bool isJumping;
-    //private float jumpTimer;
-    //private float cachedJumpTimer;
 
 
     //TODO: enter better way of input settings (ScriptableObject?)
     private const float walkSpeed = 8;
     private const float gravityConstant = 2;
     private const float jumpStrength = 11;
-    private const float movementSpeed = 10;
     private const float jumpSpeed = 6;
     private const int groundLayerMask = 1;
     private const float groundHeight = 0.51f;
     private const float gravityMultiplier = 8;
+
+    const float forwardSpeed = 1;
+    const float backSpeed = 0.95f * forwardSpeed;
+    const float strafeSpeed = 0.7f * forwardSpeed;
+    const float fullFowardSpeed = 9;
 
     private bool isGrounded = true;
 
@@ -43,14 +42,7 @@ public class PlayerLogic : MonoBehaviour
 
     public PlayerStateData GetNextFrameData(PlayerInputData input, PlayerStateData currentStateData)
     {
-        bool HasAction(PlayerAction which)
-        {
-            return input.KeyInputs[(int)which];
-        }
-
         float dt = Constants.TickInterval;
-
-        //bool isGrounded = HasAction(PlayerAction.Grounded);
 
         bool isGrounded = true;
 
@@ -70,83 +62,47 @@ public class PlayerLogic : MonoBehaviour
             transform.rotation = newRotation;
         }
 
-        gravity = new Vector3(0, currentStateData.Gravity, 0);
-
-        /*Vector3 movement = Vector3.zero;
-
-        if (HasAction(PlayerAction.Forward))
+        Vector3 inputWorld = Vector3.zero;
+        if (input.HasAction(PlayerAction.Forward))
         {
-            movement += Vector3.forward;
-        }
-        if (HasAction(PlayerAction.Left))
-        {
-            movement += Vector3.left;
-        }
-        if (HasAction(PlayerAction.Back))
-        {
-            movement += Vector3.back;
-        }
-        if (HasAction(PlayerAction.Right))
-        {
-            movement += Vector3.right;
+            inputWorld.z += forwardSpeed;
         }
 
-        movement = Quaternion.Euler(0, rotation.y, 0) * movement; // Move towards the look direction.
-        movement.Normalize();
-        movement = movement * walkSpeed;
+        if (input.HasAction(PlayerAction.Back))
+        {
+            inputWorld.z -= backSpeed;
+        }
 
-        movement = movement * dt;
-        movement = movement + gravity * dt;
+        if (input.HasAction(PlayerAction.Left))
+        {
+            inputWorld.x -= strafeSpeed;
+        }
 
-        // The following code fixes character controller issues from unity. It makes sure that the controller stays connected to the ground by adding a little bit of down movement.
-        CharacterController.Move(new Vector3(0, -0.001f, 0));
+        if (input.HasAction(PlayerAction.Right))
+        {
+            inputWorld.x += strafeSpeed;
+        }
 
-        //bool isGrounded = CharacterController.isGrounded;
+        if (input.HasAction(PlayerAction.Forward) && input.HasAction(PlayerAction.Back))
+        {
+            inputWorld.z = 0;
+        }
+
+        if (input.HasAction(PlayerAction.Left) && input.HasAction(PlayerAction.Right))
+        {
+            inputWorld.x = 0;
+        }
+
+        //inputWorld *= fullFowardSpeed;
+        inputWorld = transform.TransformDirection(inputWorld);
+        inputWorld.y = 0;
+
+        var _movementDir = inputWorld;
+        float _yChange = 0;
 
         if (isGrounded)
         {
-            if (HasAction(PlayerAction.Jump))
-            {
-                gravity = new Vector3(0, jumpStrength, 0);
-            }
-        }
-        else
-        {
-            gravity -= new Vector3(0, gravityConstant, 0);
-        }
-
-        CharacterController.Move(movement);*/
-
-        //GroundCheck();
-
-        Vector3 _movementDir = Vector3.zero;
-
-        if (HasAction(PlayerAction.Forward))
-        {
-            _movementDir.z += 1f;
-        }
-
-        if (HasAction(PlayerAction.Left))
-        {
-            _movementDir.x += -1f;
-        }
-
-        if (HasAction(PlayerAction.Right))
-        {
-            _movementDir.z += -1f;
-        }
-
-        if (HasAction(PlayerAction.Back))
-        {
-            _movementDir.x += 1f;
-        }
-
-        bool _isJumping = HasAction(PlayerAction.Jump);
-        float _yChange = _movementDir.y;
-
-        if (isGrounded)
-        {
-            if (_isJumping)
+            if (input.HasAction(PlayerAction.Jump))
             {
                 // Ensure player doesn't jump to high.
 
@@ -172,7 +128,7 @@ public class PlayerLogic : MonoBehaviour
 
         if (!isGrounded)
         {
-            // Partial control when in ari.
+            // Partial control when in air.
 
             var horizontalLastVelocity = Vector3.ProjectOnPlane(lastVelocity, Vector3.up);
             var horizontalInputWorldVelocity = Vector3.ProjectOnPlane(_movementDir, Vector3.up);
@@ -181,23 +137,12 @@ public class PlayerLogic : MonoBehaviour
 
         _movementDir.y = _yChange;
 
-        CollisionFlags flags = controller.Move(dt * movementSpeed * transform.TransformDirection(_movementDir));
+        //TODO: decompose fullFowardSpeed application (see inserted comment earlier) so we don't scale EVERYTHING by this value
+        CollisionFlags flags = controller.Move(dt * fullFowardSpeed * _movementDir);
 
         lastVelocity = _movementDir;
         isGrounded = controller.isGrounded;
 
-        return new PlayerStateData(currentStateData.PlayerId, input, gravity.y, transform.position, transform.rotation, flags);
-    }
-
-    public bool IsGroundedCheck()
-    {
-        return true; //TODO: remove
-        
-        if (Physics.Linecast(controller.bounds.center, controller.bounds.center + (-Vector3.up * (controller.height * groundHeight)), out RaycastHit _, groundLayerMask))
-        {
-            return true;
-        }
-
-        return false;
+        return new PlayerStateData(currentStateData.PlayerId, input, transform.position, transform.rotation, flags);
     }
 }

@@ -79,7 +79,7 @@ public class ClientPlayer : MonoBehaviour
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
             IsOwn = true;
-            interpolation.CurrentData = new PlayerStateData(id, default, 0, transform.position, transform.rotation, CollisionFlags.None);
+            interpolation.CurrentData = new PlayerStateData(id, default, transform.position, transform.rotation, CollisionFlags.None);
             localControllerInitalized.Invoke(); //TODO: convert to code
 
             ClientStats.Instance.SetOwnPlayer(this);
@@ -156,13 +156,13 @@ public class ClientPlayer : MonoBehaviour
 
                     FirstPersonController fpController = GetComponent<FirstPersonController>();
 
-                    List<ReconciliationInfo> infos = reconciliationHistory.ToList();
+                    ReconciliationInfo[] infos = reconciliationHistory.ToArray();
                     interpolation.CurrentData = playerStateData;
                     Quaternion oldHeadRotation = fpController.camera.transform.rotation;
 
                     transform.SetPositionAndRotation(playerStateData.Position, playerStateData.Rotation);
                     
-                    for (int i = 0; i < infos.Count; i++)
+                    for (int i = 0; i < infos.Length; i++)
                     {
                         PlayerStateData u = playerLogic.GetNextFrameData(infos[i].Input, interpolation.CurrentData);
                         interpolation.SetFramePosition(u);
