@@ -1,37 +1,60 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using UnityEditor;
 
 public class SpawnManager : MonoBehaviour
 {
     public static SpawnManager Instance { get; private set; }
 
-#pragma warning disable SA1307 // Accessible fields should begin with upper-case letter
-    public List<Transform> spawners = new List<Transform>();
-#pragma warning restore SA1307 // Accessible fields should begin with upper-case letter
+    private Transform[] spawns;
+
     private void Awake()
     {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        Instance = this; //map specific
 
-        Instance = this;
-        DontDestroyOnLoad(this);
+        spawns = FindSpawns();
     }
 
     private void OnDestroy()
     {
-        Instance = null;
+        if (Instance == this)
+            Instance = null;
+    }
+
+    private Transform[] FindSpawns()
+    {
+        List<Transform> childrenAndSelf = transform.GetComponentsInChildren<Transform>().ToList();
+        childrenAndSelf.Remove(transform);
+        return childrenAndSelf.ToArray();
+    }
+
+    private void OnDrawGizmos()
+    {
+        var theSpawns = spawns;
+        if (theSpawns == null || theSpawns.Length == 0)
+        {
+            //true in editor
+            theSpawns = FindSpawns();
+        }
+
+        var color = Color.red;
+        color.a = 0.55f;
+        Gizmos.color = color;
+
+        foreach (Transform spawn in theSpawns)
+        {
+            Gizmos.DrawSphere(spawn.position, 1.2f);
+        }
     }
 
     public void GetSpawnpoint(ServerPlayer player, IEnumerable<ServerPlayer> allPlayers, out Vector3 position, out Quaternion rotation)
     {
         float bestValue = -float.MaxValue;
-        Transform bestSpawn = spawners[0];
+        Transform bestSpawn = spawns[0];
 
-        foreach (Transform spawn in spawners)
+        foreach (Transform spawn in spawns)
         {
             Vector3 point = spawn.position;
 
