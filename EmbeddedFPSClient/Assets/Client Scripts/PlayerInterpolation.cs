@@ -3,6 +3,7 @@
 public class PlayerInterpolation : MonoBehaviour
 {
     private double lastInputTime;
+    private Vector3 interpolatedVelocity;
 
     public PlayerStateData CurrentData { get; set; }
     public PlayerStateData PreviousData { get; private set; }
@@ -25,22 +26,23 @@ public class PlayerInterpolation : MonoBehaviour
         lastInputTime = Time.timeAsDouble;
     }
 
-    private Vector3 interpolatedVelocity;
-
     public void Update()
     {
         float timeSinceLastInput = (float)(Time.timeAsDouble - lastInputTime);
         float timeBetweenFrames = Constants.TickInterval;
         float t = timeSinceLastInput / timeBetweenFrames;
-        
+
         if (IsOwn)
         {
             transform.position = Vector3.LerpUnclamped(PreviousData.Position, CurrentData.Position, t);
+            //skip setting rotation for own player since we have authority over it
         }
         else
         {
-            transform.position = Vector3.SmoothDamp(transform.position, CurrentData.Position, ref interpolatedVelocity, 0.002f / Time.deltaTime, 1.05f * (CurrentData.Position - PreviousData.Position).magnitude / Time.deltaTime);
-            transform.rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
+            float smoothTime = 0.03f;
+            Vector3 position = Vector3.SmoothDamp(transform.position, CurrentData.Position, ref interpolatedVelocity, smoothTime);
+            Quaternion rotation = Quaternion.SlerpUnclamped(PreviousData.Rotation, CurrentData.Rotation, t);
+            transform.SetPositionAndRotation(position, rotation);
         }
     }
 }

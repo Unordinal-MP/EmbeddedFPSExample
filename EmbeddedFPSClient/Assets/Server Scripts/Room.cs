@@ -220,4 +220,15 @@ public class Room : MonoBehaviour
 
         killUpdateData.Add(killData);
     }
+
+    public void UpdateRespawn(ServerPlayer which)
+    {
+        var killData = new PlayerKillData()
+        {
+            Killer = which.Client.ID,
+            Victim = which.Client.ID,
+        };
+
+        killUpdateData.Add(killData);
+    }
 }

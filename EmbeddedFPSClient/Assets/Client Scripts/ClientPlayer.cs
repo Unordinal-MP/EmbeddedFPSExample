@@ -46,6 +46,8 @@ public class ClientPlayer : MonoBehaviour
 
     private int health;
 
+    public bool IsDead { get; set; }
+
     public int Kills { get; set; }
     public int Deaths { get; set; }
 
@@ -79,7 +81,7 @@ public class ClientPlayer : MonoBehaviour
         if (ConnectionManager.Instance.OwnPlayerId == id)
         {
             IsOwn = true;
-            interpolation.CurrentData = new PlayerStateData(id, default, 0, transform.position, transform.rotation, CollisionFlags.None);
+            interpolation.CurrentData = new PlayerStateData(id, default, transform.position, transform.rotation, CollisionFlags.None);
             localControllerInitalized.Invoke(); //TODO: convert to code
 
             ClientStats.Instance.SetOwnPlayer(this);
@@ -90,6 +92,8 @@ public class ClientPlayer : MonoBehaviour
 
     public void SetHealth(int value)
     {
+        //TODO: currently value of clientside health is minimal since updates are not guaranteed to eventually arrive
+
         health = value;
     }
 
@@ -108,7 +112,12 @@ public class ClientPlayer : MonoBehaviour
             }
             
             transform.position = interpolation.CurrentData.Position;
-            PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
+            PlayerStateData nextStateData;
+            if (IsDead)
+                nextStateData = playerLogic.GetDeathFrameData(inputData, interpolation.CurrentData);
+            else
+                nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
+            
             interpolation.SetFramePosition(nextStateData);
 
             if (outgoingInputData.Count >= PlayerInputMessage.MaxStackedInputs)
@@ -138,7 +147,7 @@ public class ClientPlayer : MonoBehaviour
                 reconciliationHistory.Dequeue();
             }
 
-            if (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
+            if (!IsDead && reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
 
@@ -156,13 +165,13 @@ public class ClientPlayer : MonoBehaviour
 
                     FirstPersonController fpController = GetComponent<FirstPersonController>();
 
-                    List<ReconciliationInfo> infos = reconciliationHistory.ToList();
+                    ReconciliationInfo[] infos = reconciliationHistory.ToArray();
                     interpolation.CurrentData = playerStateData;
                     Quaternion oldHeadRotation = fpController.camera.transform.rotation;
 
                     transform.SetPositionAndRotation(playerStateData.Position, playerStateData.Rotation);
                     
-                    for (int i = 0; i < infos.Count; i++)
+                    for (int i = 0; i < infos.Length; i++)
                     {
                         PlayerStateData u = playerLogic.GetNextFrameData(infos[i].Input, interpolation.CurrentData);
                         interpolation.SetFramePosition(u);

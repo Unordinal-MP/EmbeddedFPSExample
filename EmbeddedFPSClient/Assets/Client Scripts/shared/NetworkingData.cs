@@ -25,7 +25,6 @@ public enum PlayerAction
     Jump,
     Sprint,
     Fire,
-    Grounded,
     Aim,
     Reload,
     Inspect,
@@ -236,13 +235,12 @@ public struct PlayerDespawnData : IDarkRiftSerializable
 
 public struct PlayerStateData : IDarkRiftSerializable
 {
-    public PlayerStateData(ushort id, PlayerInputData input, float gravity, Vector3 position, Quaternion rotation, CollisionFlags collisionFlags)
+    public PlayerStateData(ushort id, PlayerInputData input, Vector3 position, Quaternion rotation, CollisionFlags collisionFlags)
     {
         PlayerId = id;
         Input = input;
         Position = position;
         Rotation = rotation;
-        Gravity = gravity;
         LatestCollision = collisionFlags;
     }
 
@@ -250,7 +248,6 @@ public struct PlayerStateData : IDarkRiftSerializable
     public PlayerInputData Input;
     public Vector3 Position;
     public Quaternion Rotation;
-    public float Gravity;
 
     //debug
     public CollisionFlags LatestCollision;
@@ -261,7 +258,6 @@ public struct PlayerStateData : IDarkRiftSerializable
         Position = new Vector3(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
         Rotation = new Quaternion(e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle(), e.Reader.ReadSingle());
         PlayerId = e.Reader.ReadUInt16();
-        Gravity = e.Reader.ReadSingle();
 
         byte latestCollision = e.Reader.ReadByte();
         LatestCollision = (CollisionFlags)latestCollision;
@@ -279,8 +275,8 @@ public struct PlayerStateData : IDarkRiftSerializable
         e.Writer.Write(Rotation.y);
         e.Writer.Write(Rotation.z);
         e.Writer.Write(Rotation.w);
+
         e.Writer.Write(PlayerId);
-        e.Writer.Write(Gravity);
 
         e.Writer.Write((byte)LatestCollision);
     }
@@ -391,6 +387,8 @@ public struct PlayerKillData : IDarkRiftSerializable
     public ushort Killer;
     public ushort Victim;
 
+    public bool IsRespawn => Killer == Victim; //TODO: make respawn message
+
     public PlayerKillData(ushort killer, ushort victim)
     {
         Killer = killer;
@@ -448,10 +446,10 @@ public struct PlayerInputData : IDarkRiftSerializable
         return KeyInputs[(int)action];
     }
 
-    public PlayerInputData(bool[] keyInputs, Quaternion lookdirection, uint time, uint sequenceNumber)
+    public PlayerInputData(bool[] keyInputs, Quaternion lookDirection, uint time, uint sequenceNumber)
     {
         KeyInputs = keyInputs;
-        LookDirection = lookdirection;
+        LookDirection = lookDirection;
         Time = time;
         SequenceNumber = sequenceNumber;
     }
