@@ -387,6 +387,8 @@ public struct PlayerKillData : IDarkRiftSerializable
     public ushort Killer;
     public ushort Victim;
 
+    public bool IsRespawn => Killer == Victim; //TODO: make respawn message
+
     public PlayerKillData(ushort killer, ushort victim)
     {
         Killer = killer;

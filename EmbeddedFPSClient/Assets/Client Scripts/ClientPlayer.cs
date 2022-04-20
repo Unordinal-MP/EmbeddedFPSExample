@@ -46,6 +46,8 @@ public class ClientPlayer : MonoBehaviour
 
     private int health;
 
+    public bool IsDead { get; set; }
+
     public int Kills { get; set; }
     public int Deaths { get; set; }
 
@@ -90,6 +92,8 @@ public class ClientPlayer : MonoBehaviour
 
     public void SetHealth(int value)
     {
+        //TODO: currently value of clientside health is minimal since updates are not guaranteed to eventually arrive
+
         health = value;
     }
 
@@ -108,7 +112,12 @@ public class ClientPlayer : MonoBehaviour
             }
             
             transform.position = interpolation.CurrentData.Position;
-            PlayerStateData nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
+            PlayerStateData nextStateData;
+            if (IsDead)
+                nextStateData = playerLogic.GetDeathFrameData(inputData, interpolation.CurrentData);
+            else
+                nextStateData = playerLogic.GetNextFrameData(inputData, interpolation.CurrentData);
+            
             interpolation.SetFramePosition(nextStateData);
 
             if (outgoingInputData.Count >= PlayerInputMessage.MaxStackedInputs)
@@ -138,7 +147,7 @@ public class ClientPlayer : MonoBehaviour
                 reconciliationHistory.Dequeue();
             }
 
-            if (reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
+            if (!IsDead && reconciliationHistory.Any() && reconciliationHistory.Peek().Frame == GameManager.Instance.LastReceivedServerTick)
             {
                 ReconciliationInfo info = reconciliationHistory.Dequeue();
 

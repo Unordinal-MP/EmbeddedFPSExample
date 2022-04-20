@@ -40,6 +40,33 @@ public class PlayerLogic : MonoBehaviour
         controller = GetComponent<CharacterController>();
     }
 
+    public PlayerStateData GetDeathFrameData(PlayerInputData input, PlayerStateData currentStateData)
+    {
+        float dt = Constants.TickInterval;
+
+        if (controller.enabled)
+            controller.enabled = false;
+
+        FirstPersonController fpController = GetComponent<FirstPersonController>();
+        Quaternion oldHeadRotation = Quaternion.identity;
+        if (fpController)
+        {
+            oldHeadRotation = fpController.camera.transform.rotation;
+        }
+
+        //fly to heaven
+        transform.position += 2.5f * Vector3.up * dt;
+        transform.RotateAround(Vector3.up, 30 * dt);
+
+        if (fpController)
+        {
+            fpController.camera.transform.rotation = oldHeadRotation;
+            fpController.camera.transform.RotateAround(Vector3.up, 5 * dt);
+        }
+
+        return new PlayerStateData(currentStateData.PlayerId, input, transform.position, transform.rotation, CollisionFlags.None);
+    }
+
     public PlayerStateData GetNextFrameData(PlayerInputData input, PlayerStateData currentStateData)
     {
         float dt = Constants.TickInterval;
@@ -136,6 +163,9 @@ public class PlayerLogic : MonoBehaviour
         }
 
         _movementDir.y = _yChange;
+
+        if (!controller.enabled)
+            controller.enabled = true;
 
         //TODO: decompose fullFowardSpeed application (see inserted comment earlier) so we don't scale EVERYTHING by this value
         CollisionFlags flags = controller.Move(dt * fullFowardSpeed * _movementDir);

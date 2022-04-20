@@ -108,6 +108,17 @@ public class GameManager : MonoBehaviour
         victim.Deaths += 1;
 
         //jury is out on whether we should manipulate health here
+
+        victim.IsDead = true;
+    }
+
+    private void OnRespawn(PlayerKillData kill)
+    {
+        ClientPlayer victim = players[kill.Victim];
+
+        victim.IsDead = false;
+
+        Debug.Log("respawned");
     }
 
     private void OnGameJoinAccept(GameStartData gameStartData)
@@ -233,7 +244,10 @@ public class GameManager : MonoBehaviour
 
         foreach (PlayerKillData data in gameUpdateData.KillDataData)
         {
-            OnKill(data);
+            if (data.IsRespawn)
+                OnRespawn(data);
+            else
+                OnKill(data);
         }
     }
 

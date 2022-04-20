@@ -85,11 +85,35 @@ public class HudManager : MonoBehaviour
             MakeDebugView();
         }
 
-        //temp implementation of scoreboard
+        //temp implementation
         MakeScoreboard();
 
-        //temp implementation of name signs
+        //temp implementation
         MakeNameSigns();
+
+        //temp implementation
+        MakeDeathNotice();
+    }
+
+    private void MakeDeathNotice()
+    {
+        if (GameManager.Instance == null)
+            return;
+
+        ClientPlayer player = GameManager.Instance.OwnPlayer;
+        if (player == null)
+            return;
+
+        if (player.IsDead)
+        {
+            int insetX = (Screen.width - 200) / 2;
+            int insetY = (Screen.height - 200) / 2;
+            Rect central = new Rect(insetX, insetY, Screen.width - 2 * insetX, Screen.height - 2 * insetY); ;
+
+            GUILayout.BeginArea(central);
+            GUILayout.Label("You are dead and going to heaven");
+            GUILayout.EndArea();
+        }
     }
 
     private void MakeDebugView()

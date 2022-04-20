@@ -29,6 +29,8 @@ public class ServerPlayer : MonoBehaviour
 
     public Vector3 SpawnPosition { get; private set; }
 
+    public bool IsDead => health <= 0;
+
     private void Awake()
     {
         PlayerLogic = GetComponent<PlayerLogic>();
@@ -65,6 +67,8 @@ public class ServerPlayer : MonoBehaviour
         transform.SetPositionAndRotation(position, rotation);
 
         currentPlayerStateData = new PlayerStateData(Client.ID, default, position, rotation, CollisionFlags.None);
+
+        room.UpdateRespawn(this);
     }
 
     public void RecieveInput(PlayerInputData input)
@@ -90,6 +94,9 @@ public class ServerPlayer : MonoBehaviour
 
     public void TakeDamage(int value, ServerPlayer shooter)
     {
+        if (health <= 0)
+            return;
+        
         health -= value;
         if (health <= 0)
         {
@@ -103,7 +110,7 @@ public class ServerPlayer : MonoBehaviour
     {
         room.UpdateKill(shooter, this);
 
-        Respawn();
+        Invoke(nameof(Respawn), Constants.RespawnTime);
     }
 
     //private uint nextseq;
@@ -147,7 +154,10 @@ public class ServerPlayer : MonoBehaviour
                 input.LookDirection = inputs[i].LookDirection;
             }
 
-            currentPlayerStateData = PlayerLogic.GetNextFrameData(input, currentPlayerStateData);
+            if (IsDead)
+                currentPlayerStateData = PlayerLogic.GetDeathFrameData(input, currentPlayerStateData);
+            else
+                currentPlayerStateData = PlayerLogic.GetNextFrameData(input, currentPlayerStateData);
         }
         
         PlayerStateDataHistory.Add(currentPlayerStateData);
