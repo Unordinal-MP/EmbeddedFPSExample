@@ -17,6 +17,7 @@ public class ServerManager : MonoBehaviour
     {
         if (Instance != null)
         {
+            Debug.Log("Destroying redundant ServerManager instance");
             Destroy(gameObject);
             return;
         }
@@ -27,6 +28,8 @@ public class ServerManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("Starting ServerManager");
+
         Time.fixedDeltaTime = Constants.TickInterval;
 
         XmlUnityServer xmlServer = GetComponent<XmlUnityServer>();

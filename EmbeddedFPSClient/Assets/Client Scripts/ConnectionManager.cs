@@ -13,7 +13,7 @@ public class ConnectionManager : MonoBehaviour
     public string Hostname;
     [SerializeField]
     private int port;
-    private readonly int udport = 4297;
+    private readonly int udpPort = 4296;
 
     [Header("References")]
     [SerializeField]
@@ -24,8 +24,6 @@ public class ConnectionManager : MonoBehaviour
     public ushort OwnPlayerId { get; set; }
 
     public LobbyInfoData LobbyInfoData { get; set; }
-
-    private LiteNetNetworkClientConnection clientConnection;
 
     public delegate void OnConnectedDelegate();
     public event OnConnectedDelegate OnConnected;
@@ -48,18 +46,8 @@ public class ConnectionManager : MonoBehaviour
         {
             hostname = "127.0.0.1";
         }
-
-        clientConnection = new LiteNetNetworkClientConnection(hostname, (ushort)port);
         
-        Client.Client.ConnectInBackground(clientConnection, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
-    }
-
-    private void Update()
-    {
-        if (clientConnection != null)
-        {
-            clientConnection.Update();
-        }
+        Client.ConnectInBackground(hostname, port, udpPort, true, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
     }
 
     private void ConnectCallback(Exception exception)
