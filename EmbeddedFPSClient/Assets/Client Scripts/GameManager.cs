@@ -36,6 +36,7 @@ public class GameManager : MonoBehaviour
             //is is client
             if (Instance != null)
             {
+                Debug.Log("Destroying redundant GameManager");
                 Destroy(gameObject);
             }
             else
@@ -47,6 +48,7 @@ public class GameManager : MonoBehaviour
         else
         {
             //if is server
+            Debug.Log("Destroying GameManager because ServerManager already exists");
             Destroy(gameObject);
         }
     }
@@ -62,6 +64,8 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
+        Debug.Log("Starting GameManager");
+
         players = new Dictionary<ushort, ClientPlayer>();
         gameUpdateDataBuffer = new Buffer<UnreliableGameUpdateData>(1, 1);
         receivedGameUpdates = new CircularBuffer<uint>(40);
@@ -117,8 +121,6 @@ public class GameManager : MonoBehaviour
         ClientPlayer victim = players[kill.Victim];
 
         victim.IsDead = false;
-
-        Debug.Log("respawned");
     }
 
     private void OnGameJoinAccept(GameStartData gameStartData)
