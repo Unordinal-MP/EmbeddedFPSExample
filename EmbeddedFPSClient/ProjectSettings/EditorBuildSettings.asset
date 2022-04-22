@@ -12,9 +12,6 @@ EditorBuildSettings:
     path: Assets/Client.unity
     guid: 6883dcc58a8580143983000e0c6e5be2
   - enabled: 1
-    path: Assets/Scenes/Lobby.unity
-    guid: 08e9a636e34f32c489e725586efb63ee
-  - enabled: 1
     path: Assets/DevIos-Map/Map1.unity
     guid: 4ab3269e33cd8c944a982ec87ff1f484
   m_configObjects:

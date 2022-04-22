@@ -1,21 +1,17 @@
 ﻿using System;
 using System.Net;
+using System.Reflection;
 using DarkRift;
 using DarkRift.Client.Unity;
 using UnityEngine;
 
-[RequireComponent(typeof(UnityClient))]
 public class ConnectionManager : MonoBehaviour
 {
     public static ConnectionManager Instance { get; private set; }
 
-    [Header("Settings")]
-    public string Hostname;
-    [SerializeField]
-    private int port;
-    private readonly int udpPort = 4296;
+    public string Hostname = "127.0.0.1";
+    public int Port = 4296;
 
-    [Header("References")]
     [SerializeField]
     private LoginManager loginManager;
 
@@ -25,8 +21,11 @@ public class ConnectionManager : MonoBehaviour
 
     public LobbyInfoData LobbyInfoData { get; set; }
 
+    private LiteNetNetworkClientConnection clientConnection;
+
     public delegate void OnConnectedDelegate();
     public event OnConnectedDelegate OnConnected;
+
     private void Awake()
     {
         if (Instance != null)
@@ -37,17 +36,29 @@ public class ConnectionManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(this);
-        Client = GetComponent<UnityClient>();
+
+        Client = gameObject.AddComponent<UnityClient>();
+        Client.GetType().GetField("connectOnStart", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Client, false);
     }
 
-    public void Connect(string hostname)
+    public void Connect(Action<Exception> onDone)
     {
-        if (hostname == "localhost")
+        if (Hostname == "localhost")
         {
-            hostname = "127.0.0.1";
+            Hostname = "127.0.0.1";
         }
-        
-        Client.ConnectInBackground(hostname, port, udpPort, true, (e) => Client.Dispatcher.InvokeAsync(() => ConnectCallback(e)));
+
+        clientConnection = new LiteNetNetworkClientConnection(Hostname, (ushort)Port);
+        //Client.ConnectInBackground(Hostname, Port, true, ex => Client.Dispatcher.InvokeAsync(() => { onDone(ex); ConnectCallback(ex); }));
+        Client.Client.ConnectInBackground(clientConnection, ex => Client.Dispatcher.InvokeAsync(() => { onDone(ex); ConnectCallback(ex); }));
+    }
+
+    private void Update()
+    {
+        if (clientConnection != null)
+        {
+            clientConnection.Update();
+        }
     }
 
     private void ConnectCallback(Exception exception)
