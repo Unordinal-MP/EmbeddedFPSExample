@@ -1,20 +1,18 @@
 # How to Build a Multiplayer Game, a humble template
 
-Welcome to the this tutorial which aim to give you the help needed to start your own multiplayer game development.
-In this template game you will find a fully functional FPS game with an authorative server, built in cloud hosting capabilities on the Unordinal platform, automatic server discoverability for clients, on click deployment of your server to cloud, automatic client sharing with your friends.
+Welcome to the this tutorial which aims to give you the help needed to start developing your own multiplayer game.
 
-The team at unordinal will support this template and will, over the coming time, extend it with additional functionality such as:
+After cloning but **before you open the project in Unity**, please download and unzip the external assets archive from https://drive.google.com/file/d/1d-QGKSQvc69VgRJXO5rhPQF6SPK-w9xk/view?usp=sharing into your Unity Assets folder. The reason for this is to prevent Git clone operation from choking for users with low connection bandwidth.
 
+In this template game you will find a fully functional FPS game with an authorative server, built-in cloud hosting capabilities on the Unordinal platform, automatic server discoverability for clients, one click deployment of your server to cloud, automatic client sharing with your friends.
 
-
-Adittional to the features provided in the template, you will also find a tutorial and documentation where you can learn more about how to create an authoritative multiplayer first person shooter game with Unity and [Darkrift 2](https://darkriftnetworking.com/DarkRift2).
+Additionally to the features provided in the template, you will also find a tutorial and documentation where you can learn more about how to create an authoritative multiplayer first person shooter game with Unity and [Darkrift 2](https://darkriftnetworking.com/DarkRift2).
 
 The tutorial will cover the following subjects:
 
 - Multiplayer game project architecture
 - Darkrift 2 basics.
-- Choosing between an embedded and a standalone Darkrift server.
-- Basic room management
+- Embedded Darkrift server.
 - Client prediction, reconciliation, interpolation, authoritative movement.
 - Lag compensation (shooting in an FPS game)
 
