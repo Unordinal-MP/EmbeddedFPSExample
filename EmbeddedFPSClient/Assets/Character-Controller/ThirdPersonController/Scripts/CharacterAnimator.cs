@@ -22,6 +22,8 @@ public class CharacterAnimator : MonoBehaviour, IServerUpdateListener
 
     private int isHitID;
 
+    private int isJumpingID;
+
     private void Awake()
     {
         if (!animator)
@@ -36,6 +38,7 @@ public class CharacterAnimator : MonoBehaviour, IServerUpdateListener
         isReloadingID = Animator.StringToHash("isReloading");
         isShootingID = Animator.StringToHash("Shoot");
         isHitID = Animator.StringToHash("isHit");
+        isJumpingID = Animator.StringToHash("isJumping");
     }
 
     public void OnServerDataUpdate(PlayerStateData playerStateData, bool isOwn)
@@ -63,6 +66,7 @@ public class CharacterAnimator : MonoBehaviour, IServerUpdateListener
         SetBool(isAimingID, playerStateData.Input.HasAction(PlayerAction.Aim));
 
         SetTrigger(isReloadingID, playerStateData.Input.HasAction(PlayerAction.Reload));
+        SetTrigger(isJumpingID, playerStateData.Input.HasAction(PlayerAction.Jump));
     }
 
     private void SetBool(int id, bool value)

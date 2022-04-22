@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: 983a619afdc9ee245bd2d09b92535a96
+guid: ed14f7e3560a7c5429555719023c5a0c
 ModelImporter:
   serializedVersion: 20200
   internalIDToNameTable:
   - first:
       74: -203655887218126122
-    second: mixamo.com
+    second: hit
   externalObjects: {}
   materials:
     materialImportMode: 2
@@ -35,7 +35,7 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: mixamo.com
+      name: hit
       takeName: mixamo.com
       internalID: 0
       firstFrame: 0
@@ -48,7 +48,7 @@ ModelImporter:
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
-      loopBlendOrientation: 1
+      loopBlendOrientation: 0
       loopBlendPositionY: 0
       loopBlendPositionXZ: 0
       keepOriginalOrientation: 0
@@ -905,7 +905,7 @@ ModelImporter:
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: b0581b6e7bc8ebb46a5c1dabf8e25597,
+  lastHumanDescriptionAvatarSource: {fileID: 9000000, guid: 8f866461b1c983e42826cb28e2f09017,
     type: 3}
   autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 3
