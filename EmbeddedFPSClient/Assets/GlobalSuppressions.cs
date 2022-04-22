@@ -13,6 +13,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Major Bug", "S3903:Types should be defined in named namespaces", Justification = "Unity conventions")]
 [assembly: SuppressMessage("Minor Code Smell", "S1104:Fields should not have public accessibility", Justification = "Unity conventions")]
 [assembly: SuppressMessage("Minor Code Smell", "S3267:Loops should be simplified with \"LINQ\" expressions", Justification = "Unity conventions, bad performance")]
+[assembly: SuppressMessage("Major Code Smell", "S3011:Reflection should not be used to increase accessibility of classes, methods, or fields", Justification = "Don't modify interface of DR2 Unity Client", Scope = "member", Target = "~M:ConnectionManager.Awake")]
 
 //StyleCop
 //order rules have been temp disabled due to enormous diffs caused
