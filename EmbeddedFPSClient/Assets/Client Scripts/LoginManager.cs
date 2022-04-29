@@ -4,6 +4,7 @@ using DarkRift.Client;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Unordinal.Discoverability;
 
 public class LoginManager : MonoBehaviour
 {
@@ -12,12 +13,33 @@ public class LoginManager : MonoBehaviour
     public InputField HostInput;
     public InputField PortInput;
     public Button SubmitLoginButton;
+    public Button ManualConnectButton;
+    public ServerBrowser ServerBrowser;
+    private double lastServerRefresh;
 
     private void Start()
     {
         ConnectionManager.Instance.OnConnected += OnConnected;
-        SubmitLoginButton.onClick.AddListener(StartConnectingIfPossible);
         ConnectionManager.Instance.Client.MessageReceived += OnMessage;
+
+        SubmitLoginButton.onClick.AddListener(StartConnectingIfPossible);
+        ManualConnectButton.onClick.AddListener(delegate { LoginWindow.SetActive(!LoginWindow.activeSelf); });
+
+        LoginWindow.SetActive(false);
+
+        DiscoverabilityClientApi.Connect = server =>
+        {
+            HostInput.text = server.IpAddress;
+            PortInput.text = "4296";
+            if (NameInput.text == "")
+            {
+                SetRandomPlayerName();
+            }
+
+            StartConnectingIfPossible();
+        };
+
+        InvokeRepeating(nameof(CheckRefreshServers), 1, 1);
     }
 
     private void OnDestroy()
@@ -26,16 +48,35 @@ public class LoginManager : MonoBehaviour
         ConnectionManager.Instance.Client.MessageReceived -= OnMessage;
     }
 
+    private void CheckRefreshServers()
+    {
+        if (Time.realtimeSinceStartup - lastServerRefresh < 30)
+            return;
+
+        RefreshServers();
+    }
+
+    public void RefreshServers()
+    {
+        lastServerRefresh = Time.realtimeSinceStartup;
+        ServerBrowser.RefreshServers();
+    }
+
     public void OnConnected()
     {
         SubmitLogin();
+    }
+
+    private void SetRandomPlayerName()
+    {
+        NameInput.text = "Beginner" + UnityEngine.Random.Range(1, 100);
     }
 
     private void StartConnectingIfPossible()
     {
         if (NameInput.text == "")
         {
-            NameInput.text = "Beginner" + UnityEngine.Random.Range(1, 100);
+            SetRandomPlayerName();
             return;
         }
 
@@ -52,11 +93,12 @@ public class LoginManager : MonoBehaviour
         }
 
         LoginWindow.SetActive(false);
+        ServerBrowser.gameObject.SetActive(false);
 
         var connectionManager = ConnectionManager.Instance;
         connectionManager.Hostname = hostname;
         connectionManager.Port = ushort.Parse(port);
-        connectionManager.Connect(ex => LoginWindow.SetActive(true));
+        connectionManager.Connect(ex => OnLoginDecline());
     }
 
     private void OnMessage(object sender, MessageReceivedEventArgs e)
@@ -98,7 +140,7 @@ public class LoginManager : MonoBehaviour
 
     private void OnLoginDecline()
     {
-        LoginWindow.SetActive(true);
+        ServerBrowser.gameObject.SetActive(true);
     }
 
     private void OnLoginAccept(LoginInfoData data)
