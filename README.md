@@ -82,6 +82,7 @@ Because of licence restrictions, you must download the animations from Mixamo yo
 * Drag and drop the animation assets' mixamo.com sub-assets into the CharacterPrimary's corresponding slots.
 
 That's it; the animations should now be visible in-game.
+</details>
 
 ## Special Thanks
 Special thanks to [LukeStampfli](https://github.com/LukeStampfli/EmbeddedFPSExample) for the orignial technical DR2 template project which handles the DR2 networking model.
