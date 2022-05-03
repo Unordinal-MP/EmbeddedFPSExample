@@ -40,7 +40,7 @@ Additionally to the features provided in the template, you will also find a tuto
 * Download and install Unity.
 * Download the additional assets and clone this template from Github.
 * Create an account on Unordinal.com and download the Unity plugin.
-* Open this template game in Unity and select "Play with Friends" using the Unordinal plugin.
+* Open this template game in Unity and select "Play with Friends" using the Unordinal plugin. **Select Server as the server start scene and Client as the client start scene.**
 * Play your own first-person shooter game with your friends.
 
 Here are a few more details to make sure everything works for you:
@@ -92,3 +92,7 @@ That's it; the animations should now be visible in-game.
 Special thanks to [LukeStampfli](https://github.com/LukeStampfli/EmbeddedFPSExample) for the orignial technical DR2 template project which handles the DR2 networking model.
 Special thanks to [DevIos01](https://github.com/DevIos01/FPS-Starter-Assets) for sharing his Graphical Game Assets used in this template.
 Special thanks to [KABBOUCHI](https://github.com/KABBOUCHI) for converting this tutorial into a website.
+
+## Known Issues that will be fixed
+* There is currently an issue which incorrectly sets the aiming direction of animations for other players.
+* Rarely the client fails to initialize correctly (presumingly due to some timing dependency).
