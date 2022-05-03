@@ -88,3 +88,6 @@ That's it; the animations should now be visible in-game.
 Special thanks to [LukeStampfli](https://github.com/LukeStampfli/EmbeddedFPSExample) for the orignial technical DR2 template project which handles the DR2 networking model.
 Special thanks to [DevIos01](https://github.com/DevIos01/FPS-Starter-Assets) for sharing his Graphical Game Assets used in this template.
 Special thanks to [KABBOUCHI](https://github.com/KABBOUCHI) for converting this tutorial into a website.
+
+## Additional comment
+There is currently an issue which incorrectly sets the aiming direction of animations for other players, we are working on fixing this ASAP.
