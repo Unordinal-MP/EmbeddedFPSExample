@@ -56,11 +56,15 @@ Because of licence restrictions, you must download the animations from Mixamo yo
 
 * Open https://www.mixamo.com/ and sign in or create a Mixamo account with Adobe if necessary.
   
-* Navigate to the "Animations" tab and look for "Basic Shooter Pack.
+* Navigate to the Animations tab and look for "Basic Shooter Pack.
   
-* Choose the Basic Shooter Pack (it should have 16 animations, beware of the similarly named Shooter Pack and Slim Shooter Pack)
+* Choose the Basic Shooter Pack (it should have 16 animations, beware of the similarly named Shooter Pack and Slim Shooter Pack).
   
-* When you press the Download button to the right, a "Basic Shooter Pack.zip" file should be downloaded.
+* Click Upload Character and drag the Armature.fbx from EmbeddedFPSClient/Assets/Character/Models to the drop area on Maximo (or press the upload button and choose that folder on your disk).
+
+* Once the upload has completed, click through Next and Next. At this point the model should be playing a run animation in the preview to the right.
+  
+* Press the Download button to the right, a "Basic Shooter Pack.zip" file will be downloaded.
   
 * Unzip the file into the EmbeddedFPSClient/Assets/Character/Animations folder.
   
@@ -73,13 +77,13 @@ Because of licence restrictions, you must download the animations from Mixamo yo
   
 * Select Copy from Avatar.
   
-* Select AvatarArmature as the Source.
+* Select CharacterAvatar as the Source.
   
 * To save your changes, click Apply. If everything went well, the files should re-import without any warnings or errors in the console.
   
 * Select the asset CharacterPrimary.
   
-* Drag and drop the animation assets' mixamo.com sub-assets into the CharacterPrimary's corresponding slots.
+* Drag and drop the animation assets' mixamo.com sub-assets into the CharacterPrimary's corresponding slots. It is important that you drag the sub-clips called "mixamo.com" and not the parent clips, counter-intuitive as it may seem.
 
 That's it; the animations should now be visible in-game.
 </details>
