@@ -542,3 +542,5 @@ sysinfo.txt
 */Hosting_builds
 /EmbeddedFPSClient/*.vsconfig
 /EmbeddedFPSClient/Data
+/EmbeddedFPSClient/Assets/Resources/Unordinal/GameId.txt
+/EmbeddedFPSClient/Assets/Resources/Unordinal/GameId.txt.meta
