@@ -3,6 +3,7 @@ using System.Linq;
 using DarkRift;
 using DarkRift.Client;
 using UnityEngine;
+using LootLocker.Requests;
 
 public class GameManager : MonoBehaviour
 {
@@ -28,6 +29,14 @@ public class GameManager : MonoBehaviour
     private Queue<UnreliableGameUpdateData> updateQueue;
 
     public int UpdateQueueLength => updateQueue.Count;
+
+    private int currentPlayerIdentifier;
+
+    public string OnlineLeaderboardString;
+
+    public string LootLockerPlayerName;
+
+    public string LootLockerIdentifier;
 
     private void Awake()
     {
@@ -112,8 +121,8 @@ public class GameManager : MonoBehaviour
         victim.Deaths += 1;
 
         //jury is out on whether we should manipulate health here
-
-        victim.IsDead = true;
+        RegisterKillOnOnlineLeaderboard(killer);
+        victim.IsDead = true;  
     }
 
     private void OnRespawn(PlayerKillData kill)
@@ -131,6 +140,7 @@ public class GameManager : MonoBehaviour
         {
             SpawnPlayer(playerSpawnData, "OnGameJoinAccept");
         }
+        StartLootLockerSession();
     }
 
     private void OnUnreliableGameUpdate(UnreliableGameUpdateData gameUpdateData)
@@ -276,5 +286,120 @@ public class GameManager : MonoBehaviour
                 }
             }
         }
+    }
+
+    private void UpdateOnlineLeaderboard()
+    {
+        // Update and format leaderboard string
+        LootLockerSDKManager.GetScoreList("playerKillsLeaderboard", 10, (scoreResponse) =>
+        {
+            if (scoreResponse.success)
+            {
+                OnlineLeaderboardString = "";
+                for (int i = 0; i < scoreResponse.items.Length; i++)
+                {
+                    LootLockerLeaderboardMember currentEntry = scoreResponse.items[i];
+                    OnlineLeaderboardString += currentEntry.rank + ". ";
+                    OnlineLeaderboardString += currentEntry.player.name;
+                    OnlineLeaderboardString += " - " + currentEntry.score;
+                    OnlineLeaderboardString += "\n";
+                }
+            }
+        });
+    }
+
+    private void RegisterKillOnOnlineLeaderboard(ClientPlayer killer)
+    {
+        // Upload current kills to leaderboard
+        if (killer == OwnPlayer)
+        {
+            // When releasing use the saved identifier from the lootlocker response instead
+            LootLockerSDKManager.SubmitScore(LootLockerIdentifier, killer.Kills, "playerKillsLeaderboard", "metadata", (scoreResponse) =>
+            {
+                if (scoreResponse.success)
+                {
+                    Debug.Log("Succesfully uploaded score");
+                    UpdateOnlineLeaderboard();
+                }
+                else
+                {
+                    Debug.Log("Failed to upload score:" + scoreResponse.Error);
+                }
+            });
+        }
+        else
+        {
+            UpdateOnlineLeaderboard();
+        }
+    }
+
+    private void StartLootLockerSession()
+    {
+        
+        // Only for debugging
+        // Give every new player a new random identifier, there is a chance that 2 are the same but highly unlikely
+        // this is to support multiple users on the same machine
+        LootLockerIdentifier = "player#" + Random.Range(0,int.MaxValue).ToString();
+
+        // When releasing use StartGuestSession((guestResponse)), without identifier
+        LootLockerSDKManager.StartGuestSession(LootLockerIdentifier, (guestResponse) =>
+        {
+            if (guestResponse.success)
+            {
+                Debug.Log("LootLocker guest session started.");
+                //Update leaderboards
+                UpdateOnlineLeaderboard();
+                // If it is a new player, set a random name
+                if (guestResponse.seen_before == false)
+                {
+                    string[] randomAnimal = { "Racoon", "Turtle", "Seagull", "Rabbit", "Squirrel", "Shark", "Elephant", "Horse", "Sheep" };
+                    int randomNumber = Random.Range(11111, 99999);
+                    string newPlayerName = randomAnimal[Random.Range(0, randomAnimal.Length)] + "#" + randomNumber.ToString();
+                    LootLockerSDKManager.SetPlayerName(newPlayerName, (nameResponse) =>
+                    {
+                        if(nameResponse.success)
+                        {
+                            Debug.Log("Set new players name to:" + nameResponse.name);
+                            LootLockerPlayerName = nameResponse.name;
+                        }
+                        else
+                        {
+                            Debug.Log("Could not set player name:" + nameResponse.Error);
+                        }
+                    });
+                }
+                else
+                {
+                    // Otherwise get the name
+                    LootLockerSDKManager.GetPlayerName((getNameResponse) =>
+                    {
+                        if(getNameResponse.success)
+                        {
+                            LootLockerPlayerName = getNameResponse.name;
+                        }
+                    });
+                }
+            }
+            else
+            {
+                Debug.Log("Could not start guest session:" + guestResponse.Error);
+            }
+        });
+    }
+
+    private void EndLootLockerSession()
+    {
+        LootLockerSessionRequest newSession = new LootLockerSessionRequest();
+        LootLocker.LootLockerAPIManager.EndSession(newSession, (response) =>
+        {
+            if (response.success)
+            {
+                Debug.Log("Ended lootlocker session.");
+            }
+            else
+            {
+                Debug.Log("Could not end session, " + response.Error);
+            }
+        });
     }
 }
