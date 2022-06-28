@@ -5,6 +5,7 @@ using System.Linq;
 using DarkRift.Client.Unity;
 using UnityEngine;
 using UnityEngine.UI;
+using LootLocker.Requests;
 
 public class HudManager : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class HudManager : MonoBehaviour
     private string byteInRate;
     private string reconciliationRate;
     private string confirmationRate;
+    private string leaderboards;
 
     public bool AnyOnGuiClicked { get; set; }
 
@@ -165,9 +167,15 @@ public class HudManager : MonoBehaviour
         {
             GUILayout.Label(player.PlayerName + "   " + player.Kills + " kills  " + player.Deaths + " deaths");
         }
-        
+
+        // Online leaderboards
+        GUILayout.Label("\nLootLocker");
+        GUILayout.Label("LootLockerPlayerName:"+GameManager.Instance.LootLockerPlayerName);
+        GUILayout.Label("\nLootLocker max kills leaderboard");
+        GUILayout.Label(GameManager.Instance.OnlineLeaderboardString);
         GUILayout.EndArea();
     }
+
 
     private void MakeNameSigns()
     {
