@@ -5,6 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Unordinal.Discoverability;
+using LootLocker.Requests;
+using Random = UnityEngine.Random;
 
 public class LoginManager : MonoBehaviour
 {
@@ -16,7 +18,6 @@ public class LoginManager : MonoBehaviour
     public Button ManualConnectButton;
     public ServerBrowser ServerBrowser;
     private double lastServerRefresh;
-
     private void Start()
     {
         ConnectionManager.Instance.OnConnected += OnConnected;
@@ -127,11 +128,9 @@ public class LoginManager : MonoBehaviour
         Debug.Log("Submitting login");
 
         LoginWindow.SetActive(false);
+        StartLootLockerSession();
 
-        if (string.IsNullOrEmpty(NameInput.text))
-        {
-            NameInput.text = "Unnamed Player";
-        }
+
 
         using Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(NameInput.text));
         
@@ -170,5 +169,61 @@ public class LoginManager : MonoBehaviour
     public void OnRoomJoinAcepted()
     {
         SceneManager.LoadScene("Map1");
+    }
+
+    private void StartLootLockerSession()
+    {
+        if (string.IsNullOrEmpty(NameInput.text))
+        {
+            SetRandomPlayerName();
+        }
+
+        string player_identifier = NameInput.text;
+
+        LootLockerSDKManager.StartGuestSession(player_identifier,(guestResponse) =>
+        {
+            if (guestResponse.success)
+            {
+                Debug.Log("LootLocker guest session started.");
+
+                PlayerPrefs.SetInt("PlayerID", guestResponse.player_id);
+                PlayerPrefs.SetString("PlayerName", NameInput.text);
+                PlayerPrefs.Save();
+
+                // If it is a new player, set a random name
+                if (guestResponse.seen_before == false)
+                {
+
+                    string newPlayerName = NameInput.text;
+
+                    LootLockerSDKManager.SetPlayerName(newPlayerName, (nameResponse) =>
+                    {
+                        if (nameResponse.success)
+                        {
+                            Debug.Log("Set new players name to:" + nameResponse.name);
+                        }
+                        else
+                        {
+                            Debug.Log("Could not set player name:" + nameResponse.Error);
+                        }
+                    });
+                }
+                else
+                {
+                    // Otherwise get the name
+                    LootLockerSDKManager.GetPlayerName((getNameResponse) =>
+                    {
+                        if (getNameResponse.success)
+                        {
+                            NameInput.text = getNameResponse.name;
+                        }
+                    });
+                }
+            }
+            else
+            {
+                Debug.Log("Could not start guest session:" + guestResponse.Error);
+            }
+        });
     }
 }

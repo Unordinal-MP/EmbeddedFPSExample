@@ -170,7 +170,7 @@ public class HudManager : MonoBehaviour
 
         // Online leaderboards
         GUILayout.Label("\nLootLocker");
-        GUILayout.Label("LootLockerPlayerName:"+GameManager.Instance.LootLockerPlayerName);
+        GUILayout.Label("LootLockerPlayerName:"+ PlayerPrefs.GetString("PlayerName"));
         GUILayout.Label("\nLootLocker max kills leaderboard");
         GUILayout.Label(GameManager.Instance.OnlineLeaderboardString);
         GUILayout.EndArea();
