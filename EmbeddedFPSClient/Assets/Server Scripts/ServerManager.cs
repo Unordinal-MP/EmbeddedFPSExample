@@ -81,7 +81,7 @@ public class ServerManager : MonoBehaviour
     private void OnClientLogin(IClient client, LoginRequestData data)
     {
         //not an example of a high quality word filter implementation
-        if (data.Name.ToLower().Contains("hitler"))
+        if (data.Name.ToLower().Contains("hitler")) // we could add a open source bad word list to filter if needed
         {
             Debug.Log("Player denied");
 

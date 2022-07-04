@@ -413,7 +413,7 @@ public class GameManager : MonoBehaviour
             if (response.success)
             {
                 PlayerPrefs.DeleteKey("LootLockerGuestPlayerID");
-                PlayerPrefs.DeleteKey("PlayerID");
+                PlayerPrefs.DeleteKey("PlayerID"); // remove it when doing prod (delete seession id on application key)
                 PlayerPrefs.DeleteKey("PlayerName");
 
                 Debug.Log("Ended lootlocker session.");

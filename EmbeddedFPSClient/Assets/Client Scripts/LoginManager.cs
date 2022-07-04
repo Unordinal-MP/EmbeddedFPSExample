@@ -11,13 +11,13 @@ using Random = UnityEngine.Random;
 public class LoginManager : MonoBehaviour
 {
     public GameObject LoginWindow;
-    public InputField NameInput;
     public InputField HostInput;
     public InputField PortInput;
     public Button SubmitLoginButton;
     public Button ManualConnectButton;
     public ServerBrowser ServerBrowser;
     private double lastServerRefresh;
+    private string NameInput;
     private void Start()
     {
         ConnectionManager.Instance.OnConnected += OnConnected;
@@ -32,10 +32,9 @@ public class LoginManager : MonoBehaviour
         {
             HostInput.text = server.IpAddress;
             PortInput.text = "4296";
-            if (NameInput.text == "")
-            {
+            
                 SetRandomPlayerName();
-            }
+
 
             StartConnectingIfPossible();
         };
@@ -70,12 +69,12 @@ public class LoginManager : MonoBehaviour
 
     private void SetRandomPlayerName()
     {
-        NameInput.text = "Beginner" + UnityEngine.Random.Range(1, 100);
+        NameInput = "Beginner" + UnityEngine.Random.Range(1, 100);
     }
 
     private void StartConnectingIfPossible()
     {
-        if (NameInput.text == "")
+        if (NameInput == "")
         {
             SetRandomPlayerName();
             return;
@@ -132,7 +131,7 @@ public class LoginManager : MonoBehaviour
 
 
 
-        using Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(NameInput.text));
+        using Message message = Message.Create((ushort)Tags.LoginRequest, new LoginRequestData(NameInput));
         
         ConnectionManager.Instance.Client.SendMessage(message, SendMode.Reliable);
     }
@@ -173,12 +172,12 @@ public class LoginManager : MonoBehaviour
 
     private void StartLootLockerSession()
     {
-        if (string.IsNullOrEmpty(NameInput.text))
+        if (string.IsNullOrEmpty(NameInput))
         {
             SetRandomPlayerName();
         }
 
-        string player_identifier = NameInput.text;
+        string player_identifier = NameInput;
 
         LootLockerSDKManager.StartGuestSession(player_identifier,(guestResponse) =>
         {
@@ -187,14 +186,14 @@ public class LoginManager : MonoBehaviour
                 Debug.Log("LootLocker guest session started.");
 
                 PlayerPrefs.SetInt("PlayerID", guestResponse.player_id);
-                PlayerPrefs.SetString("PlayerName", NameInput.text);
+                PlayerPrefs.SetString("PlayerName", NameInput);
                 PlayerPrefs.Save();
 
                 // If it is a new player, set a random name
                 if (guestResponse.seen_before == false)
                 {
 
-                    string newPlayerName = NameInput.text;
+                    string newPlayerName = NameInput;
 
                     LootLockerSDKManager.SetPlayerName(newPlayerName, (nameResponse) =>
                     {
@@ -215,7 +214,7 @@ public class LoginManager : MonoBehaviour
                     {
                         if (getNameResponse.success)
                         {
-                            NameInput.text = getNameResponse.name;
+                            NameInput = getNameResponse.name;
                         }
                     });
                 }
