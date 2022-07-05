@@ -18,6 +18,14 @@ public class LoginManager : MonoBehaviour
     public ServerBrowser ServerBrowser;
     private double lastServerRefresh;
     private string NameInput;
+
+    private void Awake()
+    {
+        // Start LootLocker session manually to override settings in Project Settings
+        // This is not needed for a released game, just for this sample game
+        LootLockerSDKManager.Init("3f70b4d820d285dc20f62fa87d82505496b76246", "1.0.0.0", LootLocker.LootLockerConfig.platformType.Android, true, "goc52ppj");
+    }
+    
     private void Start()
     {
         ConnectionManager.Instance.OnConnected += OnConnected;
